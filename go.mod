@@ -1,4 +1,4 @@
-module github.com/bozz33/sublime-admin
+module github.com/bozz33/sublimeadmin
 
 go 1.24.0
 
