@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bozz33/sublimego/auth"
+	"github.com/bozz33/sublime-admin/auth"
 	"golang.org/x/time/rate"
 )
 

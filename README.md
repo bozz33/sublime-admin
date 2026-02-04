@@ -1,11 +1,11 @@
-# SublimeGo
+# Sublime Admin
 
 A modern Go framework for building admin panels, inspired by Laravel Filament.
 
 ## Installation
 
 ```bash
-go get github.com/bozz33/sublimego@v1.0.0
+go get github.com/bozz33/sublime-admin@v1.0.0
 ```
 
 ## Features
@@ -27,9 +27,9 @@ go get github.com/bozz33/sublimego@v1.0.0
 package main
 
 import (
-    "github.com/bozz33/sublimego/engine"
-    "github.com/bozz33/sublimego/form"
-    "github.com/bozz33/sublimego/table"
+    "github.com/bozz33/sublime-admin/engine"
+    "github.com/bozz33/sublime-admin/form"
+    "github.com/bozz33/sublime-admin/table"
 )
 
 func main() {

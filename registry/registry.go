@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/bozz33/sublimego/engine"
+	"github.com/bozz33/sublime-admin/engine"
 	"github.com/samber/lo"
 )
 
