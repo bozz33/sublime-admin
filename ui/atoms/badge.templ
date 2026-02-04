@@ -1,0 +1,35 @@
+package atoms
+
+// Variant: "default", "primary", "danger", "success", "warning", "info", "dark"
+type BadgeProps struct {
+	Text    string
+	Variant string
+}
+
+// Badge - Flowbite component with TailAdmin style
+templ Badge(props BadgeProps) {
+	<span class={ badgeClasses(props) }>
+		{ props.Text }
+	</span>
+}
+
+func badgeClasses(props BadgeProps) string {
+	base := "text-xs font-medium px-2.5 py-0.5 rounded-full"
+	
+	switch props.Variant {
+	case "primary", "blue":
+		return base + " bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+	case "danger", "red":
+		return base + " bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+	case "success", "green":
+		return base + " bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+	case "warning", "yellow":
+		return base + " bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+	case "info", "indigo":
+		return base + " bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300"
+	case "dark":
+		return base + " bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+	default:
+		return base + " bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+	}
+}
