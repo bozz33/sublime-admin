@@ -2,6 +2,13 @@
 
 A modern Go framework for building admin panels, inspired by Laravel Filament.
 
+**This is the core framework package without a project structure.** For a complete starter project with examples, see [SublimeGo](https://github.com/bozz33/SublimeGo).
+
+## Which One Should I Use?
+
+- **sublime-admin** (`github.com/bozz33/sublimeadmin`) - Core framework library only, use this as a dependency in your existing Go project
+- **SublimeGo** (`github.com/bozz33/sublimego`) - Complete starter project with examples, database setup, and project structure
+
 ## Installation
 
 ```bash
@@ -68,7 +75,14 @@ func main() {
 
 ## Documentation
 
-See the [SublimeGo Starter](https://github.com/bozz33/SublimeGo) for a complete example project.
+For complete documentation, examples, and guides, see the [SublimeGo Starter Project](https://github.com/bozz33/SublimeGo).
+
+## Relationship with SublimeGo
+
+- **sublime-admin** is the core framework library (this repository)
+- **SublimeGo** is a complete starter project that uses sublime-admin
+- Use **SublimeGo** if you want to start a new admin panel project
+- Use **sublime-admin** if you want to add admin panel functionality to an existing Go project
 
 ## License
 
