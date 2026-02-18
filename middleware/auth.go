@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bozz33/sublime-admin/auth"
-	"github.com/bozz33/sublime-admin/errors"
+	"github.com/bozz33/sublimeadmin/auth"
+	"github.com/bozz33/sublimeadmin/errors"
 )
 
 // AuthConfig configures the authentication middleware.

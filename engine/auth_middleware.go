@@ -3,7 +3,7 @@ package engine
 import (
 "net/http"
 
-"github.com/bozz33/sublime-admin/auth"
+"github.com/bozz33/sublimeadmin/auth"
 )
 
 // AuthMiddleware provides authentication middleware.

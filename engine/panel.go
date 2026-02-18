@@ -6,8 +6,8 @@ import (
 
 "github.com/a-h/templ"
 "github.com/alexedwards/scs/v2"
-"github.com/bozz33/sublime-admin/auth"
-"github.com/bozz33/sublime-admin/ui/layouts"
+"github.com/bozz33/sublimeadmin/auth"
+"github.com/bozz33/sublimeadmin/ui/layouts"
 "github.com/samber/lo"
 "sort"
 )

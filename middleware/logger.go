@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/bozz33/sublime-admin/logger"
+	"github.com/bozz33/sublimeadmin/logger"
 	"github.com/google/uuid"
 	"github.com/samber/lo"
 )

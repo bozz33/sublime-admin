@@ -5,7 +5,7 @@ import (
 "strings"
 
 "github.com/a-h/templ"
-"github.com/bozz33/sublime-admin/auth"
+"github.com/bozz33/sublimeadmin/auth"
 "golang.org/x/crypto/bcrypt"
 )
 

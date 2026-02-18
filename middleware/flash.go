@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/bozz33/sublime-admin/flash"
+	"github.com/bozz33/sublimeadmin/flash"
 )
 
 // Flash returns a middleware that loads flash messages into the context.
