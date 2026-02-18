@@ -1,32 +1,73 @@
-![alt text](image.png)# Sublime Admin
+# sublime-admin
 
-A modern Go framework for building admin panels, inspired by Laravel Filament.
+**The core Go framework library for building admin panels.**
+Use this package as a dependency in your existing Go project.
 
-**This is the core framework package without a project structure.** For a complete starter project with examples, see [SublimeGo](https://github.com/bozz33/SublimeGo).
+[![Go Reference](https://pkg.go.dev/badge/github.com/bozz33/sublimeadmin.svg)](https://pkg.go.dev/github.com/bozz33/sublimeadmin)
+[![Go Version](https://img.shields.io/badge/Go-1.24+-00ADD8?logo=go)](https://go.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Which One Should I Use?
+---
 
-- **sublime-admin** (`github.com/bozz33/sublimeadmin`) - Core framework library only, use this as a dependency in your existing Go project
-- **SublimeGo** (`github.com/bozz33/sublimego`) - Complete starter project with examples, database setup, and project structure
+## Two Repositories
+
+SublimeGo is split into two complementary repositories:
+
+| | [SublimeGo](https://github.com/bozz33/SublimeGo) | [sublime-admin](https://github.com/bozz33/sublime-admin) |
+|---|---|---|
+| **Type** | Complete starter project | Core framework library |
+| **Use when** | Starting a new admin panel project | Adding admin panel to an existing Go project |
+| **Includes** | DB setup, Ent schemas, CLI, examples, views | Framework packages only |
+| **Import** | `github.com/bozz33/sublimego` | `github.com/bozz33/sublimeadmin` |
+
+> **Not sure which to pick?** Start with **SublimeGo**  it includes everything out of the box.
+
+---
 
 ## Installation
 
 ```bash
-go get github.com/bozz33/sublimeadmin@v1.0.0
+go get github.com/bozz33/sublimeadmin@latest
 ```
+
+---
 
 ## Features
 
-- **Resource System**: Full CRUD with automatic generation
-- **Form Builder**: Fluent form builder with validation
-- **Table Builder**: Interactive tables with sorting, filters, and pagination
-- **Actions**: Customizable actions with confirmation modals
-- **Widgets**: Stats cards and charts (ApexCharts)
-- **Navigation**: Advanced navigation with groups and badges
-- **Authentication**: Built-in auth with bcrypt and sessions
-- **Middleware**: Rate limiting, CORS, logging, recovery
-- **Validation**: Extensible validation with custom rules
-- **Export**: CSV and Excel export
+### Forms
+- Fields: Text, Email, Password, Number, Textarea, Select, Checkbox, Toggle, DatePicker, FileUpload
+- Advanced fields: **RichEditor**, **MarkdownEditor**, **TagsInput**, **KeyValue**, **ColorPicker**, **Slider**
+- Layouts: Section, Grid, Tabs, **Wizard/Steps**, Callout, Repeater
+
+### Tables
+- Columns: Text, Badge, Boolean, Date, Image
+- Sorting, search, pagination, filters, bulk actions
+- **Summaries** (sum, average, min, max, count) in the table footer
+- **Grouping**  group rows by column value with optional collapse
+- Export CSV/Excel, Import CSV/Excel/JSON
+
+### Authentication & Security
+- Bcrypt password hashing + secure sessions
+- Middleware: RequireAuth, RequireRole, RequirePermission, login throttling
+- **MFA/TOTP**  two-factor authentication (RFC 6238) + recovery codes
+- Role and permission management
+
+### Notifications
+- In-memory store (development)
+- **DatabaseStore**  persistent backend via any Ent client
+- SSE (Server-Sent Events) for real-time delivery
+- **Broadcaster**  per-user SSE fan-out with 30s heartbeat
+
+### Advanced Architecture
+- **Multi-tenancy**  `SubdomainResolver`, `PathResolver`, `MultiPanelRouter`, `TenantAware`
+- **Render Hooks**  10 named UI injection points
+- **Plugin system**  `Plugin` interface with `Boot()` and thread-safe registry
+- **Nested Resources**  `RelationManager` (BelongsTo, HasMany, ManyToMany)
+- Background jobs with SQLite persistence
+- Structured logger (`log/slog`) with log rotation
+- Built-in mailer
+
+---
 
 ## Quick Start
 
@@ -34,56 +75,173 @@ go get github.com/bozz33/sublimeadmin@v1.0.0
 package main
 
 import (
+    "net/http"
+
     "github.com/bozz33/sublimeadmin/engine"
     "github.com/bozz33/sublimeadmin/form"
     "github.com/bozz33/sublimeadmin/table"
 )
 
 func main() {
-    // Create your admin panel
     panel := engine.NewPanel("admin").
-        SetPath("/admin").
-        SetBrandName("My App")
-    
-    // Register resources
+        WithPath("/admin").
+        WithBrandName("My App").
+        WithDatabase(db)
+
     panel.AddResources(
-        &ProductResource{},
-        &UserResource{},
+        NewProductResource(db),
+        NewUserResource(db),
     )
-    
-    // Start server
+
     http.ListenAndServe(":8080", panel.Router())
 }
 ```
 
-## Packages
+---
+
+## Package Reference
 
 | Package | Description |
 |---------|-------------|
-| `engine` | Core panel and resource management |
-| `form` | Form builder with fields and validation |
-| `table` | Table builder with columns and filters |
-| `actions` | Action system with confirmation dialogs |
-| `auth` | Authentication and authorization |
-| `middleware` | HTTP middlewares (auth, CORS, rate limit, etc.) |
-| `validation` | Input validation with custom rules |
-| `widget` | Dashboard widgets (stats, charts) |
-| `flash` | Flash messages |
-| `errors` | Error handling |
-| `export` | CSV/Excel export |
-| `ui` | UI components and layouts |
+| `engine` | Core panel, CRUD handlers, multi-tenancy, relations |
+| `form` | Form builder  fields, layouts, validation |
+| `table` | Table builder  columns, filters, summaries, grouping |
+| `actions` | Row actions (edit, delete, custom, bulk) |
+| `auth` | Authentication, sessions, roles, permissions, MFA/TOTP |
+| `middleware` | HTTP middlewares (auth, CORS, CSRF, recovery, throttle) |
+| `notifications` | Notifications  memory store, DatabaseStore, SSE Broadcaster |
+| `hooks` | Render Hooks  named UI injection points |
+| `plugin` | Plugin system |
+| `validation` | Input validation (go-playground/validator + gorilla/schema) |
+| `widget` | Dashboard widgets (stats cards, ApexCharts) |
+| `flash` | Session-based flash messages |
+| `errors` | Structured errors  package apperrors |
+| `export` | CSV / Excel export |
+| `ui` | Templ UI components and layouts |
+
+---
+
+## Resource Example
+
+```go
+type ProductResource struct {
+    engine.BaseResource
+    db *ent.Client
+}
+
+func (r *ProductResource) Slug() string        { return "products" }
+func (r *ProductResource) Label() string       { return "Product" }
+func (r *ProductResource) PluralLabel() string { return "Products" }
+func (r *ProductResource) Icon() string        { return "package" }
+
+func (r *ProductResource) Form(ctx context.Context, item any) templ.Component {
+    f := form.New().SetSchema(
+        form.NewText("name").Label("Name").Required(),
+        form.NewRichEditor("description").Label("Description"),
+        form.NewSelect("status").Label("Status").WithOptions(
+            form.Option{Value: "draft",     Label: "Draft"},
+            form.Option{Value: "published", Label: "Published"},
+        ),
+        form.NewTagsInput("tags").Label("Tags"),
+        form.NewColorPicker("color").Label("Color"),
+    )
+    return views.GenericForm(f)
+}
+
+func (r *ProductResource) Table(ctx context.Context) templ.Component {
+    t := table.New(nil).
+        WithColumns(
+            table.Text("name").WithLabel("Name").WithSortable(true).WithSearchable(true),
+            table.Badge("status").WithLabel("Status"),
+            table.Date("created_at").WithLabel("Created").WithSortable(true),
+        ).
+        WithSummaries(
+            table.NewSummary("price", table.SummarySum).WithLabel("Total").WithFormat("$%.2f"),
+        ).
+        WithGroups(
+            table.GroupBy("status").WithLabel("By status").Collapsible(),
+        )
+    return views.GenericTable(t)
+}
+```
+
+---
+
+## MFA Example
+
+```go
+mfa := auth.NewMFA(auth.DefaultMFAConfig())
+
+// Generate a secret for a user
+secret, _ := mfa.GenerateSecret()
+
+// Provisioning URI for QR code
+uri := mfa.ProvisioningURI(secret, user.Email)
+
+// Validate a submitted TOTP code
+if !mfa.Validate(secret, code) {
+    // invalid
+}
+
+// Recovery codes
+codes, _ := mfa.GenerateRecoveryCodes()
+auth.SetRecoveryCodes(user, codes)
+auth.UseRecoveryCode(user, submittedCode) // consumes the code
+```
+
+---
+
+## Render Hooks Example
+
+```go
+import "github.com/bozz33/sublimeadmin/hooks"
+
+hooks.Register(hooks.AfterContent, func(ctx context.Context) templ.Component {
+    return myBannerComponent()
+})
+```
+
+---
+
+## Multi-Tenancy Example
+
+```go
+resolver := engine.NewSubdomainResolver("example.com").
+    Register(&engine.Tenant{ID: "acme", Subdomain: "acme", Name: "Acme Corp"})
+
+router := engine.NewMultiPanelRouter(resolver).
+    RegisterPanel("acme", acmePanel)
+
+http.ListenAndServe(":8080", engine.TenantMiddleware(resolver, true)(router))
+```
+
+---
 
 ## Documentation
 
-For complete documentation, examples, and guides, see the [SublimeGo Starter Project](https://github.com/bozz33/SublimeGo).
+Full documentation, guides, and examples are available in the
+[SublimeGo starter project](https://github.com/bozz33/SublimeGo):
 
-## Relationship with SublimeGo
+- [ARCHITECTURE.md](https://github.com/bozz33/SublimeGo/blob/main/ARCHITECTURE.md)
+- [RESOURCES_GUIDE.md](https://github.com/bozz33/SublimeGo/blob/main/RESOURCES_GUIDE.md)
+- [PANEL_CONFIG.md](https://github.com/bozz33/SublimeGo/blob/main/PANEL_CONFIG.md)
+- [TEMPLATING.md](https://github.com/bozz33/SublimeGo/blob/main/TEMPLATING.md)
+- [CONTRIBUTING.md](https://github.com/bozz33/SublimeGo/blob/main/CONTRIBUTING.md)
 
-- **sublime-admin** is the core framework library (this repository)
-- **SublimeGo** is a complete starter project that uses sublime-admin
-- Use **SublimeGo** if you want to start a new admin panel project
-- Use **sublime-admin** if you want to add admin panel functionality to an existing Go project
+---
+
+## Contributing
+
+Contributions are welcome  please read
+[CONTRIBUTING.md](https://github.com/bozz33/SublimeGo/blob/main/CONTRIBUTING.md)
+for guidelines.
+
+---
 
 ## License
 
-MIT License
+MIT  see [LICENSE](LICENSE).
+
+---
+
+*Inspired by [Laravel Filament](https://filamentphp.com/)  Built with [Ent](https://entgo.io/) and [Templ](https://templ.guide/)*
