@@ -115,7 +115,7 @@ func main() {
 | `validation` | Input validation (go-playground/validator + gorilla/schema) |
 | `widget` | Dashboard widgets (stats cards, ApexCharts) |
 | `flash` | Session-based flash messages |
-| `errors` | Structured errors  package apperrors |
+| `apperrors` | Structured errors  AppError, Handler, typed constructors |
 | `export` | CSV / Excel export |
 | `ui` | Templ UI components and layouts |
 
@@ -136,14 +136,14 @@ func (r *ProductResource) Icon() string        { return "package" }
 
 func (r *ProductResource) Form(ctx context.Context, item any) templ.Component {
     f := form.New().SetSchema(
-        form.NewText("name").Label("Name").Required(),
-        form.NewRichEditor("description").Label("Description"),
-        form.NewSelect("status").Label("Status").WithOptions(
-            form.Option{Value: "draft",     Label: "Draft"},
-            form.Option{Value: "published", Label: "Published"},
-        ),
-        form.NewTagsInput("tags").Label("Tags"),
-        form.NewColorPicker("color").Label("Color"),
+        form.Text("name").Label("Name").Required(),
+        form.RichEditor("description").Label("Description"),
+        form.Select("status").Label("Status").SetOptions(map[string]string{
+            "draft":     "Draft",
+            "published": "Published",
+        }),
+        form.Tags("tags").Label("Tags"),
+        form.ColorPicker("color").Label("Color"),
     )
     return views.GenericForm(f)
 }
@@ -151,9 +151,9 @@ func (r *ProductResource) Form(ctx context.Context, item any) templ.Component {
 func (r *ProductResource) Table(ctx context.Context) templ.Component {
     t := table.New(nil).
         WithColumns(
-            table.Text("name").WithLabel("Name").WithSortable(true).WithSearchable(true),
+            table.Text("name").WithLabel("Name").Sortable().Searchable(),
             table.Badge("status").WithLabel("Status"),
-            table.Date("created_at").WithLabel("Created").WithSortable(true),
+            table.Date("created_at").WithLabel("Created").Sortable(),
         ).
         WithSummaries(
             table.NewSummary("price", table.SummarySum).WithLabel("Total").WithFormat("$%.2f"),
