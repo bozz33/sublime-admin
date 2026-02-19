@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/bozz33/sublimeadmin/errors"
+	errors "github.com/bozz33/sublimeadmin/apperrors"
 	"github.com/bozz33/sublimeadmin/logger"
 )
 

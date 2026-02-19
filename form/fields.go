@@ -125,34 +125,34 @@ func (f *TextInput) Default(val any) *TextInput {
 	return f
 }
 
-// Textarea represents a textarea field.
-type Textarea struct {
+// TextareaInput represents a textarea field.
+type TextareaInput struct {
 	BaseField
 	RowCount int
 }
 
-// NewTextarea creates a textarea field.
-func NewTextarea(name string) *Textarea {
-	return &Textarea{
+// Textarea creates a textarea field.
+func Textarea(name string) *TextareaInput {
+	return &TextareaInput{
 		BaseField: BaseField{Name: name, LabelStr: name},
 		RowCount:  3,
 	}
 }
 
 // Label sets the label.
-func (t *Textarea) Label(label string) *Textarea {
+func (t *TextareaInput) Label(label string) *TextareaInput {
 	t.LabelStr = label
 	return t
 }
 
 // Rows sets the number of rows.
-func (t *Textarea) Rows(rows int) *Textarea {
+func (t *TextareaInput) Rows(rows int) *TextareaInput {
 	t.RowCount = rows
 	return t
 }
 
 // Required makes the field required.
-func (t *Textarea) Required() *Textarea {
+func (t *TextareaInput) Required() *TextareaInput {
 	t.BaseField.Required = true
 	t.Rules = append(t.Rules, "required")
 	return t
@@ -164,22 +164,22 @@ type SelectOption struct {
 	Value string
 }
 
-// Select represents a select field.
-type Select struct {
+// SelectInput represents a select field.
+type SelectInput struct {
 	BaseField
 	Options []SelectOption
 }
 
-// NewSelect creates a select field.
-func NewSelect(name string) *Select {
-	return &Select{
+// Select creates a select field.
+func Select(name string) *SelectInput {
+	return &SelectInput{
 		BaseField: BaseField{Name: name, LabelStr: name},
 		Options:   make([]SelectOption, 0),
 	}
 }
 
 // SetOptions sets the options.
-func (s *Select) SetOptions(options map[string]string) *Select {
+func (s *SelectInput) SetOptions(options map[string]string) *SelectInput {
 	for v, l := range options {
 		s.Options = append(s.Options, SelectOption{Value: v, Label: l})
 	}
@@ -187,89 +187,89 @@ func (s *Select) SetOptions(options map[string]string) *Select {
 }
 
 // Label sets the label.
-func (s *Select) Label(label string) *Select {
+func (s *SelectInput) Label(label string) *SelectInput {
 	s.LabelStr = label
 	return s
 }
 
 // Required makes the field required.
-func (s *Select) Required() *Select {
+func (s *SelectInput) Required() *SelectInput {
 	s.BaseField.Required = true
 	s.Rules = append(s.Rules, "required")
 	return s
 }
 
 // Default sets the default value.
-func (s *Select) Default(val any) *Select {
+func (s *SelectInput) Default(val any) *SelectInput {
 	s.Value = val
 	return s
 }
 
-// Checkbox represents a checkbox field.
-type Checkbox struct {
+// CheckboxInput represents a checkbox field.
+type CheckboxInput struct {
 	BaseField
 }
 
-// NewCheckbox creates a checkbox field.
-func NewCheckbox(name string) *Checkbox {
-	return &Checkbox{
+// Checkbox creates a checkbox field.
+func Checkbox(name string) *CheckboxInput {
+	return &CheckboxInput{
 		BaseField: BaseField{Name: name, LabelStr: name},
 	}
 }
 
 // Label sets the label.
-func (c *Checkbox) Label(label string) *Checkbox {
+func (c *CheckboxInput) Label(label string) *CheckboxInput {
 	c.LabelStr = label
 	return c
 }
 
 // Default sets the default value.
-func (c *Checkbox) Default(val bool) *Checkbox {
+func (c *CheckboxInput) Default(val bool) *CheckboxInput {
 	c.Value = val
 	return c
 }
 
-// FileUpload represents a file upload field.
-type FileUpload struct {
+// FileUploadInput represents a file upload field.
+type FileUploadInput struct {
 	BaseField
 	AcceptTypes   string
 	MaxFileSize   int64
 	AllowMultiple bool
 }
 
-// NewFileUpload creates a file upload field.
-func NewFileUpload(name string) *FileUpload {
-	return &FileUpload{
+// FileUpload creates a file upload field.
+func FileUpload(name string) *FileUploadInput {
+	return &FileUploadInput{
 		BaseField: BaseField{Name: name, LabelStr: name},
 	}
 }
 
 // Label sets the label.
-func (f *FileUpload) Label(label string) *FileUpload {
+func (f *FileUploadInput) Label(label string) *FileUploadInput {
 	f.LabelStr = label
 	return f
 }
 
 // Accept sets the accepted file types.
-func (f *FileUpload) Accept(accept string) *FileUpload {
+func (f *FileUploadInput) Accept(accept string) *FileUploadInput {
 	f.AcceptTypes = accept
 	return f
 }
 
 // MaxSize sets the maximum size in bytes.
-func (f *FileUpload) MaxSize(size int64) *FileUpload {
+func (f *FileUploadInput) MaxSize(size int64) *FileUploadInput {
 	f.MaxFileSize = size
 	return f
 }
 
 // Multiple allows multiple files.
-func (f *FileUpload) Multiple() *FileUpload {
+func (f *FileUploadInput) Multiple() *FileUploadInput {
 	f.AllowMultiple = true
 	return f
 }
 
 // Required makes the field required.
-func (f *FileUpload) Required() *FileUpload {
+func (f *FileUploadInput) Required() *FileUploadInput {
 	f.BaseField.Required = true
 	f.Rules = append(f.Rules, "required")
 	return f
