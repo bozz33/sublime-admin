@@ -8,14 +8,15 @@ import (
 
 // Table represents the complete configuration of a table.
 type Table struct {
-	Columns    []Column
-	Rows       []any
-	Actions    []*actions.Action
-	Filters    []Filter
-	Searchable bool
-	Pagination bool
-	PerPage    int
-	BaseURL    string
+	Columns     []Column
+	Rows        []any
+	Actions     []*actions.Action
+	BulkActions []*BulkAction
+	Filters     []Filter
+	Searchable  bool
+	Pagination  bool
+	PerPage     int
+	BaseURL     string
 }
 
 // New creates a new Table instance.

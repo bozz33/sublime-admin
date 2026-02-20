@@ -1,0 +1,337 @@
+package components
+
+import (
+	"github.com/bozz33/sublimeadmin/form"
+	"fmt"
+)
+
+// Form renders a complete form with all its components.
+templ Form(f []form.Component, action string, method string) {
+	<form action={ templ.SafeURL(action) } method={ method } class="space-y-6" enctype="multipart/form-data">
+		for _, component := range f {
+			@RenderFormComponent(component)
+		}
+		<div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+			<a href="javascript:history.back()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
+				Cancel
+			</a>
+			<button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
+				Save
+			</button>
+		</div>
+	</form>
+}
+
+// RenderFormComponent dispatches rendering based on component type.
+templ RenderFormComponent(c form.Component) {
+	switch c.GetComponentType() {
+		case "layout_section":
+			if section, ok := c.(*form.Section); ok {
+				@FormSection(section)
+			}
+		case "layout_grid":
+			if grid, ok := c.(*form.Grid); ok {
+				@FormGrid(grid)
+			}
+		case "layout_tabs":
+			if tabs, ok := c.(*form.Tabs); ok {
+				@FormTabs(tabs)
+			}
+		case "text":
+			if field, ok := c.(*form.TextInput); ok {
+				@FormTextInput(field)
+			}
+		case "textarea":
+			if field, ok := c.(*form.TextareaInput); ok {
+				@FormTextarea(field)
+			}
+		case "select":
+			if field, ok := c.(*form.SelectInput); ok {
+				@FormSelect(field)
+			}
+		case "checkbox":
+			if field, ok := c.(*form.CheckboxInput); ok {
+				@FormCheckbox(field)
+			}
+		case "toggle":
+			if field, ok := c.(*form.ToggleInput); ok {
+				@FormToggle(field)
+			}
+		case "file":
+			if field, ok := c.(*form.FileUploadInput); ok {
+				@FormFileUpload(field)
+			}
+		case "repeater":
+			if field, ok := c.(*form.RepeaterField); ok {
+				@FormRepeater(field)
+			}
+		default:
+			if f, ok := c.(form.Field); ok {
+				@FormGenericField(f)
+			}
+	}
+}
+
+// FormSection renders a collapsible section layout.
+templ FormSection(s *form.Section) {
+	<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+		if s.Heading != "" {
+			<div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+				<h3 class="text-base font-semibold text-gray-900 dark:text-white">{ s.Heading }</h3>
+				if s.Description != "" {
+					<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{ s.Description }</p>
+				}
+			</div>
+		}
+		<div class="p-6 space-y-4">
+			for _, child := range s.GetSchema() {
+				@RenderFormComponent(child)
+			}
+		</div>
+	</div>
+}
+
+// FormGrid renders a grid layout.
+templ FormGrid(g *form.Grid) {
+	<div class={ fmt.Sprintf("grid grid-cols-%d gap-4", g.Columns) }>
+		for _, child := range g.GetSchema() {
+			@RenderFormComponent(child)
+		}
+	</div>
+}
+
+// FormTabs renders a tabbed layout.
+templ FormTabs(t *form.Tabs) {
+	<div x-data="{ activeTab: 0 }" class="space-y-4">
+		<div class="border-b border-gray-200 dark:border-gray-700">
+			<nav class="flex gap-4 -mb-px">
+				for i, tab := range t.TabItems {
+					<button
+						type="button"
+						@click={ fmt.Sprintf("activeTab = %d", i) }
+						:class={ fmt.Sprintf("activeTab === %d ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'", i) }
+						class="py-2 px-1 border-b-2 font-medium text-sm transition-colors"
+					>
+						{ tab.Label }
+					</button>
+				}
+			</nav>
+		</div>
+		for i, tab := range t.TabItems {
+			<div x-show={ fmt.Sprintf("activeTab === %d", i) } class="space-y-4">
+				for _, child := range tab.Components {
+					@RenderFormComponent(child)
+				}
+			</div>
+		}
+	</div>
+}
+
+// FormTextInput renders a text input field.
+templ FormTextInput(f *form.TextInput) {
+	<div class="space-y-1">
+		<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+			{ f.GetLabel() }
+			if f.IsRequired() {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		</label>
+		<input
+			type={ f.Type }
+			id={ f.GetName() }
+			name={ f.GetName() }
+			value={ f.GetValueString() }
+			placeholder={ f.GetPlaceholder() }
+			if f.IsRequired() { required }
+			if f.IsDisabled() { disabled }
+			class="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+		/>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// FormTextarea renders a textarea field.
+templ FormTextarea(f *form.TextareaInput) {
+	<div class="space-y-1">
+		<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+			{ f.GetLabel() }
+			if f.IsRequired() {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		</label>
+		<textarea
+			id={ f.GetName() }
+			name={ f.GetName() }
+			placeholder={ f.GetPlaceholder() }
+			if f.IsRequired() { required }
+			if f.IsDisabled() { disabled }
+			rows={ fmt.Sprintf("%d", f.RowCount) }
+			class="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+		>{ f.GetValueString() }</textarea>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// FormSelect renders a select dropdown field.
+templ FormSelect(f *form.SelectInput) {
+	<div class="space-y-1">
+		<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+			{ f.GetLabel() }
+			if f.IsRequired() {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		</label>
+		<select
+			id={ f.GetName() }
+			name={ f.GetName() }
+			if f.IsRequired() { required }
+			if f.IsDisabled() { disabled }
+			class="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+		>
+			if f.GetPlaceholder() != "" {
+				<option value="">{ f.GetPlaceholder() }</option>
+			}
+			for _, opt := range f.Options {
+				<option value={ opt.Value } selected?={ opt.Value == f.GetValueString() }>
+					{ opt.Label }
+				</option>
+			}
+		</select>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// FormCheckbox renders a checkbox field.
+templ FormCheckbox(f *form.CheckboxInput) {
+	<div class="flex items-start gap-3">
+		<div class="flex items-center h-5">
+			<input
+				type="checkbox"
+				id={ f.GetName() }
+				name={ f.GetName() }
+				value="1"
+				checked?={ f.IsChecked() }
+				if f.IsDisabled() { disabled }
+				class="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
+			/>
+		</div>
+		<div>
+			<label for={ f.GetName() } class="text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+			</label>
+			if f.GetHelp() != "" {
+				<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+			}
+		</div>
+	</div>
+}
+
+// FormToggle renders a toggle switch field.
+templ FormToggle(f *form.ToggleInput) {
+	<div class="flex items-center justify-between">
+		<div>
+			<label for={ f.GetName() } class="text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+			</label>
+			if f.GetHelp() != "" {
+				<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+			}
+		</div>
+		<label class="relative inline-flex items-center cursor-pointer">
+			<input
+				type="checkbox"
+				id={ f.GetName() }
+				name={ f.GetName() }
+				value="1"
+				checked?={ f.IsChecked() }
+				if f.IsDisabled() { disabled }
+				class="sr-only peer"
+			/>
+			<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+		</label>
+	</div>
+}
+
+// FormFileUpload renders a file upload field.
+templ FormFileUpload(f *form.FileUploadInput) {
+	<div class="space-y-1">
+		<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+			{ f.GetLabel() }
+			if f.IsRequired() {
+				<span class="text-red-500 ml-1">*</span>
+			}
+		</label>
+		<input
+			type="file"
+			id={ f.GetName() }
+			name={ f.GetName() }
+			accept={ f.AcceptTypes }
+			if f.AllowMultiple { multiple }
+			if f.IsRequired() { required }
+			if f.IsDisabled() { disabled }
+			class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:text-gray-400"
+		/>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// FormRepeater renders a repeater field (dynamic list of sub-fields).
+templ FormRepeater(f *form.RepeaterField) {
+	<div class="space-y-2" x-data="{ items: [0] }">
+		<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{ f.GetLabel() }</label>
+		<template x-for="(item, index) in items" :key="index">
+			<div class="flex items-center gap-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+				for _, sub := range f.SubFields {
+					@RenderFormComponent(sub)
+				}
+				<button
+					type="button"
+					@click="items.splice(index, 1)"
+					class="p-1 text-red-500 hover:text-red-700"
+				>
+					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+					</svg>
+				</button>
+			</div>
+		</template>
+		<button
+			type="button"
+			@click="items.push(items.length)"
+			class="flex items-center gap-2 px-3 py-2 text-sm text-primary-600 border border-dashed border-primary-300 rounded-lg hover:bg-primary-50 dark:text-primary-400 dark:border-primary-700 dark:hover:bg-primary-900/20"
+		>
+			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+			</svg>
+			{ f.AddLabel }
+		</button>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// FormGenericField renders any field that doesn't have a specific renderer.
+templ FormGenericField(f form.Field) {
+	<div class="space-y-1">
+		<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+			{ f.GetLabel() }
+		</label>
+		<input
+			type="text"
+			id={ f.GetName() }
+			name={ f.GetName() }
+			if f.IsRequired() { required }
+			if f.IsDisabled() { disabled }
+			class="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+		/>
+	</div>
+}

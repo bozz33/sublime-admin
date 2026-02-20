@@ -127,3 +127,61 @@ func getItemID(item any) string {
 func GetItemID(item any) string {
 	return getItemID(item)
 }
+
+// CreateAction creates a standard Create button (no item ID needed).
+func CreateAction(baseURL string) *Action {
+	return New("create").
+		SetLabel("Create").
+		SetIcon("plus").
+		SetColor("primary").
+		SetUrl(func(_ any) string {
+			return baseURL + "/create"
+		})
+}
+
+// ExportAction creates an Export button (CSV by default).
+func ExportAction(baseURL string) *Action {
+	return New("export").
+		SetLabel("Export").
+		SetIcon("download").
+		SetColor("secondary").
+		SetUrl(func(_ any) string {
+			return baseURL + "/export?format=csv"
+		})
+}
+
+// ImportAction creates an Import button.
+func ImportAction(baseURL string) *Action {
+	return New("import").
+		SetLabel("Import").
+		SetIcon("upload").
+		SetColor("secondary").
+		SetUrl(func(_ any) string {
+			return baseURL + "/import"
+		})
+}
+
+// RestoreAction creates a Restore button (soft-delete recovery).
+func RestoreAction(baseURL string) *Action {
+	return New("restore").
+		SetLabel("Restore").
+		SetIcon("refresh").
+		SetColor("success").
+		SetUrl(func(item any) string {
+			return fmt.Sprintf("%s/%v/restore", baseURL, getItemID(item))
+		})
+}
+
+// ForceDeleteAction creates a Force Delete button with confirmation modal.
+func ForceDeleteAction(baseURL string) *Action {
+	a := New("force-delete").
+		SetLabel("Force Delete").
+		SetIcon("trash").
+		SetColor("danger").
+		RequiresDialog("Permanently delete?", "This action cannot be undone and will permanently remove the record.").
+		SetUrl(func(item any) string {
+			return fmt.Sprintf("%s/%v/force-delete", baseURL, getItemID(item))
+		})
+	a.Method = "DELETE"
+	return a
+}
