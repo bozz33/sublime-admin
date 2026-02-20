@@ -9,12 +9,27 @@ import (
 
 // ExampleTenantSetup shows how to set up automatic tenant management.
 func ExampleTenantSetup() {
-	// 1. Create tenant manager
-	manager := NewTenantManager(
-		"./data/master.db", // Master database for tenant registry
-		"sqlite3",
-		slog.Default(),
-	)
+	// 1. Create tenant manager with new TenantManagerConfig API
+	manager, err := NewTenantManager(TenantManagerConfig{
+		MasterDSN:     "./data/master.db",
+		Driver:        "sqlite3",
+		DatabaseStyle: DatabaseStylePerTenant,
+		ConnStrGen:    NewConnStrGenerator("./data/tenants/%s.db"),
+		Logger:        slog.Default(),
+		// Optional: run migrations on each new tenant DB
+		MigrationHook: func(ctx context.Context, db *sql.DB, tenant TenantInfo) error {
+			_, err := db.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS users (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				email TEXT NOT NULL UNIQUE,
+				name TEXT NOT NULL,
+				created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+			)`)
+			return err
+		},
+	})
+	if err != nil {
+		panic(err)
+	}
 
 	// 2. Initialize tenant registry (creates tables if they don't exist)
 	ctx := context.Background()
@@ -22,23 +37,20 @@ func ExampleTenantSetup() {
 		panic(err)
 	}
 
-	// 3. Create a new tenant (automatic database provisioning)
-	tenant := &Tenant{
+	// 3. Create a new tenant — database provisioned automatically
+	cfg := &TenantConfig{
 		ID:        "acme",
 		Name:      "Acme Corporation",
 		Domain:    "acme.example.com",
 		Subdomain: "acme",
-		Meta: map[string]any{
-			"plan":      "premium",
-			"max_users": 100,
-		},
+		Meta:      map[string]string{"plan": "premium"},
 	}
 
-	if err := manager.CreateTenant(ctx, tenant); err != nil {
+	if err := manager.CreateTenant(ctx, cfg); err != nil {
 		panic(err)
 	}
 
-	// 4. Use tenant database resolver
+	// 4. Use tenant database resolver (with built-in LRU cache)
 	resolver := NewTenantDatabaseResolver(manager, "example.com")
 
 	// 5. Set up multi-panel router
