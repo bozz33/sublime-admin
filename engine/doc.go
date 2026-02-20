@@ -2,7 +2,7 @@
 //
 // It provides the main application engine that orchestrates all components
 // including routing, middleware, resource management, and template rendering.
-// The engine follows a resource-oriented architecture inspired by Laravel Filament.
+// The engine follows a resource-oriented architecture.
 //
 // Features:
 //   - HTTP server with standard library

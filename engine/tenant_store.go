@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// TenantInfo is the interface all tenant types must implement.
+// TenantInfo is the interface that all tenant types must implement.
 type TenantInfo interface {
 	GetId() string
 	GetName() string
@@ -20,7 +20,6 @@ type TenantInfo interface {
 }
 
 // TenantConfig holds full tenant configuration.
-// Mirrors go-saas's TenantConfig.
 type TenantConfig struct {
 	ID          string            `json:"id"`
 	Name        string            `json:"name"`
@@ -76,7 +75,7 @@ type TenantStore interface {
 	Delete(ctx context.Context, id string) error
 }
 
-// MemoryTenantStore is an in-memory TenantStore.
+// MemoryTenantStore is an in-memory implementation of TenantStore.
 type MemoryTenantStore struct {
 	mu      sync.RWMutex
 	tenants map[string]*TenantConfig // keyed by id, domain, subdomain

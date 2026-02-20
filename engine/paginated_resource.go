@@ -20,7 +20,6 @@ import (
 // -------------------------
 
 // PaginationConfig holds global pagination settings.
-// Inspired by morkid/paginate's Config struct.
 type PaginationConfig struct {
 	DefaultSize  int      // default items per page (default: 15)
 	MaxSize      int      // maximum allowed per page (default: 100)
@@ -48,12 +47,8 @@ func defaultPaginationConfig() PaginationConfig {
 	}
 }
 
-// -------------------------
-// SortField — multi-column sort
-// -------------------------
-
 // SortField represents a single sort column with direction.
-// Inspired by morkid/paginate's sort syntax: "-name,id" → [{name,DESC},{id,ASC}]
+// Prefix "-" means DESC, no prefix means ASC. Example: "-name,id" → [{name,DESC},{id,ASC}]
 type SortField struct {
 	Field string
 	Desc  bool
@@ -84,10 +79,6 @@ func ParseSortFields(s string) []SortField {
 	return result
 }
 
-// -------------------------
-// FilterExpr — filtres JSON
-// -------------------------
-
 // FilterOperator represents a filter comparison operator.
 type FilterOperator string
 
@@ -108,7 +99,7 @@ const (
 )
 
 // FilterExpr represents a single filter condition.
-// Inspired by morkid/paginate's filter format: ["field","operator","value"]
+// Format: ["field","operator","value"]
 type FilterExpr struct {
 	Field    string
 	Operator FilterOperator
@@ -118,7 +109,7 @@ type FilterExpr struct {
 	Or  []*FilterExpr
 }
 
-// ParseFiltersJSON parses morkid/paginate-style JSON filter expressions.
+// ParseFiltersJSON parses JSON filter expressions.
 // Supports:
 //
 //	["name","john"]                        → name = 'john'
@@ -221,24 +212,20 @@ func isLogicalOp(s string) bool {
 	return up == "OR" || up == "AND"
 }
 
-// -----------------
-// PaginationParams
-// -----------------
-
 // PaginationParams represents all pagination, sort, search and filter params.
 type PaginationParams struct {
 	Page    int
 	PerPage int
 	Search  string
-	Sorts   []SortField   // multi-column sort (inspiré de morkid/paginate)
-	Filters []*FilterExpr // structured filters (inspiré de morkid/paginate)
+	Sorts   []SortField   // multi-column sort, parsed from sort param
+	Filters []*FilterExpr // structured filters, parsed from filters param
 	// Legacy single-sort fields (backward compat)
 	Sort  string
 	Order string
 }
 
 // ParsePaginationParams extracts pagination from an HTTP request.
-// Supports GET query params and POST JSON body (inspiré de morkid/paginate).
+// Supports GET query params and POST JSON body.
 func ParsePaginationParams(r *http.Request) PaginationParams {
 	return ParsePaginationParamsWithConfig(r, defaultPaginationConfig())
 }
@@ -253,7 +240,7 @@ func ParsePaginationParamsWithConfig(r *http.Request, cfg PaginationConfig) Pagi
 
 	q := r.URL.Query()
 
-	// Support POST JSON body (inspiré de morkid/paginate POST support)
+	// Support POST JSON body
 	if r.Method == http.MethodPost {
 		body, _ := io.ReadAll(io.LimitReader(r.Body, 64*1024))
 		if len(body) > 0 {
@@ -318,7 +305,7 @@ func ParsePaginationParamsWithConfig(r *http.Request, cfg PaginationConfig) Pagi
 		}
 	}
 
-	// Sort — multi-column (inspiré de morkid/paginate "-name,id")
+	// Sort — multi-column, e.g. "-name,id"
 	for _, pname := range cfg.SortParams {
 		if v := q.Get(pname); v != "" {
 			params.Sort = v
@@ -337,7 +324,7 @@ func ParsePaginationParamsWithConfig(r *http.Request, cfg PaginationConfig) Pagi
 		}
 	}
 
-	// Filters JSON (inspiré de morkid/paginate filter format)
+	// Filters JSON
 	for _, pname := range cfg.FilterParams {
 		if v := q.Get(pname); v != "" {
 			params.Filters, _ = ParseFiltersJSON(v)
@@ -357,9 +344,9 @@ func (p PaginationParams) Offset() int {
 	return page * p.PerPage
 }
 
-// ---------------------------------------------------------------------------
-// PageResult — résultat paginé (inspiré de morkid/paginate Page struct)
-// ---------------------------------------------------------------------------
+// -----------
+// PageResult
+// ----------
 
 // PageResult is the paginated result wrapper.
 // Mirrors morkid/paginate's Page struct with all fields.
@@ -422,12 +409,11 @@ func NewPaginatedResult(items []any, total, page, perPage int) *PageResult {
 	return NewPage(items, int64(total), page, perPage)
 }
 
-// ---------------------------------------------------------------------------
-// PaginationCache — in-memory cache (inspiré de morkid/paginate cache adapters)
-// ---------------------------------------------------------------------------
+// ---------------------------------
+// PaginationCache — in-memory cache
+// ----------------------------------
 
 // PaginationCacheAdapter is the interface for pagination caching.
-// Inspired by morkid/paginate's CacheAdapter interface.
 type PaginationCacheAdapter interface {
 	Get(key string) (*PageResult, bool)
 	Set(key string, page *PageResult, ttl time.Duration)
@@ -478,16 +464,16 @@ func (c *MemoryPaginationCache) Flush() {
 	c.entries = make(map[string]*pageCacheEntry)
 }
 
-// ---------------------------------------------------------------------------
+// ---------------------------
 // PaginatedListFunc — function type
-// ---------------------------------------------------------------------------
+// ---------------------------
 
-// PaginatedListFunc is a function that returns a paginated PageResult.
+// PaginatedListFunc is a function that returns a PageResult.
 type PaginatedListFunc func(ctx context.Context, params PaginationParams) (*PageResult, error)
 
-// ---------------------------------------------------------------------------
+// ---------------------------
 // PaginatedResource — interface
-// ---------------------------------------------------------------------------
+// ---------------------------
 
 // PaginatedResource extends Resource with server-side pagination support.
 type PaginatedResource interface {
@@ -495,12 +481,11 @@ type PaginatedResource interface {
 	ListPaginated(ctx context.Context, params PaginationParams) (*PageResult, error)
 }
 
-// ---------------------------------------------------------------------------
-// Paginator — fluent builder (inspiré de morkid/paginate pg.With().Request().Response())
-// ---------------------------------------------------------------------------
+// ---------------------------
+// Paginator — fluent builder
+// ---------------------------
 
 // Paginator is a fluent builder for paginated queries.
-// Inspired by morkid/paginate's Pagination.With().Request().Response() chain.
 type Paginator struct {
 	cfg      PaginationConfig
 	cache    PaginationCacheAdapter
@@ -529,7 +514,7 @@ func (p *Paginator) WithCache(adapter PaginationCacheAdapter, ttl time.Duration)
 	return p
 }
 
-// With sets the list function (equivalent to morkid's pg.With(stmt)).
+// With sets the list function.
 func (p *Paginator) With(fn PaginatedListFunc) *PaginatorRequest {
 	return &PaginatorRequest{paginator: p, fn: fn}
 }
@@ -540,7 +525,7 @@ type PaginatorRequest struct {
 	fn        PaginatedListFunc
 }
 
-// Request attaches an HTTP request (equivalent to morkid's .Request(r)).
+// Request attaches an HTTP request.
 func (pr *PaginatorRequest) Request(r *http.Request) *PaginatorResponse {
 	params := ParsePaginationParamsWithConfig(r, pr.paginator.cfg)
 	return &PaginatorResponse{paginator: pr.paginator, fn: pr.fn, params: params, r: r}
@@ -554,7 +539,7 @@ type PaginatorResponse struct {
 	r         *http.Request
 }
 
-// Response executes the paginated query (equivalent to morkid's .Response(&[]T{})).
+// Response executes the paginated query.
 func (pr *PaginatorResponse) Response(ctx context.Context) *PageResult {
 	// Build cache key
 	cacheKey := fmt.Sprintf("page:%d:size:%d:search:%s:sort:%s:order:%s",
@@ -581,9 +566,9 @@ func (pr *PaginatorResponse) Response(ctx context.Context) *PageResult {
 	return pageResult
 }
 
-// ---------------------------------------------------------------------------
+// ---------------------------
 // PaginatedCRUDHandler — handler CRUD avec pagination
-// ---------------------------------------------------------------------------
+// ---------------------------
 // ...
 
 // PaginatedCRUDHandler handles CRUD operations with server-side pagination.
@@ -749,10 +734,6 @@ func (h *PaginatedCRUDHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 		}
 	}
 }
-
-// ---------------------------------------------------------------------------
-// SimplePaginatedResource — resource with built-in pagination
-// ---------------------------------------------------------------------------
 
 // SimplePaginatedResource extends SimpleResource with pagination support.
 type SimplePaginatedResource struct {

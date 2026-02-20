@@ -11,10 +11,6 @@ import (
 	"time"
 )
 
-// ---------------------------------------------------------------------------
-// DatabaseStyleType — (inspiré de go-saas DatabaseStyleType)
-// ---------------------------------------------------------------------------
-
 // DatabaseStyleType controls how tenant data is isolated.
 type DatabaseStyleType int32
 
@@ -26,10 +22,6 @@ const (
 	// DatabaseStyleMulti — hybrid: some tenants share, some are isolated.
 	DatabaseStyleMulti DatabaseStyleType = 1 << 2
 )
-
-// ---------------------------------------------------------------------------
-// ConnStrGenerator — (inspiré de go-saas ConnStrGenerator)
-// ---------------------------------------------------------------------------
 
 // ConnStrGenerator generates a database connection string for a tenant.
 type ConnStrGenerator interface {
@@ -50,17 +42,9 @@ func (d *DefaultConnStrGenerator) Gen(_ context.Context, tenant TenantInfo) (str
 	return fmt.Sprintf(d.format, tenant.GetId()), nil
 }
 
-// ---------------------------------------------------------------------------
-// MigrationHook — hook for running migrations on tenant DB creation
-// ---------------------------------------------------------------------------
-
 // MigrationHook is called after a tenant database is created or upgraded.
 // Use it to run schema migrations or seed data.
 type MigrationHook func(ctx context.Context, db *sql.DB, tenant TenantInfo) error
-
-// ---------------------------------------------------------------------------
-// TenantManagerConfig — configuration
-// ---------------------------------------------------------------------------
 
 // TenantManagerConfig holds configuration for TenantManager.
 type TenantManagerConfig struct {
@@ -77,12 +61,7 @@ type TenantManagerConfig struct {
 	ConnMaxIdleTime time.Duration
 }
 
-// ---------------------------------------------------------------------------
-// TenantManager — gestionnaire principal
-// ---------------------------------------------------------------------------
-
 // TenantManager handles automatic tenant database creation and management.
-// Inspired by go-saas's multi-tenancy patterns.
 type TenantManager struct {
 	cfg      TenantManagerConfig
 	store    TenantStore
@@ -99,7 +78,6 @@ func NewTenantManager(cfg TenantManagerConfig) (*TenantManager, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open master database: %w", err)
 	}
-	// Official Go connection pool settings
 	masterDB.SetMaxOpenConns(cfg.MaxOpenConns)
 	masterDB.SetMaxIdleConns(cfg.MaxIdleConns)
 	masterDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
@@ -180,7 +158,6 @@ func (tm *TenantManager) CreateTenant(ctx context.Context, cfg *TenantConfig) er
 		cfg.Meta = make(map[string]string)
 	}
 
-	// Auto-generate DSN via ConnStrGenerator (go-saas pattern)
 	if cfg.DatabaseDSN == "" {
 		dsn, err := tm.cfg.ConnStrGen.Gen(ctx, cfg)
 		if err != nil {
@@ -212,13 +189,11 @@ func (tm *TenantManager) provisionTenantDatabase(ctx context.Context, cfg *Tenan
 	}
 	defer db.Close()
 
-	// Apply connection pool settings to tenant DB too
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(3)
 	db.SetConnMaxLifetime(tm.cfg.ConnMaxLifetime)
 	db.SetConnMaxIdleTime(tm.cfg.ConnMaxIdleTime)
 
-	// Base schema: migration tracking table
 	_, err = db.ExecContext(ctx, `
 		CREATE TABLE IF NOT EXISTS schema_migrations (
 			version    TEXT PRIMARY KEY,
@@ -229,7 +204,6 @@ func (tm *TenantManager) provisionTenantDatabase(ctx context.Context, cfg *Tenan
 		return fmt.Errorf("create schema_migrations: %w", err)
 	}
 
-	// Run user-provided migration hook (go-saas Seed/Migrate pattern)
 	if tm.cfg.MigrationHook != nil {
 		if err := tm.cfg.MigrationHook(ctx, db, cfg); err != nil {
 			return fmt.Errorf("migration hook: %w", err)
@@ -288,23 +262,17 @@ func (tm *TenantManager) OpenTenantDB(ctx context.Context, nameOrId string) (*sq
 // Store returns the underlying TenantStore.
 func (tm *TenantManager) Store() TenantStore { return tm.store }
 
-// ---------------------------------------------------------------------------
-// TenantResolveContrib — résolveurs chaînés (inspiré de go-saas contrib pattern)
-// ---------------------------------------------------------------------------
-
 // TenantResolveContrib is a single resolver in a chain.
-// Inspired by go-saas's ContextContrib / contrib pattern.
 type TenantResolveContrib interface {
 	Name() string
 	Resolve(r *http.Request) (string, bool)
 }
 
 // ChainedTenantResolver tries multiple resolvers in order.
-// Inspired by go-saas's DefaultTenantResolver which chains multiple contribs.
 type ChainedTenantResolver struct {
-	store   TenantStore
+	store    TenantStore
 	contribs []TenantResolveContrib
-	cache   *tenantLRUCache
+	cache    *tenantLRUCache
 }
 
 // NewChainedTenantResolver creates a resolver that tries contribs in order.
@@ -320,7 +288,6 @@ func NewChainedTenantResolver(store TenantStore, ttl time.Duration, contribs ...
 func (r *ChainedTenantResolver) Resolve(req *http.Request) (*Tenant, bool) {
 	for _, contrib := range r.contribs {
 		if slug, ok := contrib.Resolve(req); ok && slug != "" {
-			// Check LRU cache first
 			if t, hit := r.cache.get(slug); hit {
 				return t, true
 			}
@@ -336,15 +303,13 @@ func (r *ChainedTenantResolver) Resolve(req *http.Request) (*Tenant, bool) {
 	return nil, false
 }
 
-// ---------------------------------------------------------------------------
-// Built-in contrib resolvers (inspiré de go-saas)
-// ---------------------------------------------------------------------------
-
 // DomainContrib resolves tenant from the full hostname.
 type DomainContrib struct{ BaseDomain string }
 
-func NewDomainContrib(baseDomain string) *DomainContrib { return &DomainContrib{BaseDomain: baseDomain} }
-func (c *DomainContrib) Name() string                   { return "domain" }
+func NewDomainContrib(baseDomain string) *DomainContrib {
+	return &DomainContrib{BaseDomain: baseDomain}
+}
+func (c *DomainContrib) Name() string { return "domain" }
 func (c *DomainContrib) Resolve(r *http.Request) (string, bool) {
 	host := stripPort(r.Host)
 	if c.BaseDomain != "" && strings.HasSuffix(host, "."+c.BaseDomain) {
@@ -392,20 +357,16 @@ func (c *CookieContrib) Resolve(r *http.Request) (string, bool) {
 // PathContrib resolves tenant from the first URL path segment (e.g. /acme/admin).
 type PathContrib struct{}
 
-func NewPathContrib() *PathContrib              { return &PathContrib{} }
-func (c *PathContrib) Name() string             { return "path" }
+func NewPathContrib() *PathContrib  { return &PathContrib{} }
+func (c *PathContrib) Name() string { return "path" }
 func (c *PathContrib) Resolve(r *http.Request) (string, bool) {
 	path := strings.TrimPrefix(r.URL.Path, "/")
 	seg := strings.SplitN(path, "/", 2)[0]
 	return seg, seg != ""
 }
 
-// ---------------------------------------------------------------------------
-// TenantDatabaseResolver — backward-compatible resolver using TenantManager
-// ---------------------------------------------------------------------------
-
 // TenantDatabaseResolver resolves tenants from the database registry.
-// Kept for backward compatibility; prefer ChainedTenantResolver for new code.
+// Prefer ChainedTenantResolver for new code.
 type TenantDatabaseResolver struct {
 	manager    *TenantManager
 	baseDomain string
@@ -443,10 +404,6 @@ func (r *TenantDatabaseResolver) Resolve(req *http.Request) (*Tenant, bool) {
 	r.cache.set(slug, t)
 	return t, true
 }
-
-// ---------------------------------------------------------------------------
-// tenantLRUCache — LRU cache with TTL (inspiré de go-saas Cache[K,V])
-// ---------------------------------------------------------------------------
 
 type tenantCacheEntry struct {
 	tenant *Tenant
@@ -486,7 +443,6 @@ func (c *tenantLRUCache) get(key string) (*Tenant, bool) {
 		delete(c.entries, key)
 		return nil, false
 	}
-	// Move to front (LRU)
 	c.moveToFront(key)
 	return e.tenant, true
 }
@@ -495,7 +451,6 @@ func (c *tenantLRUCache) set(key string, t *Tenant) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	if len(c.entries) >= c.cap {
-		// Evict oldest
 		if len(c.order) > 0 {
 			oldest := c.order[0]
 			c.order = c.order[1:]
@@ -528,10 +483,6 @@ func (c *tenantLRUCache) moveToFront(key string) {
 		}
 	}
 }
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 
 func stripPort(host string) string {
 	if idx := strings.LastIndex(host, ":"); idx != -1 {
