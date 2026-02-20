@@ -3,8 +3,8 @@ package engine
 import (
 	"context"
 	"net/http"
-
 	"sort"
+	"time"
 
 	"github.com/a-h/templ"
 	"github.com/alexedwards/scs/v2"
@@ -246,4 +246,53 @@ func (p *Panel) Router() http.Handler {
 	}
 
 	return mux
+}
+
+// ---------------------------------------------------------------------------
+// ServerOption — functional options for Server()
+// ---------------------------------------------------------------------------
+
+// ServerOption configures the http.Server returned by Panel.Server().
+type ServerOption func(*http.Server)
+
+// WithReadTimeout sets the server read timeout.
+func WithReadTimeout(d time.Duration) ServerOption {
+	return func(s *http.Server) { s.ReadTimeout = d }
+}
+
+// WithWriteTimeout sets the server write timeout.
+func WithWriteTimeout(d time.Duration) ServerOption {
+	return func(s *http.Server) { s.WriteTimeout = d }
+}
+
+// WithIdleTimeout sets the server idle timeout.
+func WithIdleTimeout(d time.Duration) ServerOption {
+	return func(s *http.Server) { s.IdleTimeout = d }
+}
+
+// Server creates an *http.Server with secure timeouts by default.
+// Override any timeout with the provided ServerOption functions.
+//
+//	srv := panel.Server(":8080")
+//	log.Fatal(srv.ListenAndServe())
+func (p *Panel) Server(addr string, opts ...ServerOption) *http.Server {
+	srv := &http.Server{
+		Addr:         addr,
+		Handler:      p.Router(),
+		ReadTimeout:  15 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  120 * time.Second,
+	}
+	for _, opt := range opts {
+		opt(srv)
+	}
+	return srv
+}
+
+// ListenAndServe starts the panel on addr with secure timeouts.
+// It blocks until the server stops.
+//
+//	log.Fatal(panel.ListenAndServe(":8080"))
+func (p *Panel) ListenAndServe(addr string, opts ...ServerOption) error {
+	return p.Server(addr, opts...).ListenAndServe()
 }
