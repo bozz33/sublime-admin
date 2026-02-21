@@ -14,7 +14,7 @@ import (
 
 // MFAConfig configures Multi-Factor Authentication behaviour.
 type MFAConfig struct {
-	// Issuer is the service name shown in authenticator apps (e.g. "SublimeAdmin").
+	// Issuer is the service name shown in authenticator apps (e.g. "SublimeGo Admin").
 	Issuer string
 	// Digits is the OTP length (default 6).
 	Digits int
@@ -31,7 +31,7 @@ type MFAConfig struct {
 // DefaultMFAConfig returns sensible defaults for TOTP-based MFA.
 func DefaultMFAConfig() *MFAConfig {
 	return &MFAConfig{
-		Issuer:            "SublimeAdmin",
+		Issuer:            "SublimeGo",
 		Digits:            6,
 		Period:            30,
 		Skew:              1,
@@ -212,6 +212,7 @@ func UseRecoveryCode(user *User, code string) bool {
 	normalised := strings.ToUpper(strings.TrimSpace(code))
 	for i, c := range codes {
 		if c == normalised {
+			// Remove the used code
 			codes = append(codes[:i], codes[i+1:]...)
 			user.Metadata["mfa_recovery_codes"] = codes
 			return true

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bozz33/sublimeadmin/export"
-	"github.com/bozz33/sublimeadmin/importer"
+	"github.com/bozz33/sublimego/export"
+	importer "github.com/bozz33/sublimego/import"
 )
 
 // ExportHandler serves CSV/Excel exports for a resource.
@@ -101,6 +101,7 @@ func (h *ImportHandler) handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = file.Close() }()
 
+	// Resource must implement ResourceImportable to handle rows
 	importable, ok := h.resource.(ResourceImportable)
 	if !ok {
 		http.Error(w, "This resource does not support import", http.StatusNotImplemented)

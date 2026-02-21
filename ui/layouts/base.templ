@@ -1,117 +1,93 @@
 package layouts
 
+import "fmt"
+
 // Base is the main skeleton of the SublimeGo application.
 // Hybrid configuration: Tailwind CDN + local assets (Alpine.js, HTMX, app.js, custom.css)
 templ Base(title string) {
+	{{ cfg := GetPanelConfig() }}
 	<!DOCTYPE html>
-	<html 
-		lang="en" 
+	<html
+		lang="en"
 		class="h-full"
-		x-data="{ 
-			darkMode: localStorage.getItem('darkMode') === 'true',
-			sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false',
-			sidebarMobileOpen: false
-		}"
-		x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); $watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val))"
+		x-data={ initAppData(cfg.DarkMode, cfg.SidebarCollapsible) }
+		x-init="$watch('darkMode', val => localStorage.setItem('theme', val ? 'dark' : 'light')); $watch('sidebarCollapsed', val => localStorage.setItem('sidebarCollapsed', val))"
 		:class="{ 'dark': darkMode }"
 	>
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<meta name="color-scheme" content="light dark"/>
-		<title>{ title } - { GetPanelConfig().Name }</title>
-		
+		<title>{ title } - { cfg.Name }</title>
+
 		<!-- Favicon -->
-		if GetPanelConfig().Favicon != "" {
-			<link rel="icon" href={ GetPanelConfig().Favicon }/>
+		if cfg.Favicon != "" {
+			<link rel="icon" href={ cfg.Favicon }/>
 		} else {
 			<link rel="icon" href="/assets/favicon.ico"/>
 		}
-		
-		<!-- Tailwind CSS CDN -->
-		<script src="https://cdn.tailwindcss.com"></script>
-		<script>
-			tailwind.config = {
-				darkMode: 'class',
-				theme: {
-					extend: {
-						colors: {
-							primary: {
-								50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
-								400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d',
-								800: '#166534', 900: '#14532d'
-							}
-						},
-						fontFamily: { sans: ['Inter', 'sans-serif'] }
-					}
-				}
-			}
-		</script>
-		
+
+		<!-- Dynamic CSS Variables (Filament-style: color injected from PanelConfig) -->
+		@templ.Raw(fmt.Sprintf("<style>%s</style>", primaryCSSVars(cfg.PrimaryColor)))
+
+		<!-- Tailwind CSS (compilé localement — Tailwind v4) -->
+		<link href="/assets/css/output.css" rel="stylesheet"/>
+
 		<!-- Fonts (CDN) -->
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 		<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
-		
+
 		<!-- Custom styles (local) -->
 		<link href="/assets/css/custom.css" rel="stylesheet"/>
-		
+
 		<!-- Alpine.js (local) -->
 		<script src="/assets/js/alpine.min.js" defer></script>
-		
+
 		<!-- HTMX (local) -->
 		<script src="/assets/js/htmx.min.js"></script>
-		
+
 		<!-- ApexCharts (CDN) -->
 		<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-		
+
 		<!-- App JS (local) -->
 		<script src="/assets/js/app.js" defer></script>
-		
+
+		<!-- Charts JS (local) -->
+		<script src="/assets/js/charts.js" defer></script>
+
 		<style>[x-cloak] { display: none !important; }</style>
 	</head>
-	<body class="h-full bg-gray-50 dark:bg-gray-900 font-sans antialiased text-gray-900 dark:text-gray-100 transition-colors duration-300">
-		<!-- Sidebar (includes mobile overlay + mobile sidebar) -->
-		@Sidebar()
+	<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
+		<!-- Layout: Sidebar + Main -->
+		<div class="flex min-h-screen">
+			<!-- Sidebar (desktop + mobile) -->
+			@Sidebar(ctx)
 
-		<!-- Main Content Area -->
-		<div 
-			id="main-content"
-			class="flex-1 flex flex-col min-h-screen transition-all duration-300"
-			:class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'"
-		>
-			<!-- Header -->
-			@Topbar(ctx)
+			<!-- Main Content Area -->
+			<div
+				id="main-content"
+				:class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'"
+				class="flex-1 flex flex-col min-h-screen transition-all duration-300"
+			>
+				<!-- Header -->
+				@Topbar(ctx)
 
-			<!-- Main Content -->
-			<main class="flex-1 p-4 lg:p-6">
-				<div class="max-w-7xl mx-auto">
+				<!-- Main Content -->
+				<main class="flex-1 p-4 lg:p-6">
 					<!-- Flash Messages Container -->
 					<div id="flash-container" class="mb-6">
 						@Flash()
 					</div>
-					
+
 					<!-- Page Content -->
-					{ children... }
-				</div>
-			</main>
-			
-			<!-- Footer -->
-			if GetPanelConfig().FooterEnabled {
-				<footer class="mt-auto border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
-					<div class="max-w-7xl mx-auto px-4 lg:px-6 py-4">
-						<div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-							<p>© 2024 { GetPanelConfig().Name }. All rights reserved.</p>
-							if len(GetPanelConfig().FooterLinks) > 0 {
-								<div class="flex gap-6">
-									for _, link := range GetPanelConfig().FooterLinks {
-										<a href={ templ.SafeURL(link.URL) } class="hover:text-primary-600 transition-colors">{ link.Label }</a>
-									}
-								</div>
-							}
-						</div>
+					<div class="max-w-7xl mx-auto">
+						{ children... }
 					</div>
-				</footer>
-			}
+				</main>
+
+				<!-- Footer -->
+				@Footer()
+			</div>
 		</div>
 
 		<!-- Toast Container -->

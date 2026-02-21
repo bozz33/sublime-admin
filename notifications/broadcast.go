@@ -9,18 +9,24 @@ import (
 	"time"
 )
 
-// Broadcaster manages Server-Sent Events connections for real-time
-// notification delivery. Each connected client gets a dedicated channel.
-// Broadcast() fans out a notification to every subscriber of a given user.
-// BroadcastAll() fans out to every connected client (system-wide alerts).
+// Broadcaster manages WebSocket-like broadcast connections for real-time
+// notification delivery. It uses Server-Sent Events (SSE) as the transport
+// because SSE is natively supported by browsers, requires no external
+// dependencies, and works through proxies/load-balancers without special
+// configuration. For true WebSocket support, wrap this with nhooyr.io/websocket.
+//
+// Architecture:
+//   - Each connected client gets a dedicated channel.
+//   - Broadcast() fans out a notification to every subscriber of a given user.
+//   - BroadcastAll() fans out to every connected client (system-wide alerts).
 type Broadcaster struct {
 	mu      sync.RWMutex
-	clients map[string]map[*sseClient]struct{} // userID -> set of clients
+	clients map[string]map[*client]struct{} // userID -> set of clients
 	logger  *slog.Logger
 }
 
-// sseClient represents a single connected SSE client.
-type sseClient struct {
+// client represents a single connected SSE client.
+type client struct {
 	ch     chan *Notification
 	userID string
 }
@@ -31,7 +37,7 @@ func NewBroadcaster(logger *slog.Logger) *Broadcaster {
 		logger = slog.Default()
 	}
 	return &Broadcaster{
-		clients: make(map[string]map[*sseClient]struct{}),
+		clients: make(map[string]map[*client]struct{}),
 		logger:  logger,
 	}
 }
@@ -39,14 +45,14 @@ func NewBroadcaster(logger *slog.Logger) *Broadcaster {
 // Subscribe registers a new client for the given user and returns a
 // receive-only channel. The channel is closed when ctx is cancelled.
 func (b *Broadcaster) Subscribe(ctx context.Context, userID string) <-chan *Notification {
-	c := &sseClient{
+	c := &client{
 		ch:     make(chan *Notification, 32),
 		userID: userID,
 	}
 
 	b.mu.Lock()
 	if b.clients[userID] == nil {
-		b.clients[userID] = make(map[*sseClient]struct{})
+		b.clients[userID] = make(map[*client]struct{})
 	}
 	b.clients[userID][c] = struct{}{}
 	b.mu.Unlock()
@@ -117,7 +123,7 @@ func (b *Broadcaster) ConnectedClients() int {
 }
 
 // ServeSSE is an http.HandlerFunc that streams notifications via SSE.
-// userIDFunc extracts the authenticated user ID from the request.
+// It expects userIDFunc to extract the authenticated user ID from the request.
 func (b *Broadcaster) ServeSSE(userIDFunc func(r *http.Request) string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		userID := userIDFunc(r)
@@ -139,11 +145,13 @@ func (b *Broadcaster) ServeSSE(userIDFunc func(r *http.Request) string) http.Han
 
 		ch := b.Subscribe(r.Context(), userID)
 
+		// Send initial heartbeat so the client knows the connection is alive.
 		writeSSEEvent(w, "connected", map[string]any{
 			"time": time.Now().UTC().Format(time.RFC3339),
 		})
 		flusher.Flush()
 
+		// Heartbeat ticker to keep the connection alive through proxies.
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
 

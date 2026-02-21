@@ -38,6 +38,8 @@ func init() {
 }
 
 // Register adds a render function at the given position.
+// Multiple functions can be registered at the same position; they are
+// rendered in registration order.
 func Register(pos Position, fn RenderFunc) {
 	registry.mu.Lock()
 	defer registry.mu.Unlock()
@@ -45,6 +47,7 @@ func Register(pos Position, fn RenderFunc) {
 }
 
 // Render returns a Templ component that renders all hooks at the given position.
+// Returns nil if no hooks are registered at that position.
 func Render(pos Position) templ.Component {
 	registry.mu.RLock()
 	fns := registry.hooks[pos]

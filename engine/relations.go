@@ -126,20 +126,16 @@ func (rb *RelationBuilder) Build() *Relation {
 
 // RelationAware is the interface for resources that have relations.
 type RelationAware interface {
+	// GetRelations returns the relations defined for this resource.
 	GetRelations() []*Relation
 }
 
 // RelationLoader is the interface for loading related data.
 type RelationLoader interface {
+	// LoadRelation loads related data for an item.
 	LoadRelation(ctx context.Context, item any, relation *Relation) (any, error)
+	// LoadRelations loads multiple relations for an item.
 	LoadRelations(ctx context.Context, item any, relations []*Relation) (map[string]any, error)
-}
-
-// SelectOption represents an option in a select field.
-type SelectOption struct {
-	Value    string
-	Label    string
-	Selected bool
 }
 
 // RelationOptions provides options for select fields based on relations.
@@ -152,16 +148,29 @@ type RelationOptions struct {
 	EmptyLabel  string
 }
 
+// SelectOption represents an option in a select field.
+type SelectOption struct {
+	Value    string
+	Label    string
+	Selected bool
+}
+
 // GetRelationOptions fetches options for a relation from the registry.
 func GetRelationOptions(ctx context.Context, relation *Relation, selectedID any) (*RelationOptions, error) {
-	return &RelationOptions{
+	opts := &RelationOptions{
 		Relation:    relation,
 		Options:     make([]SelectOption, 0),
 		SelectedID:  selectedID,
 		Placeholder: fmt.Sprintf("Select %s", relation.Name),
 		AllowEmpty:  true,
 		EmptyLabel:  "-- None --",
-	}, nil
+	}
+
+	// This would be implemented to fetch from the related resource
+	// For now, return empty options - the actual implementation would
+	// use the registry to find the related resource and fetch its data
+
+	return opts, nil
 }
 
 // ExtractRelatedID extracts the related ID from an item using reflection.
@@ -173,8 +182,10 @@ func ExtractRelatedID(item any, foreignKey string) any {
 	if val.Kind() != reflect.Struct {
 		return nil
 	}
+
 	field := val.FieldByName(foreignKey)
 	if !field.IsValid() {
+		// Try with different casing
 		for i := 0; i < val.NumField(); i++ {
 			if val.Type().Field(i).Tag.Get("json") == foreignKey {
 				field = val.Field(i)
@@ -182,6 +193,7 @@ func ExtractRelatedID(item any, foreignKey string) any {
 			}
 		}
 	}
+
 	if field.IsValid() && field.CanInterface() {
 		return field.Interface()
 	}
@@ -197,10 +209,12 @@ func SetRelatedID(item any, foreignKey string, value any) error {
 	if val.Kind() != reflect.Struct {
 		return fmt.Errorf("item must be a struct")
 	}
+
 	field := val.FieldByName(foreignKey)
 	if !field.IsValid() || !field.CanSet() {
 		return fmt.Errorf("cannot set field %s", foreignKey)
 	}
+
 	field.Set(reflect.ValueOf(value))
 	return nil
 }
@@ -212,7 +226,7 @@ type RelationSchema struct {
 	Related    string
 	ForeignKey string
 	Nullable   bool
-	OnDelete   string
+	OnDelete   string // CASCADE, SET NULL, RESTRICT
 	OnUpdate   string
 }
 
@@ -234,26 +248,42 @@ func GetRelationSchema(relation *Relation) *RelationSchema {
 // ---------------------------------------------------------------------------
 
 // RelationManager is the interface for managing a related resource within a parent resource.
+// Equivalent to Filament's RelationManager class.
 type RelationManager interface {
+	// Name returns the unique identifier of this relation manager (e.g. "posts").
 	Name() string
+	// Label returns the display label for the tab (e.g. "Posts").
 	Label() string
+	// Icon returns the icon for the tab.
 	Icon() string
+	// RelationName returns the name of the relation on the parent model.
 	RelationName() string
+	// RelationType returns the type of relation (has_many, many_to_many).
 	RelationType() RelationType
 
+	// ListRelated returns the related items for a given parent ID.
 	ListRelated(ctx context.Context, parentID string) ([]any, error)
+	// AttachRelated attaches a related item to the parent (ManyToMany).
 	AttachRelated(ctx context.Context, parentID, relatedID string) error
+	// DetachRelated detaches a related item from the parent (ManyToMany).
 	DetachRelated(ctx context.Context, parentID, relatedID string) error
+	// CreateRelated creates a new related item linked to the parent (HasMany).
 	CreateRelated(ctx context.Context, parentID string, r *http.Request) error
+	// DeleteRelated deletes a related item.
 	DeleteRelated(ctx context.Context, parentID, relatedID string) error
 
+	// Columns returns the columns to display in the sub-table.
 	Columns() []Column
+	// CanAttach returns whether the user can attach items.
 	CanAttach(ctx context.Context) bool
+	// CanCreate returns whether the user can create related items.
 	CanCreate(ctx context.Context) bool
+	// CanDelete returns whether the user can delete related items.
 	CanDelete(ctx context.Context) bool
 }
 
 // BaseRelationManager provides default no-op implementations for RelationManager.
+// Embed this in your concrete relation managers and override what you need.
 type BaseRelationManager struct {
 	name         string
 	label        string
@@ -309,6 +339,13 @@ type RelationManagerAware interface {
 // ---------------------------------------------------------------------------
 
 // RelationManagerHandler handles HTTP requests for relation manager sub-tables.
+// Routes handled:
+//
+//	GET    /{parentID}/relations/{name}              -> list related items (JSON)
+//	POST   /{parentID}/relations/{name}              -> create related item
+//	POST   /{parentID}/relations/{name}/attach       -> attach (ManyToMany)
+//	POST   /{parentID}/relations/{name}/detach/{id}  -> detach (ManyToMany)
+//	DELETE /{parentID}/relations/{name}/{id}         -> delete related item
 type RelationManagerHandler struct {
 	resource Resource
 	managers map[string]RelationManager
@@ -365,6 +402,7 @@ func (h *RelationManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// parseRelationPath extracts parentID, relationName, subAction, relatedID from the URL.
 func (h *RelationManagerHandler) parseRelationPath(r *http.Request) (parentID, relationName, subAction, relatedID string, ok bool) {
 	path := strings.TrimPrefix(r.URL.Path, "/")
 	parts := strings.SplitN(path, "/", 4)

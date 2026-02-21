@@ -1,101 +1,82 @@
 package table
 
-import "fmt"
+import "context"
 
-// BulkAction defines an action that can be applied to multiple selected rows.
+// BulkAction represents an action that applies to multiple selected rows.
 type BulkAction struct {
-	Name                 string
-	Label                string
-	Icon                 string
-	Color                string
-	Method               string
-	URL                  string
-	RequiresConfirmation bool
-	ModalTitle           string
-	ModalDescription     string
+	LabelStr    string
+	IconStr     string
+	ColorStr    string
+	RequireConf bool
+	ConfTitle   string
+	ConfDesc    string
+	Handler     func(ctx context.Context, ids []string) error
+	VisibleFn   func(ctx context.Context) bool
 }
 
-// NewBulkAction creates a new bulk action.
-func NewBulkAction(name string) *BulkAction {
+// BulkDelete creates a pre-configured bulk delete action.
+func BulkDelete() *BulkAction {
 	return &BulkAction{
-		Name:   name,
-		Label:  name,
-		Color:  "gray",
-		Method: "POST",
+		LabelStr:    "Delete selected",
+		IconStr:     "trash",
+		ColorStr:    "danger",
+		RequireConf: true,
+		ConfTitle:   "Delete selected records",
+		ConfDesc:    "Are you sure you want to delete the selected records? This action cannot be undone.",
 	}
 }
 
-// SetLabel sets the display label.
-func (b *BulkAction) SetLabel(label string) *BulkAction {
-	b.Label = label
+// BulkExport creates a pre-configured bulk export action.
+func BulkExport() *BulkAction {
+	return &BulkAction{
+		LabelStr: "Export selected",
+		IconStr:  "download",
+		ColorStr: "secondary",
+	}
+}
+
+// NewBulkAction creates a custom bulk action.
+func NewBulkAction(label, icon, color string) *BulkAction {
+	return &BulkAction{
+		LabelStr: label,
+		IconStr:  icon,
+		ColorStr: color,
+	}
+}
+
+// WithHandler sets the server-side handler for the bulk action.
+func (b *BulkAction) WithHandler(fn func(ctx context.Context, ids []string) error) *BulkAction {
+	b.Handler = fn
 	return b
 }
 
-// SetIcon sets the icon name.
-func (b *BulkAction) SetIcon(icon string) *BulkAction {
-	b.Icon = icon
+// RequireConfirmation enables a confirmation modal before executing.
+func (b *BulkAction) RequireConfirmation(title, desc string) *BulkAction {
+	b.RequireConf = true
+	b.ConfTitle = title
+	b.ConfDesc = desc
 	return b
 }
 
-// SetColor sets the color variant.
-func (b *BulkAction) SetColor(color string) *BulkAction {
-	b.Color = color
+// VisibleWhen sets a visibility condition for the action.
+func (b *BulkAction) VisibleWhen(fn func(ctx context.Context) bool) *BulkAction {
+	b.VisibleFn = fn
 	return b
 }
 
-// SetURL sets the endpoint URL for the bulk action.
-func (b *BulkAction) SetURL(url string) *BulkAction {
-	b.URL = url
-	return b
+// IsVisible returns whether the action should be shown.
+func (b *BulkAction) IsVisible(ctx context.Context) bool {
+	if b.VisibleFn != nil {
+		return b.VisibleFn(ctx)
+	}
+	return true
 }
 
-// SetMethod sets the HTTP method (default POST).
-func (b *BulkAction) SetMethod(method string) *BulkAction {
-	b.Method = method
-	return b
-}
+// GetLabel returns the action label.
+func (b *BulkAction) GetLabel() string { return b.LabelStr }
 
-// RequiresDialog enables a confirmation modal before executing the action.
-func (b *BulkAction) RequiresDialog(title, desc string) *BulkAction {
-	b.RequiresConfirmation = true
-	b.ModalTitle = title
-	b.ModalDescription = desc
-	return b
-}
+// GetIcon returns the action icon name.
+func (b *BulkAction) GetIcon() string { return b.IconStr }
 
-// BulkDelete creates a standard bulk delete action.
-func BulkDelete(baseURL string) *BulkAction {
-	return NewBulkAction("bulk-delete").
-		SetLabel("Delete selected").
-		SetIcon("trash").
-		SetColor("danger").
-		SetURL(fmt.Sprintf("%s/bulk-delete", baseURL)).
-		SetMethod("DELETE").
-		RequiresDialog("Delete selected items?", "This action cannot be undone.")
-}
-
-// BulkExport creates a standard bulk export action (CSV).
-func BulkExport(baseURL string) *BulkAction {
-	return NewBulkAction("bulk-export").
-		SetLabel("Export selected").
-		SetIcon("download").
-		SetColor("secondary").
-		SetURL(fmt.Sprintf("%s/bulk-export?format=csv", baseURL)).
-		SetMethod("POST")
-}
-
-// BulkRestore creates a standard bulk restore action (soft-delete recovery).
-func BulkRestore(baseURL string) *BulkAction {
-	return NewBulkAction("bulk-restore").
-		SetLabel("Restore selected").
-		SetIcon("refresh").
-		SetColor("success").
-		SetURL(fmt.Sprintf("%s/bulk-restore", baseURL)).
-		SetMethod("POST")
-}
-
-// WithBulkActions adds bulk actions to the table.
-func (t *Table) WithBulkActions(actions ...*BulkAction) *Table {
-	t.BulkActions = append(t.BulkActions, actions...)
-	return t
-}
+// GetColor returns the action color variant.
+func (b *BulkAction) GetColor() string { return b.ColorStr }

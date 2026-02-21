@@ -1,0 +1,97 @@
+package errors
+
+// Error404Data contains data for the 404 page
+type Error404Data struct {
+	Path      string
+	RequestID string
+}
+
+// Page404 displays the 404 error page
+templ Page404(data Error404Data) {
+	<!DOCTYPE html>
+	<html lang="en" class="h-full">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>404 - Page Not Found</title>
+			<script src="https://cdn.tailwindcss.com"></script>
+		</head>
+		<body class="h-full bg-gray-50">
+			<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+				<div class="sm:mx-auto sm:w-full sm:max-w-md">
+					<!-- Logo / Brand -->
+					<div class="flex justify-center">
+						<div class="flex items-center space-x-3">
+							<div class="w-12 h-12 bg-indigo-600 rounded-lg flex items-center justify-center">
+								<span class="text-white font-bold text-xl">S</span>
+							</div>
+							<span class="text-2xl font-bold text-gray-900">SublimeGo</span>
+						</div>
+					</div>
+					
+					<!-- Error code -->
+					<div class="mt-8 text-center">
+						<h1 class="text-9xl font-extrabold text-indigo-600">404</h1>
+						<h2 class="mt-4 text-3xl font-bold text-gray-900">Page Not Found</h2>
+						<p class="mt-2 text-base text-gray-600">
+							The page you are looking for does not exist or has been moved.
+						</p>
+					</div>
+					
+					<!-- Technical information -->
+					if data.Path != "" {
+						<div class="mt-6 bg-white rounded-lg shadow px-4 py-3">
+							<dl class="space-y-2 text-sm">
+								<div class="flex justify-between">
+									<dt class="font-medium text-gray-500">Requested path:</dt>
+									<dd class="text-gray-900 font-mono">{ data.Path }</dd>
+								</div>
+								if data.RequestID != "" {
+									<div class="flex justify-between">
+										<dt class="font-medium text-gray-500">Request ID:</dt>
+										<dd class="text-gray-900 font-mono text-xs">{ data.RequestID }</dd>
+									</div>
+								}
+							</dl>
+						</div>
+					}
+					
+					<!-- Actions -->
+					<div class="mt-8 space-y-3">
+						<a
+							href="/"
+							class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
+						>
+							<span class="material-icons-outlined">home</span>
+							Retour à l'accueil
+						</a>
+						
+						<button
+							onclick="history.back()"
+							class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition"
+						>
+							<span class="material-icons-outlined">arrow_back</span>
+							Page précédente
+						</button>
+					</div>
+					
+					<!-- Help text -->
+					<div class="mt-6 text-center text-sm text-gray-500">
+						if data.RequestID != "" {
+							<p>
+								If you think this is an error,
+								<a href="/contact" class="font-medium text-indigo-600 hover:text-indigo-500">contact support</a>
+								with the request ID above.
+							</p>
+						} else {
+							<p>
+								If you think this is an error,
+								<a href="/contact" class="font-medium text-indigo-600 hover:text-indigo-500">contact support</a>.
+							</p>
+						}
+					</div>
+				</div>
+			</div>
+		</body>
+	</html>
+}

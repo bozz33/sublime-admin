@@ -18,7 +18,7 @@ import (
 //
 // Usage:
 //
-//	mux := http.NewServeMux()
+//	panel.WithMiddleware(engine.PprofAuthMiddleware("secret-token"))
 //	engine.EnablePprof(mux)
 func EnablePprof(mux *http.ServeMux) {
 	mux.Handle("/debug/pprof/", http.DefaultServeMux)
@@ -65,6 +65,7 @@ func (e *etagResponseWriter) Write(b []byte) (int, error) {
 // Only applied to 200 OK HTML responses to avoid buffering large exports.
 func ETagMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Only GET/HEAD benefit from ETags
 		if r.Method != http.MethodGet && r.Method != http.MethodHead {
 			next.ServeHTTP(w, r)
 			return
@@ -73,6 +74,7 @@ func ETagMiddleware(next http.Handler) http.Handler {
 		erw := &etagResponseWriter{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(erw, r)
 
+		// Only cache HTML 200 responses
 		ct := w.Header().Get("Content-Type")
 		if erw.status != http.StatusOK || !strings.Contains(ct, "text/html") {
 			if erw.status != http.StatusOK {

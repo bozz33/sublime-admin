@@ -7,6 +7,7 @@ import (
 )
 
 // Mailer is the interface for sending emails.
+// Implement it to plug in any email provider (SMTP, SendGrid, Mailgun, etc.).
 type Mailer interface {
 	Send(msg Message) error
 }
@@ -22,7 +23,9 @@ type Message struct {
 // NoopMailer discards all messages (useful for development / testing).
 type NoopMailer struct{}
 
-func (n *NoopMailer) Send(msg Message) error { return nil }
+func (n *NoopMailer) Send(msg Message) error {
+	return nil
+}
 
 // LogMailer prints messages to stdout (useful for development).
 type LogMailer struct{}

@@ -46,7 +46,9 @@ func NewCSRFManager(config ...CSRFConfig) *CSRFManager {
 	if len(config) > 0 {
 		cfg = config[0]
 	}
-	return &CSRFManager{config: cfg}
+	return &CSRFManager{
+		config: cfg,
+	}
 }
 
 // GenerateToken generates a new CSRF token.
@@ -60,7 +62,7 @@ func (m *CSRFManager) GenerateToken() (string, error) {
 	return token, nil
 }
 
-// ValidateToken checks if a token is valid and not expired.
+// ValidateToken checks if a token is valid.
 func (m *CSRFManager) ValidateToken(token string) bool {
 	if token == "" {
 		return false

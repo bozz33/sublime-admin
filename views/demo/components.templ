@@ -1,0 +1,278 @@
+package demo
+
+import (
+	"github.com/bozz33/sublimego/ui/layouts"
+	"github.com/bozz33/sublimego/ui/atoms"
+)
+
+templ Components() {
+	@layouts.Base("Components Demo") {
+		<div class="space-y-8">
+			<h1 class="text-3xl font-bold text-gray-900 dark:text-white">Phase 1 Components Test</h1>
+			
+			// Section Boutons
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Buttons"}) {
+					<div class="flex flex-wrap gap-4">
+						@atoms.Button(atoms.ButtonProps{Text: "Primary", Variant: "primary"})
+						@atoms.Button(atoms.ButtonProps{Text: "Secondary", Variant: "secondary"})
+						@atoms.Button(atoms.ButtonProps{Text: "Danger", Variant: "danger"})
+						@atoms.Button(atoms.ButtonProps{Text: "Ghost", Variant: "ghost"})
+						@atoms.Button(atoms.ButtonProps{Text: "Small", Size: "sm"})
+						@atoms.Button(atoms.ButtonProps{Text: "Large", Size: "lg"})
+					</div>
+				}
+			</section>
+
+			// Section Inputs
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Form Fields"}) {
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						@atoms.Input(atoms.InputProps{
+							Name: "email",
+							Label: "Email",
+							Type: "email",
+							Placeholder: "example@email.com",
+							Required: true,
+						})
+						@atoms.Input(atoms.InputProps{
+							Name: "password",
+							Label: "Password",
+							Type: "password",
+							Placeholder: "••••••••",
+						})
+						@atoms.Input(atoms.InputProps{
+							Name: "error_field",
+							Label: "Field with error",
+							Value: "invalid value",
+							Error: "This field contains an error",
+						})
+						@atoms.Input(atoms.InputProps{
+							Name: "disabled_field",
+							Label: "Disabled field",
+							Value: "Not editable",
+							Disabled: true,
+						})
+					</div>
+				}
+			</section>
+
+			// Section Select & Toggle
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Select, Toggle & Checkbox"}) {
+					<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+						@atoms.Select(atoms.SelectProps{
+							Name: "role",
+							Label: "Role",
+							Options: []atoms.SelectOption{
+								{Label: "Administrator", Value: "admin"},
+								{Label: "User", Value: "user"},
+								{Label: "Guest", Value: "guest"},
+							},
+							Value: "user",
+						})
+						<div>
+							<label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Toggle</label>
+							@atoms.Toggle(atoms.ToggleProps{Name: "active", Label: "Active", Checked: true})
+						</div>
+						<div>
+							<label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Checkbox</label>
+							@atoms.Checkbox(atoms.CheckboxProps{Name: "terms", Label: "I accept the terms", Checked: true})
+						</div>
+					</div>
+				}
+			</section>
+
+			// Section Radio
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Radio Buttons"}) {
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						@atoms.Radio(atoms.RadioProps{
+							Name: "plan",
+							Label: "Choose a plan",
+							Options: []atoms.RadioOption{
+								{Label: "Free", Value: "free"},
+								{Label: "Pro", Value: "pro"},
+								{Label: "Enterprise", Value: "enterprise"},
+							},
+							Value: "pro",
+						})
+						@atoms.Radio(atoms.RadioProps{
+							Name: "size",
+							Label: "Size (inline)",
+							Options: []atoms.RadioOption{
+								{Label: "S", Value: "s"},
+								{Label: "M", Value: "m"},
+								{Label: "L", Value: "l"},
+								{Label: "XL", Value: "xl"},
+							},
+							Value: "m",
+							Inline: true,
+						})
+					</div>
+				}
+			</section>
+
+			// Section Textarea
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Textarea"}) {
+					@atoms.Textarea(atoms.TextareaProps{
+						Name: "description",
+						Label: "Description",
+						Placeholder: "Enter a description...",
+						Rows: 4,
+					})
+				}
+			</section>
+
+			// Section DatePicker & FileUpload
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "DatePicker & FileUpload"}) {
+					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+						@atoms.DatePicker(atoms.DatePickerProps{
+							Name: "birthdate",
+							Label: "Date of birth",
+							Type: "date",
+						})
+						@atoms.FileUpload(atoms.FileUploadProps{
+							Name: "avatar",
+							Label: "Profile picture",
+							Accept: "image/*",
+							HelpText: "PNG, JPG or GIF (max 2MB)",
+						})
+					</div>
+				}
+			</section>
+
+			// Section Badges & Avatar
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Badges & Avatar"}) {
+					<div class="flex flex-wrap items-center gap-4">
+						@atoms.Badge(atoms.BadgeProps{Text: "Default"})
+						@atoms.Badge(atoms.BadgeProps{Text: "Green", Variant: "green"})
+						@atoms.Badge(atoms.BadgeProps{Text: "Red", Variant: "red"})
+						@atoms.Badge(atoms.BadgeProps{Text: "Yellow", Variant: "yellow"})
+						@atoms.Badge(atoms.BadgeProps{Text: "Purple", Variant: "purple"})
+						<div class="flex items-center gap-2">
+							@atoms.Avatar(atoms.AvatarProps{Size: "sm", Rounded: true})
+							@atoms.Avatar(atoms.AvatarProps{Size: "md", Rounded: true})
+							@atoms.Avatar(atoms.AvatarProps{Size: "lg", Rounded: true})
+						</div>
+					</div>
+				}
+			</section>
+
+			// Section Alert & Toast
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Alerts"}) {
+					<div class="space-y-2">
+						@atoms.Alert(atoms.AlertProps{Type: "info", Message: "This is an information alert.", Dismissible: true})
+						@atoms.Alert(atoms.AlertProps{Type: "success", Message: "Operation successful!", Dismissible: true})
+						@atoms.Alert(atoms.AlertProps{Type: "warning", Message: "Warning, action required.", Dismissible: true})
+						@atoms.Alert(atoms.AlertProps{Type: "error", Message: "An error occurred.", Dismissible: true})
+					</div>
+				}
+			</section>
+
+			// Section Spinner
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Spinners"}) {
+					<div class="flex flex-wrap items-center gap-6">
+						@atoms.Spinner(atoms.SpinnerProps{Size: "sm"})
+						@atoms.Spinner(atoms.SpinnerProps{Size: "md"})
+						@atoms.Spinner(atoms.SpinnerProps{Size: "lg", Color: "green"})
+						@atoms.Spinner(atoms.SpinnerProps{Size: "md", Color: "red", Text: "Loading..."})
+						@atoms.SpinnerButton("Submit", false)
+						@atoms.SpinnerButton("Submitting...", true)
+					</div>
+				}
+			</section>
+
+			// Section Table
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Table"}) {
+					@atoms.Table() {
+						@atoms.TableHeader([]string{"Name", "Email", "Role", "Status", "Actions"})
+						@atoms.TableBody() {
+							@atoms.TableRow() {
+								@atoms.TableCellBold() {
+									John Doe
+								}
+								@atoms.TableCell() {
+									jean@example.com
+								}
+								@atoms.TableCell() {
+									@atoms.Badge(atoms.BadgeProps{Text: "Admin", Variant: "purple"})
+								}
+								@atoms.TableCell() {
+									@atoms.Badge(atoms.BadgeProps{Text: "Active", Variant: "green"})
+								}
+								@atoms.TableActions() {
+									@atoms.Button(atoms.ButtonProps{Text: "Edit", Variant: "secondary", Size: "sm"})
+									@atoms.Button(atoms.ButtonProps{Text: "Delete", Variant: "danger", Size: "sm"})
+								}
+							}
+							@atoms.TableRow() {
+								@atoms.TableCellBold() {
+									Jane Smith
+								}
+								@atoms.TableCell() {
+									marie@example.com
+								}
+								@atoms.TableCell() {
+									@atoms.Badge(atoms.BadgeProps{Text: "User", Variant: "default"})
+								}
+								@atoms.TableCell() {
+									@atoms.Badge(atoms.BadgeProps{Text: "Inactive", Variant: "red"})
+								}
+								@atoms.TableActions() {
+									@atoms.Button(atoms.ButtonProps{Text: "Edit", Variant: "secondary", Size: "sm"})
+									@atoms.Button(atoms.ButtonProps{Text: "Delete", Variant: "danger", Size: "sm"})
+								}
+							}
+						}
+					}
+					<div class="mt-4">
+						@atoms.Pagination(atoms.PaginationProps{CurrentPage: 1, TotalPages: 5, BaseURL: "/demo"})
+					</div>
+				}
+			</section>
+
+			// Section Modal
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Modal"}) {
+					<div class="flex gap-4">
+						@atoms.ModalTrigger("demo-modal") {
+							@atoms.Button(atoms.ButtonProps{Text: "Open Modal", Variant: "primary"})
+						}
+					</div>
+					@atoms.Modal(atoms.ModalProps{ID: "demo-modal", Title: "Modal Example", Size: "md"}) {
+						<p class="text-gray-500 dark:text-gray-400">
+							This is the modal content. You can put any component here.
+						</p>
+						<div class="mt-4 flex justify-end gap-2">
+							@atoms.Button(atoms.ButtonProps{Text: "Cancel", Variant: "secondary"})
+							@atoms.Button(atoms.ButtonProps{Text: "Confirm", Variant: "primary"})
+						</div>
+					}
+				}
+			</section>
+
+			// Section Dropdown
+			<section>
+				@atoms.Card(atoms.CardProps{Title: "Dropdown"}) {
+					@atoms.Dropdown(atoms.DropdownProps{
+						ID: "demo-dropdown",
+						ButtonText: "Actions",
+						Items: []atoms.DropdownItem{
+							{Label: "Edit", Href: "#"},
+							{Label: "Duplicate", Href: "#"},
+							{Label: "Delete", Href: "#"},
+						},
+					})
+				}
+			</section>
+
+		</div>
+	}
+}

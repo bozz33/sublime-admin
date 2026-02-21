@@ -8,23 +8,30 @@ import (
 
 // TextColumn represents a text column.
 type TextColumn struct {
-	Key          string
+	colKey       string
 	LabelStr     string
 	SortableFlag bool
 	SearchFlag   bool
 	CopyFlag     bool
+	ValueFunc    func(item any) string // optional: replaces reflect-based lookup
 }
 
 // Text creates a new text column.
 func Text(key string) *TextColumn {
 	return &TextColumn{
-		Key:      key,
+		colKey:   key,
 		LabelStr: key,
 	}
 }
 
-// Label sets the column label.
-func (c *TextColumn) Label(label string) *TextColumn {
+// Using sets a custom accessor function, bypassing reflection.
+func (c *TextColumn) Using(fn func(item any) string) *TextColumn {
+	c.ValueFunc = fn
+	return c
+}
+
+// WithLabel sets the column label.
+func (c *TextColumn) WithLabel(label string) *TextColumn {
 	c.LabelStr = label
 	return c
 }
@@ -48,18 +55,21 @@ func (c *TextColumn) Copyable() *TextColumn {
 }
 
 // Column interface implementation
-func (c *TextColumn) GetKey() string     { return c.Key }
-func (c *TextColumn) GetLabel() string   { return c.LabelStr }
-func (c *TextColumn) GetType() string    { return "text" }
+func (c *TextColumn) Key() string        { return c.colKey }
+func (c *TextColumn) Label() string      { return c.LabelStr }
+func (c *TextColumn) Type() string       { return "text" }
 func (c *TextColumn) IsSortable() bool   { return c.SortableFlag }
 func (c *TextColumn) IsSearchable() bool { return c.SearchFlag }
 func (c *TextColumn) IsCopyable() bool   { return c.CopyFlag }
-func (c *TextColumn) GetValue(item any) string {
+func (c *TextColumn) Value(item any) string {
+	if c.ValueFunc != nil {
+		return c.ValueFunc(item)
+	}
 	v := reflect.ValueOf(item)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	field := v.FieldByName(c.Key)
+	field := v.FieldByName(c.colKey)
 	if field.IsValid() {
 		return fmt.Sprintf("%v", field.Interface())
 	}
@@ -68,23 +78,24 @@ func (c *TextColumn) GetValue(item any) string {
 
 // BadgeColumn represents a badge column.
 type BadgeColumn struct {
-	Key          string
+	colKey       string
 	LabelStr     string
 	SortableFlag bool
 	ColorMap     map[string]string
+	ValueFunc    func(item any) string // optional: replaces reflect-based lookup
 }
 
 // Badge creates a new badge column.
 func Badge(key string) *BadgeColumn {
 	return &BadgeColumn{
-		Key:      key,
+		colKey:   key,
 		LabelStr: key,
 		ColorMap: make(map[string]string),
 	}
 }
 
-// Label sets the column label.
-func (c *BadgeColumn) Label(label string) *BadgeColumn {
+// WithLabel sets the column label.
+func (c *BadgeColumn) WithLabel(label string) *BadgeColumn {
 	c.LabelStr = label
 	return c
 }
@@ -92,6 +103,12 @@ func (c *BadgeColumn) Label(label string) *BadgeColumn {
 // Sortable makes the column sortable.
 func (c *BadgeColumn) Sortable() *BadgeColumn {
 	c.SortableFlag = true
+	return c
+}
+
+// Using sets a custom accessor function, bypassing reflection.
+func (c *BadgeColumn) Using(fn func(item any) string) *BadgeColumn {
+	c.ValueFunc = fn
 	return c
 }
 
@@ -110,18 +127,21 @@ func (c *BadgeColumn) GetColor(value string) string {
 }
 
 // Column interface implementation
-func (c *BadgeColumn) GetKey() string     { return c.Key }
-func (c *BadgeColumn) GetLabel() string   { return c.LabelStr }
-func (c *BadgeColumn) GetType() string    { return "badge" }
+func (c *BadgeColumn) Key() string        { return c.colKey }
+func (c *BadgeColumn) Label() string      { return c.LabelStr }
+func (c *BadgeColumn) Type() string       { return "badge" }
 func (c *BadgeColumn) IsSortable() bool   { return c.SortableFlag }
 func (c *BadgeColumn) IsSearchable() bool { return false }
 func (c *BadgeColumn) IsCopyable() bool   { return false }
-func (c *BadgeColumn) GetValue(item any) string {
+func (c *BadgeColumn) Value(item any) string {
+	if c.ValueFunc != nil {
+		return c.ValueFunc(item)
+	}
 	v := reflect.ValueOf(item)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	field := v.FieldByName(c.Key)
+	field := v.FieldByName(c.colKey)
 	if field.IsValid() {
 		return fmt.Sprintf("%v", field.Interface())
 	}
@@ -130,21 +150,22 @@ func (c *BadgeColumn) GetValue(item any) string {
 
 // ImageColumn represents an image column.
 type ImageColumn struct {
-	Key      string
-	LabelStr string
-	Rounded  bool
+	colKey    string
+	LabelStr  string
+	Rounded   bool
+	ValueFunc func(item any) string // optional: replaces reflect-based lookup
 }
 
 // Image creates a new image column.
 func Image(key string) *ImageColumn {
 	return &ImageColumn{
-		Key:      key,
+		colKey:   key,
 		LabelStr: key,
 	}
 }
 
-// Label sets the column label.
-func (c *ImageColumn) Label(label string) *ImageColumn {
+// WithLabel sets the column label.
+func (c *ImageColumn) WithLabel(label string) *ImageColumn {
 	c.LabelStr = label
 	return c
 }
@@ -155,46 +176,56 @@ func (c *ImageColumn) Round() *ImageColumn {
 	return c
 }
 
+// Using sets a custom accessor function, bypassing reflection.
+func (c *ImageColumn) Using(fn func(item any) string) *ImageColumn {
+	c.ValueFunc = fn
+	return c
+}
+
 // Column interface implementation
-func (c *ImageColumn) GetKey() string     { return c.Key }
-func (c *ImageColumn) GetLabel() string   { return c.LabelStr }
-func (c *ImageColumn) GetType() string    { return "image" }
+func (c *ImageColumn) Key() string        { return c.colKey }
+func (c *ImageColumn) Label() string      { return c.LabelStr }
+func (c *ImageColumn) Type() string       { return "image" }
 func (c *ImageColumn) IsSortable() bool   { return false }
 func (c *ImageColumn) IsSearchable() bool { return false }
 func (c *ImageColumn) IsCopyable() bool   { return false }
-func (c *ImageColumn) GetValue(item any) string {
+func (c *ImageColumn) Value(item any) string {
+	if c.ValueFunc != nil {
+		return c.ValueFunc(item)
+	}
 	v := reflect.ValueOf(item)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	field := v.FieldByName(c.Key)
+	field := v.FieldByName(c.colKey)
 	if field.IsValid() {
 		return fmt.Sprintf("%v", field.Interface())
 	}
 	return ""
 }
 
-// BooleanColumn displays a boolean value as configurable true/false labels.
+// BooleanColumn displays a boolean value as a ✓ or ✗ icon.
 type BooleanColumn struct {
-	Key          string
+	colKey       string
 	LabelStr     string
 	SortableFlag bool
 	TrueLabel    string
 	FalseLabel   string
+	ValueFunc    func(item any) string // optional: replaces reflect-based lookup
 }
 
 // BoolCol creates a new boolean column.
 func BoolCol(key string) *BooleanColumn {
 	return &BooleanColumn{
-		Key:        key,
+		colKey:     key,
 		LabelStr:   key,
 		TrueLabel:  "Yes",
 		FalseLabel: "No",
 	}
 }
 
-// Label sets the column label.
-func (c *BooleanColumn) Label(label string) *BooleanColumn {
+// WithLabel sets the column label.
+func (c *BooleanColumn) WithLabel(label string) *BooleanColumn {
 	c.LabelStr = label
 	return c
 }
@@ -202,6 +233,12 @@ func (c *BooleanColumn) Label(label string) *BooleanColumn {
 // Sortable makes the column sortable.
 func (c *BooleanColumn) Sortable() *BooleanColumn {
 	c.SortableFlag = true
+	return c
+}
+
+// Using sets a custom accessor function, bypassing reflection.
+func (c *BooleanColumn) Using(fn func(item any) string) *BooleanColumn {
+	c.ValueFunc = fn
 	return c
 }
 
@@ -213,58 +250,60 @@ func (c *BooleanColumn) Labels(trueLabel, falseLabel string) *BooleanColumn {
 }
 
 // Column interface implementation
-func (c *BooleanColumn) GetKey() string     { return c.Key }
-func (c *BooleanColumn) GetLabel() string   { return c.LabelStr }
-func (c *BooleanColumn) GetType() string    { return "boolean" }
+func (c *BooleanColumn) Key() string        { return c.colKey }
+func (c *BooleanColumn) Label() string      { return c.LabelStr }
+func (c *BooleanColumn) Type() string       { return "boolean" }
 func (c *BooleanColumn) IsSortable() bool   { return c.SortableFlag }
 func (c *BooleanColumn) IsSearchable() bool { return false }
 func (c *BooleanColumn) IsCopyable() bool   { return false }
-func (c *BooleanColumn) GetValue(item any) string {
+func (c *BooleanColumn) Value(item any) string {
+	if c.ValueFunc != nil {
+		return c.ValueFunc(item)
+	}
 	v := reflect.ValueOf(item)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	field := v.FieldByName(c.Key)
+	field := v.FieldByName(c.colKey)
 	if !field.IsValid() {
 		return c.FalseLabel
 	}
-	switch field.Kind() {
-	case reflect.Bool:
-		if field.Bool() {
+	switch val := field.Interface().(type) {
+	case bool:
+		if val {
 			return c.TrueLabel
 		}
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return c.FalseLabel
+	case int, int8, int16, int32, int64:
 		if field.Int() != 0 {
 			return c.TrueLabel
 		}
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		if field.Uint() != 0 {
-			return c.TrueLabel
-		}
+		return c.FalseLabel
 	}
-	return c.FalseLabel
+	return fmt.Sprintf("%v", field.Interface())
 }
 
 // DateColumn displays a time.Time value with a configurable format.
 type DateColumn struct {
-	Key          string
+	colKey       string
 	LabelStr     string
 	SortableFlag bool
-	Format       string
-	Relative     bool
+	Format       string           // Go time format string, default "2006-01-02"
+	Relative     bool             // Show relative time ("2 hours ago")
+	ValueFunc    func(any) string // optional: replaces reflect-based lookup
 }
 
-// DateCol creates a new date column with default format "2006-01-02".
+// DateCol creates a new date column.
 func DateCol(key string) *DateColumn {
 	return &DateColumn{
-		Key:      key,
+		colKey:   key,
 		LabelStr: key,
 		Format:   "2006-01-02",
 	}
 }
 
-// Label sets the column label.
-func (c *DateColumn) Label(label string) *DateColumn {
+// WithLabel sets the column label.
+func (c *DateColumn) WithLabel(label string) *DateColumn {
 	c.LabelStr = label
 	return c
 }
@@ -275,38 +314,61 @@ func (c *DateColumn) Sortable() *DateColumn {
 	return c
 }
 
-// WithFormat sets a custom time format string (Go reference time layout).
-func (c *DateColumn) WithFormat(format string) *DateColumn {
+// DateFormat sets a custom Go time format string.
+func (c *DateColumn) DateFormat(format string) *DateColumn {
 	c.Format = format
 	return c
 }
 
-// ShowRelative displays relative time ("2 hours ago") instead of a fixed format.
+// ShowRelative displays relative time ("2 hours ago") instead of absolute.
 func (c *DateColumn) ShowRelative() *DateColumn {
 	c.Relative = true
 	return c
 }
 
+// Using sets a custom accessor function, bypassing reflection.
+func (c *DateColumn) Using(fn func(any) string) *DateColumn {
+	c.ValueFunc = fn
+	return c
+}
+
 // Column interface implementation
-func (c *DateColumn) GetKey() string     { return c.Key }
-func (c *DateColumn) GetLabel() string   { return c.LabelStr }
-func (c *DateColumn) GetType() string    { return "date" }
+func (c *DateColumn) Key() string        { return c.colKey }
+func (c *DateColumn) Label() string      { return c.LabelStr }
+func (c *DateColumn) Type() string       { return "date" }
 func (c *DateColumn) IsSortable() bool   { return c.SortableFlag }
 func (c *DateColumn) IsSearchable() bool { return false }
 func (c *DateColumn) IsCopyable() bool   { return false }
-func (c *DateColumn) GetValue(item any) string {
+func (c *DateColumn) Value(item any) string {
+	if c.ValueFunc != nil {
+		return c.ValueFunc(item)
+	}
 	v := reflect.ValueOf(item)
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	field := v.FieldByName(c.Key)
+	field := v.FieldByName(c.colKey)
 	if !field.IsValid() {
 		return ""
 	}
-	t, ok := field.Interface().(time.Time)
-	if !ok {
+
+	var t time.Time
+	switch val := field.Interface().(type) {
+	case time.Time:
+		t = val
+	case *time.Time:
+		if val == nil {
+			return ""
+		}
+		t = *val
+	default:
 		return fmt.Sprintf("%v", field.Interface())
 	}
+
+	if t.IsZero() {
+		return ""
+	}
+
 	if c.Relative {
 		return relativeTime(t)
 	}
@@ -315,24 +377,24 @@ func (c *DateColumn) GetValue(item any) string {
 
 // relativeTime returns a human-readable relative time string.
 func relativeTime(t time.Time) string {
-	d := time.Since(t)
+	diff := time.Since(t)
 	switch {
-	case d < time.Minute:
+	case diff < time.Minute:
 		return "just now"
-	case d < time.Hour:
-		m := int(d.Minutes())
-		if m == 1 {
+	case diff < time.Hour:
+		mins := int(diff.Minutes())
+		if mins == 1 {
 			return "1 minute ago"
 		}
-		return fmt.Sprintf("%d minutes ago", m)
-	case d < 24*time.Hour:
-		h := int(d.Hours())
-		if h == 1 {
+		return fmt.Sprintf("%d minutes ago", mins)
+	case diff < 24*time.Hour:
+		hours := int(diff.Hours())
+		if hours == 1 {
 			return "1 hour ago"
 		}
-		return fmt.Sprintf("%d hours ago", h)
-	case d < 7*24*time.Hour:
-		days := int(d.Hours() / 24)
+		return fmt.Sprintf("%d hours ago", hours)
+	case diff < 7*24*time.Hour:
+		days := int(diff.Hours() / 24)
 		if days == 1 {
 			return "yesterday"
 		}

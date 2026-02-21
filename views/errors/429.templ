@@ -1,0 +1,83 @@
+package errors
+
+import (
+	"fmt"
+	"github.com/bozz33/sublimego/ui/layouts"
+)
+
+templ TooManyRequests(requestID string, retryAfter int) {
+	@layouts.Base("429 - Too Many Requests") {
+		<div class="flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-12">
+			<div class="w-full max-w-md text-center">
+				<!-- Error icon -->
+				<div class="mb-8 flex justify-center">
+					<div class="flex h-24 w-24 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/20">
+						<span class="material-icons-outlined text-5xl text-yellow-600 dark:text-yellow-500">warning</span>
+					</div>
+				</div>
+
+				<!-- Error code -->
+				<h1 class="mb-4 text-6xl font-bold text-gray-900 dark:text-white">429</h1>
+
+				<!-- Message -->
+				<h2 class="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">
+					Too Many Requests
+				</h2>
+
+				<p class="mb-8 text-gray-600 dark:text-gray-400">
+					You have exceeded the allowed request limit.
+					if retryAfter > 0 {
+						<br/>
+						<span class="font-medium">Please try again in { formatRetryAfter(retryAfter) }.</span>
+					}
+				</p>
+
+				<!-- Additional information -->
+				<div class="mb-8 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
+					<div class="flex items-start">
+						<span class="material-icons-outlined mr-3 flex-shrink-0 text-yellow-600 dark:text-yellow-500">info</span>
+						<div class="text-left text-sm text-yellow-700 dark:text-yellow-400">
+							<p class="font-medium">Why this limitation?</p>
+							<p class="mt-1">
+								This limit protects our servers and ensures fair service for all users.
+							</p>
+						</div>
+					</div>
+				</div>
+
+				<!-- Actions -->
+				<div class="flex flex-col gap-3 sm:flex-row sm:justify-center">
+					<a
+						href="/"
+						class="inline-flex items-center justify-center rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+					>
+						<span class="material-icons-outlined mr-2 text-lg">home</span>
+						Back to home
+					</a>
+					<button
+						onclick="window.location.reload()"
+						class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-gray-700 dark:focus:ring-gray-700"
+					>
+						<span class="material-icons-outlined mr-2 text-lg">refresh</span>
+						Retry
+					</button>
+				</div>
+
+				<!-- Request ID -->
+				if requestID != "" {
+					<div class="mt-8 text-xs text-gray-500 dark:text-gray-500">
+						Request ID: <code class="rounded bg-gray-100 px-2 py-1 font-mono dark:bg-gray-800">{ requestID }</code>
+					</div>
+				}
+			</div>
+		</div>
+	}
+}
+
+func formatRetryAfter(seconds int) string {
+	if seconds < 60 {
+		return templ.EscapeString(fmt.Sprintf("%d second(s)", seconds))
+	}
+	minutes := seconds / 60
+	return templ.EscapeString(fmt.Sprintf("%d minute(s)", minutes))
+}

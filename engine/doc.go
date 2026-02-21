@@ -2,7 +2,7 @@
 //
 // It provides the main application engine that orchestrates all components
 // including routing, middleware, resource management, and template rendering.
-// The engine follows a resource-oriented architecture.
+// The engine follows a resource-oriented architecture inspired by Laravel Filament.
 //
 // Features:
 //   - HTTP server with standard library
@@ -17,8 +17,8 @@
 // Basic usage:
 //
 //	panel := engine.NewPanel("admin").
-//		SetDatabase(db).
-//		SetAuthManager(authManager).
+//		WithDatabase(db).
+//		WithAuthManager(authManager).
 //		AddResources(&UserResource{}, &ProductResource{}).
 //		AddPages(settingsPage, reportsPage)
 //

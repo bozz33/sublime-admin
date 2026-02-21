@@ -8,18 +8,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bozz33/sublimeadmin/mailer"
+	"github.com/a-h/templ"
+	authpkg "github.com/bozz33/sublimego/auth"
+	"github.com/bozz33/sublimego/internal/ent"
+	"github.com/bozz33/sublimego/internal/ent/user"
+	"github.com/bozz33/sublimego/mailer"
+	authtemplates "github.com/bozz33/sublimego/views/auth"
 )
-
-// PasswordResettable extends DatabaseClient with password reset capability.
-// Implement this on your DB client to enable the PasswordResetHandler.
-type PasswordResettable interface {
-	DatabaseClient
-	// UserExistsByEmail checks if a user with the given email exists.
-	UserExistsByEmail(ctx interface{ Deadline() (time.Time, bool); Done() <-chan struct{}; Err() error; Value(any) any }, email string) (bool, error)
-	// UpdatePassword sets a new hashed password for the user identified by email.
-	UpdatePassword(ctx interface{ Deadline() (time.Time, bool); Done() <-chan struct{}; Err() error; Value(any) any }, email, hashedPassword string) error
-}
 
 // resetToken holds a password reset token with expiry.
 type resetToken struct {
@@ -33,31 +28,21 @@ var resetStore = struct {
 	tokens map[string]resetToken
 }{tokens: make(map[string]resetToken)}
 
-// PasswordResetTemplates provides the templates needed by PasswordResetHandler.
-type PasswordResetTemplates interface {
-	ForgotPasswordPage(errMsg, successMsg string) interface {
-		Render(ctx interface{ Deadline() (time.Time, bool); Done() <-chan struct{}; Err() error; Value(any) any }, w interface{ Write([]byte) (int, error) }) error
-	}
-	ResetPasswordPage(token, email, errMsg string) interface {
-		Render(ctx interface{ Deadline() (time.Time, bool); Done() <-chan struct{}; Err() error; Value(any) any }, w interface{ Write([]byte) (int, error) }) error
-	}
-}
-
 // PasswordResetHandler handles /forgot-password and /reset-password.
-// It depends only on the DatabaseClient interface (no ORM required).
 type PasswordResetHandler struct {
-	db      PasswordResettable
-	mailer  mailer.Mailer
-	baseURL string
+	authManager *authpkg.Manager
+	db          *ent.Client
+	mailer      mailer.Mailer
+	baseURL     string // e.g. "https://example.com" — used to build reset links
 }
 
 // NewPasswordResetHandler creates a new password reset handler.
-// Pass a &mailer.LogMailer{} for development or mailer.NewSMTPMailer(cfg) for production.
-func NewPasswordResetHandler(db PasswordResettable, m mailer.Mailer, baseURL string) *PasswordResetHandler {
+// Pass a mailer.LogMailer{} for development or mailer.NewSMTPMailer(cfg) for production.
+func NewPasswordResetHandler(authManager *authpkg.Manager, db *ent.Client, m mailer.Mailer, baseURL string) *PasswordResetHandler {
 	if m == nil {
 		m = &mailer.LogMailer{}
 	}
-	return &PasswordResetHandler{db: db, mailer: m, baseURL: baseURL}
+	return &PasswordResetHandler{authManager: authManager, db: db, mailer: m, baseURL: baseURL}
 }
 
 func (h *PasswordResetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +50,7 @@ func (h *PasswordResetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	case "/forgot-password":
 		switch r.Method {
 		case http.MethodGet:
-			h.showForgotForm(w, r)
+			templ.Handler(authtemplates.ForgotPasswordPage("", "")).ServeHTTP(w, r)
 		case http.MethodPost:
 			h.handleForgotPassword(w, r)
 		default:
@@ -74,7 +59,9 @@ func (h *PasswordResetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	case "/reset-password":
 		switch r.Method {
 		case http.MethodGet:
-			h.showResetForm(w, r)
+			token := r.URL.Query().Get("token")
+			email := r.URL.Query().Get("email")
+			templ.Handler(authtemplates.ResetPasswordPage(token, email, "")).ServeHTTP(w, r)
 		case http.MethodPost:
 			h.handleResetPassword(w, r)
 		default:
@@ -85,33 +72,22 @@ func (h *PasswordResetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (h *PasswordResetHandler) showForgotForm(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = fmt.Fprint(w, forgotPasswordHTML("", ""))
-}
-
-func (h *PasswordResetHandler) showResetForm(w http.ResponseWriter, r *http.Request) {
-	token := r.URL.Query().Get("token")
-	email := r.URL.Query().Get("email")
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = fmt.Fprint(w, resetPasswordHTML(token, email, ""))
-}
-
 func (h *PasswordResetHandler) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "Invalid form", http.StatusBadRequest)
 		return
 	}
+
 	email := r.FormValue("email")
 	if email == "" {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = fmt.Fprint(w, forgotPasswordHTML("Email is required.", ""))
+		templ.Handler(authtemplates.ForgotPasswordPage("Email is required.", "")).ServeHTTP(w, r)
 		return
 	}
 
-	exists, _ := h.db.UserExistsByEmail(r.Context(), email)
+	// Check user exists — always show success to prevent email enumeration
+	exists, _ := h.db.User.Query().Where(user.EmailEQ(email)).Exist(r.Context())
 	if exists {
-		token := generateResetToken()
+		token := generateToken()
 		resetStore.mu.Lock()
 		resetStore.tokens[token] = resetToken{
 			email:     email,
@@ -127,8 +103,8 @@ func (h *PasswordResetHandler) handleForgotPassword(w http.ResponseWriter, r *ht
 		})
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_, _ = fmt.Fprint(w, forgotPasswordHTML("", "If that email exists, a reset link has been sent."))
+	templ.Handler(authtemplates.ForgotPasswordPage("",
+		"If that email exists, a reset link has been sent.")).ServeHTTP(w, r)
 }
 
 func (h *PasswordResetHandler) handleResetPassword(w http.ResponseWriter, r *http.Request) {
@@ -143,8 +119,7 @@ func (h *PasswordResetHandler) handleResetPassword(w http.ResponseWriter, r *htt
 	confirm := r.FormValue("password_confirmation")
 
 	showErr := func(msg string) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_, _ = fmt.Fprint(w, resetPasswordHTML(token, email, msg))
+		templ.Handler(authtemplates.ResetPasswordPage(token, email, msg)).ServeHTTP(w, r)
 	}
 
 	if password != confirm {
@@ -170,7 +145,12 @@ func (h *PasswordResetHandler) handleResetPassword(w http.ResponseWriter, r *htt
 
 	ah := &AuthHandler{}
 	newHash := ah.hashPassword(password)
-	if err := h.db.UpdatePassword(r.Context(), email, newHash); err != nil {
+
+	_, err := h.db.User.Update().
+		Where(user.EmailEQ(email)).
+		SetPassword(newHash).
+		Save(r.Context())
+	if err != nil {
 		showErr("Failed to reset password. Please try again.")
 		return
 	}
@@ -178,48 +158,9 @@ func (h *PasswordResetHandler) handleResetPassword(w http.ResponseWriter, r *htt
 	http.Redirect(w, r, "/login?reset=1", http.StatusFound)
 }
 
-// generateResetToken returns a cryptographically random 32-byte hex token.
-func generateResetToken() string {
+// generateToken returns a cryptographically random 32-byte hex token.
+func generateToken() string {
 	b := make([]byte, 32)
 	_, _ = rand.Read(b)
 	return hex.EncodeToString(b)
-}
-
-// ---------------------------------------------------------------------------
-// Minimal HTML fallbacks (used when no template system is wired up)
-// ---------------------------------------------------------------------------
-
-func forgotPasswordHTML(errMsg, successMsg string) string {
-	var msg string
-	if errMsg != "" {
-		msg = `<p style="color:red">` + errMsg + `</p>`
-	}
-	if successMsg != "" {
-		msg = `<p style="color:green">` + successMsg + `</p>`
-	}
-	return `<!DOCTYPE html><html><body>
-<h2>Forgot Password</h2>` + msg + `
-<form method="POST">
-  <label>Email<br><input type="email" name="email" required /></label><br><br>
-  <button type="submit">Send Reset Link</button>
-</form>
-<p><a href="/login">Back to login</a></p>
-</body></html>`
-}
-
-func resetPasswordHTML(token, email, errMsg string) string {
-	var msg string
-	if errMsg != "" {
-		msg = `<p style="color:red">` + errMsg + `</p>`
-	}
-	return `<!DOCTYPE html><html><body>
-<h2>Reset Password</h2>` + msg + `
-<form method="POST">
-  <input type="hidden" name="token" value="` + token + `" />
-  <input type="hidden" name="email" value="` + email + `" />
-  <label>New Password<br><input type="password" name="password" required minlength="8" /></label><br><br>
-  <label>Confirm Password<br><input type="password" name="password_confirmation" required minlength="8" /></label><br><br>
-  <button type="submit">Reset Password</button>
-</form>
-</body></html>`
 }

@@ -1,0 +1,77 @@
+package widgets
+
+import (
+	"github.com/bozz33/sublimego/widget"
+)
+
+// Stats - Version 4.0 — Faithful conversion of dashboard/index.html stat cards
+// Uses Material Icons Outlined exclusively
+templ Stats(w *widget.StatsWidget) {
+	<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6">
+		for _, stat := range w.Stats {
+			<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
+				<div class="flex items-center justify-between mb-4">
+					<span class="text-sm font-medium text-gray-500">{ stat.Label }</span>
+					if stat.Icon != "" {
+						<div class={ "w-10 h-10 rounded-xl flex items-center justify-center", getIconBgColor(stat.Color) }>
+							<span class={ "material-icons-outlined", getIconTextColor(stat.Color) }>{ stat.Icon }</span>
+						</div>
+					}
+				</div>
+				<div class="text-3xl font-bold text-gray-900 dark:text-white">{ stat.Value }</div>
+				if stat.Description != "" {
+					if stat.Increase {
+						<div class="flex items-center mt-2 text-sm">
+							<span class="material-icons-outlined text-green-500 text-sm mr-1">trending_up</span>
+							<span class="text-green-500 font-medium">{ stat.Description }</span>
+						</div>
+					} else {
+						<div class="text-sm text-gray-500 mt-2">{ stat.Description }</div>
+					}
+				}
+			</div>
+		}
+	</div>
+}
+
+func getIconBgColor(color string) string {
+	switch color {
+	case "primary":
+		return "bg-primary-100 dark:bg-primary-900/30"
+	case "success", "green":
+		return "bg-green-100 dark:bg-green-900/30"
+	case "danger", "red":
+		return "bg-red-100 dark:bg-red-900/30"
+	case "warning", "yellow":
+		return "bg-yellow-100 dark:bg-yellow-900/30"
+	case "info", "blue":
+		return "bg-blue-100 dark:bg-blue-900/30"
+	case "emerald":
+		return "bg-emerald-100 dark:bg-emerald-900/30"
+	case "purple":
+		return "bg-purple-100 dark:bg-purple-900/30"
+	default:
+		return "bg-gray-100 dark:bg-gray-700"
+	}
+}
+
+func getIconTextColor(color string) string {
+	switch color {
+	case "primary":
+		return "text-primary-600"
+	case "success", "green":
+		return "text-green-600"
+	case "danger", "red":
+		return "text-red-600"
+	case "warning", "yellow":
+		return "text-yellow-600"
+	case "info", "blue":
+		return "text-blue-600"
+	case "emerald":
+		return "text-emerald-600"
+	case "purple":
+		return "text-purple-600"
+	default:
+		return "text-gray-600"
+	}
+}

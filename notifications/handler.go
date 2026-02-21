@@ -7,9 +7,9 @@ import (
 	"net/http"
 )
 
-// NotificationStore is the interface that both Store (in-memory) and any
-// database-backed store must implement. The Handler depends only on this
-// interface, making the persistence backend swappable.
+// NotificationStore is the interface that both Store (in-memory) and
+// DatabaseStore (Ent-backed) implement. The Handler depends only on
+// this interface, making the persistence backend swappable.
 type NotificationStore interface {
 	Send(userID string, n *Notification)
 	GetAll(userID string) []*Notification
@@ -24,11 +24,11 @@ type NotificationStore interface {
 //
 // Routes to register:
 //
-//	GET  /notifications            -> list all notifications (JSON)
-//	GET  /notifications/unread     -> list unread notifications (JSON)
-//	GET  /notifications/stream     -> SSE stream of live notifications
-//	POST /notifications/{id}/read  -> mark one as read
-//	POST /notifications/read-all   -> mark all as read
+//	GET  /notifications          -> list all notifications (JSON)
+//	GET  /notifications/unread   -> list unread notifications (JSON)
+//	GET  /notifications/stream   -> SSE stream of live notifications
+//	POST /notifications/{id}/read -> mark one as read
+//	POST /notifications/read-all  -> mark all as read
 type Handler struct {
 	store      NotificationStore
 	userIDFunc func(r *http.Request) string
@@ -53,6 +53,7 @@ func (h *Handler) Register(mux *http.ServeMux, prefix string) {
 	mux.HandleFunc(prefix+"/unread", h.handleUnread)
 	mux.HandleFunc(prefix+"/stream", h.handleStream)
 	mux.HandleFunc(prefix+"/read-all", h.handleReadAll)
+	// /notifications/{id}/read — handled via prefix match
 	mux.HandleFunc(prefix+"/", h.handleByID)
 }
 
@@ -109,6 +110,7 @@ func (h *Handler) handleStream(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("X-Accel-Buffering", "no")
 
+	// Send current unread count as first event
 	unread := h.store.UnreadCount(userID)
 	_, _ = fmt.Fprintf(w, "event: connected\ndata: {\"unread_count\": %d}\n\n", unread)
 	flusher.Flush()
@@ -155,8 +157,11 @@ func (h *Handler) handleByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Extract ID from path: /notifications/{id}/read
 	path := r.URL.Path
+	// strip leading /notifications/
 	rest := path[len("/notifications/"):]
+	// expect: {id}/read
 	var notifID string
 	if len(rest) > 5 && rest[len(rest)-5:] == "/read" {
 		notifID = rest[:len(rest)-5]
@@ -173,5 +178,5 @@ func (h *Handler) handleByID(w http.ResponseWriter, r *http.Request) {
 
 func writeJSON(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(v)
+	json.NewEncoder(w).Encode(v)
 }

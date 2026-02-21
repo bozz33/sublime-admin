@@ -1,0 +1,390 @@
+package generics
+
+import (
+	"fmt"
+	"github.com/bozz33/sublimego/engine"
+)
+
+// List is the universal template for all resource tables.
+// Supports: dynamic filters, bulk actions, typed columns, export/import, pagination.
+templ List(state engine.TableState) {
+	<div
+		class="space-y-6"
+		x-data={ fmt.Sprintf(`{ selected: [], allSelected: false, hiddenCols: %s, colManagerOpen: false, colOrder: %s, dragSrcKey: null, isColHidden(key){ return this.hiddenCols.includes(key) }, toggleCol(key){ if(this.isColHidden(key)){ this.hiddenCols=this.hiddenCols.filter(k=>k!==key) }else{ this.hiddenCols.push(key) } }, toggleAll(rows){ if(this.allSelected){ this.selected=[] }else{ this.selected=rows.map(r=>r) }; this.allSelected=!this.allSelected }, bulkAction(url){ if(this.selected.length===0){ alert('Select at least one item.'); return }; const f=document.createElement('form'); f.method='POST'; f.action=url; this.selected.forEach(id=>{ const i=document.createElement('input'); i.type='hidden'; i.name='ids[]'; i.value=id; f.appendChild(i) }); document.body.appendChild(f); f.submit() }, dragStart(key){ this.dragSrcKey=key }, dragOver(e){ e.preventDefault() }, dragDrop(key){ if(!this.dragSrcKey||this.dragSrcKey===key) return; const from=this.colOrder.indexOf(this.dragSrcKey); const to=this.colOrder.indexOf(key); if(from<0||to<0) return; this.colOrder.splice(from,1); this.colOrder.splice(to,0,this.dragSrcKey); this.dragSrcKey=null }, colIndex(key){ const i=this.colOrder.indexOf(key); return i<0?999:i } }`, hiddenColsJSON(state.HiddenColumns), hiddenColsJSON(state.ColumnOrder)) }
+		if state.PollInterval > 0 {
+			hx-get={ templ.SafeURL(fmt.Sprintf("%s?search=%s&sort=%s&dir=%s", state.BaseURL, state.Search, state.SortKey, state.SortDir)) }
+			hx-trigger={ fmt.Sprintf("every %ds", state.PollInterval) }
+			hx-swap="outerHTML"
+		}
+	>
+		<!-- Page Header -->
+		<div class="flex flex-wrap items-center justify-between gap-3">
+			<h1 class="text-2xl font-bold text-gray-900 dark:text-white">{ state.Title }</h1>
+			<div class="flex items-center gap-2">
+				if state.ExportURL != "" {
+					<a
+						href={ templ.SafeURL(state.ExportURL) }
+						class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+					>
+						<span class="material-icons-outlined text-base">download</span>
+						Export
+					</a>
+				}
+				if state.ImportURL != "" {
+					<a
+						href={ templ.SafeURL(state.ImportURL) }
+						class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+					>
+						<span class="material-icons-outlined text-base">upload</span>
+						Import
+					</a>
+				}
+				for _, action := range state.HeaderActions {
+					if action.Method == "POST" {
+						<form method="POST" action={ templ.SafeURL(action.URL) } class="inline">
+							<button
+								type="submit"
+								class={ headerActionClass(action.Color) }
+							>
+								if action.Icon != "" {
+									<span class="material-icons-outlined text-base">{ action.Icon }</span>
+								}
+								{ action.Label }
+							</button>
+						</form>
+					} else {
+						<a
+							href={ templ.SafeURL(action.URL) }
+							class={ headerActionClass(action.Color) }
+						>
+							if action.Icon != "" {
+								<span class="material-icons-outlined text-base">{ action.Icon }</span>
+							}
+							{ action.Label }
+						</a>
+					}
+				}
+				if state.NewURL != "" {
+					<a
+						href={ templ.SafeURL(state.NewURL) }
+						class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+					>
+						<span class="material-icons-outlined text-base">add</span>
+						New { state.Title }
+					</a>
+				}
+			</div>
+		</div>
+
+		<!-- Table Card -->
+		<div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+
+			<!-- Toolbar: search + filters + bulk actions -->
+			<div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex flex-wrap items-center gap-3">
+				<!-- Search -->
+				<form method="GET" class="flex-1 min-w-48">
+					<div class="relative">
+						<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+							<span class="material-icons-outlined text-gray-400 text-lg">search</span>
+						</div>
+						<input
+							type="text"
+							name="search"
+							value={ state.Search }
+							placeholder="Search..."
+							class="block w-full pl-9 pr-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+						/>
+					</div>
+				</form>
+
+				<!-- Dynamic Filters -->
+				if len(state.Filters) > 0 {
+					<form method="GET" class="flex flex-wrap items-center gap-2">
+						for _, f := range state.Filters {
+							if f.Type == "select" || f.Type == "boolean" {
+								<div class="relative">
+									<select
+										name={ f.Key }
+										onchange="this.form.submit()"
+										class="text-sm bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-700 dark:text-gray-300 py-2 pl-3 pr-8 focus:outline-none focus:ring-2 focus:ring-primary-500 appearance-none"
+									>
+										<option value="">{ f.Label }: All</option>
+										for _, opt := range f.Options {
+											<option
+												value={ opt.Value }
+												selected?={ state.ActiveFilters[f.Key] == opt.Value }
+											>{ opt.Label }</option>
+										}
+									</select>
+									<div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+										<span class="material-icons-outlined text-gray-400 text-sm">expand_more</span>
+									</div>
+								</div>
+							}
+						}
+					</form>
+				}
+
+				<!-- Column Manager toggle -->
+				if state.ColumnManager && len(state.Columns) > 0 {
+					<div class="relative" x-data>
+						<button
+							type="button"
+							@click="colManagerOpen = !colManagerOpen"
+							class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+							title="Manage columns"
+						>
+							<span class="material-icons-outlined text-base">view_column</span>
+							<span class="hidden sm:inline">Columns</span>
+						</button>
+						<div
+							x-show="colManagerOpen"
+							@click.outside="colManagerOpen = false"
+							x-transition
+							class="absolute right-0 mt-2 w-52 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg z-20 py-2"
+							x-cloak
+						>
+							<p class="px-3 py-1.5 text-xs font-semibold text-gray-400 uppercase tracking-wider">Toggle columns</p>
+							for _, col := range state.Columns {
+								<button
+									type="button"
+									@click={ fmt.Sprintf("toggleCol('%s')", col.Key) }
+									class="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+								>
+									<span
+										class="material-icons-outlined text-base"
+										:class={ fmt.Sprintf("isColHidden('%s') ? 'text-gray-300 dark:text-gray-600' : 'text-primary-500'", col.Key) }
+										x-text={ fmt.Sprintf("isColHidden('%s') ? 'check_box_outline_blank' : 'check_box'", col.Key) }
+									></span>
+									{ col.Label }
+								</button>
+							}
+						</div>
+					</div>
+				}
+
+				<!-- Bulk Action Bar (visible when rows selected) -->
+				if len(state.BulkActions) > 0 {
+					<div x-show="selected.length > 0" x-cloak class="flex items-center gap-2 ml-auto">
+						<span class="text-sm text-gray-500 dark:text-gray-400" x-text="selected.length + ' selected'"></span>
+						for _, ba := range state.BulkActions {
+							{{ btnClass := bulkActionClass(ba.Color) }}
+							<button
+								type="button"
+								@click={ fmt.Sprintf("bulkAction('%s')", ba.URL) }
+								class={ "inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-xl transition-colors " + btnClass }
+							>
+								if ba.Icon != "" {
+									<span class="material-icons-outlined text-base">{ ba.Icon }</span>
+								}
+								{ ba.Label }
+							</button>
+						}
+					</div>
+				}
+			</div>
+
+			<!-- Table -->
+			<div class="overflow-x-auto">
+				<table class="w-full text-sm text-left text-gray-600 dark:text-gray-400">
+					<thead class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-gray-50 dark:bg-gray-700/50 border-b border-gray-200 dark:border-gray-700">
+						<tr>
+							if len(state.BulkActions) > 0 {
+								<th scope="col" class="w-10 px-4 py-3">
+									<input
+										type="checkbox"
+										:checked="allSelected"
+										@click={ fmt.Sprintf("toggleAll(%s)", rowIDsJSON(state.Rows)) }
+										class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+									/>
+								</th>
+							}
+							for _, col := range state.Columns {
+								<th
+									scope="col"
+									class="px-4 py-3 whitespace-nowrap"
+									x-show={ fmt.Sprintf("!isColHidden('%s')", col.Key) }
+									if state.ReorderColumns {
+										draggable="true"
+										@dragstart={ fmt.Sprintf("dragStart('%s')", col.Key) }
+										@dragover="dragOver($event)"
+										@drop={ fmt.Sprintf("dragDrop('%s')", col.Key) }
+										:class={ fmt.Sprintf("dragSrcKey==='%s' ? 'opacity-50 cursor-grabbing' : 'cursor-grab'", col.Key) }
+									}
+								>
+									if col.Sortable {
+										{{ nextDir := "asc"; sortIcon := "unfold_more"
+										if state.SortKey == col.Key {
+											if state.SortDir == "asc" { nextDir = "desc"; sortIcon = "arrow_upward" } else { nextDir = "asc"; sortIcon = "arrow_downward" }
+										} }}
+										<a
+											href={ templ.SafeURL(fmt.Sprintf("?sort=%s&dir=%s&search=%s", col.Key, nextDir, state.Search)) }
+											class="inline-flex items-center gap-1 hover:text-gray-900 dark:hover:text-white"
+										>
+											{ col.Label }
+											<span class="material-icons-outlined text-xs">{ sortIcon }</span>
+										</a>
+									} else {
+										{ col.Label }
+									}
+								</th>
+							}
+							<th scope="col" class="px-4 py-3 text-right">Actions</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+						if len(state.Rows) == 0 {
+							<tr>
+								<td
+									colspan={ fmt.Sprintf("%d", len(state.Columns)+2) }
+									class="px-4 py-16 text-center"
+								>
+									@listEmptyState(state)
+								</td>
+							</tr>
+						}
+						for i, row := range state.Rows {
+							<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors">
+								if len(state.BulkActions) > 0 {
+									<td class="w-10 px-4 py-3">
+										<input
+											type="checkbox"
+											:checked="selected.includes('{ row.ID }')"
+											@click={ fmt.Sprintf("selected.includes('%s') ? selected.splice(selected.indexOf('%s'),1) : selected.push('%s')", row.ID, row.ID, row.ID) }
+											class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+										/>
+									</td>
+								}
+								for j, cell := range row.Cells {
+									if j == 0 {
+										<td
+											class="px-4 py-3 font-medium text-gray-900 dark:text-white whitespace-nowrap"
+											if j < len(state.Columns) {
+												x-show={ fmt.Sprintf("!isColHidden('%s')", state.Columns[j].Key) }
+											}
+										>
+											{{ recordURL := row.RecordURL; if recordURL == "" { recordURL = fmt.Sprintf("%s/%s", state.BaseURL, row.ID) } }}
+											<a href={ templ.SafeURL(recordURL) } class="hover:text-primary-600 dark:hover:text-primary-400">
+												{ cell }
+											</a>
+										</td>
+									} else {
+										<td
+											class="px-4 py-3"
+											if j < len(state.Columns) {
+												x-show={ fmt.Sprintf("!isColHidden('%s')", state.Columns[j].Key) }
+											}
+										>
+											@renderCell(state.Columns, j, cell)
+										</td>
+									}
+								}
+								<td class="px-4 py-3">
+									<div class="flex items-center justify-end gap-2">
+										if state.CanView {
+											<a
+												href={ templ.SafeURL(fmt.Sprintf("%s/%s", state.BaseURL, row.ID)) }
+												class="p-1.5 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+												title="View"
+											>
+												<span class="material-icons-outlined text-lg">visibility</span>
+											</a>
+										}
+										<a
+											href={ templ.SafeURL(fmt.Sprintf("%s/%s/edit", state.BaseURL, row.ID)) }
+											class="p-1.5 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+											title="Edit"
+										>
+											<span class="material-icons-outlined text-lg">edit</span>
+										</a>
+										if state.CanDelete {
+											<button
+												type="button"
+												@click={ fmt.Sprintf("$dispatch('open-action-modal', { url: '%s/%s', method: 'DELETE', title: 'Delete this record?', desc: 'This action cannot be undone.', confirmLabel: 'Delete', cancelLabel: 'Cancel', color: 'red' })", state.BaseURL, row.ID) }
+												class="p-1.5 rounded-lg text-gray-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+												title="Delete"
+											>
+												<span class="material-icons-outlined text-lg">delete_outline</span>
+											</button>
+										}
+									</div>
+								</td>
+							</tr>
+							// suppress unused variable warning
+							{ suppressUnused(i) }
+						}
+					</tbody>
+				</table>
+			</div>
+
+			<!-- Pagination -->
+			if state.Pagination != nil && state.Pagination.LastPage > 1 {
+				<div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex flex-wrap items-center justify-between gap-3">
+					<span class="text-sm text-gray-500 dark:text-gray-400">
+						Showing { fmt.Sprintf("%d", (state.Pagination.CurrentPage-1)*state.Pagination.PerPage+1) }–{ fmt.Sprintf("%d", min(state.Pagination.CurrentPage*state.Pagination.PerPage, state.Pagination.Total)) } of { fmt.Sprintf("%d", state.Pagination.Total) }
+					</span>
+					<div class="flex items-center gap-1">
+						{{ pageBase := fmt.Sprintf("?sort=%s&dir=%s&search=%s", state.SortKey, state.SortDir, state.Search) }}
+						if state.Pagination.CurrentPage > 1 {
+							<a href={ templ.SafeURL(fmt.Sprintf("%s&page=%d", pageBase, state.Pagination.CurrentPage-1)) } class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Previous</a>
+						}
+						for p := 1; p <= state.Pagination.LastPage; p++ {
+							if p == state.Pagination.CurrentPage {
+								<span class="px-3 py-1.5 text-sm rounded-lg bg-primary-600 text-white font-semibold">{ fmt.Sprintf("%d", p) }</span>
+							} else {
+								<a href={ templ.SafeURL(fmt.Sprintf("%s&page=%d", pageBase, p)) } class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">{ fmt.Sprintf("%d", p) }</a>
+							}
+						}
+						if state.Pagination.CurrentPage < state.Pagination.LastPage {
+							<a href={ templ.SafeURL(fmt.Sprintf("%s&page=%d", pageBase, state.Pagination.CurrentPage+1)) } class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">Next</a>
+						}
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+// listEmptyState renders the empty table placeholder.
+templ listEmptyState(state engine.TableState) {
+	{{ icon := "inbox"; title := "No records found."; desc := ""; actionLabel := ""; actionURL := ""
+	if state.EmptyState != nil {
+		if state.EmptyState.Icon != "" { icon = state.EmptyState.Icon }
+		if state.EmptyState.Title != "" { title = state.EmptyState.Title }
+		desc = state.EmptyState.Description
+		actionLabel = state.EmptyState.ActionLabel
+		actionURL = state.EmptyState.ActionURL
+	} }}
+	<div class="flex flex-col items-center gap-3 text-gray-400 dark:text-gray-500">
+		<span class="material-icons-outlined text-5xl">{ icon }</span>
+		<p class="text-base font-medium text-gray-500 dark:text-gray-400">{ title }</p>
+		if desc != "" {
+			<p class="text-sm">{ desc }</p>
+		}
+		if actionLabel != "" && actionURL != "" {
+			<a
+				href={ templ.SafeURL(actionURL) }
+				class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+			>
+				{ actionLabel }
+			</a>
+		}
+	</div>
+}
+
+// renderCell renders a table cell with type-aware formatting.
+templ renderCell(cols []engine.Column, idx int, value string) {
+	if idx < len(cols) && cols[idx].Type == "boolean" {
+		if value == "true" || value == "Yes" || value == "1" {
+			<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-green-100 dark:bg-green-900/30">
+				<span class="material-icons-outlined text-green-600 dark:text-green-400 text-sm">check</span>
+			</span>
+		} else {
+			<span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-700">
+				<span class="material-icons-outlined text-gray-400 text-sm">close</span>
+			</span>
+		}
+	} else {
+		{ value }
+	}
+}

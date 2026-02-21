@@ -1,0 +1,172 @@
+package components
+
+import "github.com/bozz33/sublimego/flash"
+
+// ToastContainer displays toast notifications with Alpine.js
+templ ToastContainer() {
+	<div
+		id="toast-container"
+		class="fixed top-4 right-4 z-50 flex flex-col gap-2"
+		x-data="toastManager()"
+		@toast.window="addToast($event.detail)"
+	>
+		<template x-for="toast in toasts" :key="toast.id">
+			<div
+				x-show="toast.visible"
+				x-transition:enter="transform ease-out duration-300 transition"
+				x-transition:enter-start="translate-x-full opacity-0"
+				x-transition:enter-end="translate-x-0 opacity-100"
+				x-transition:leave="transform ease-in duration-200 transition"
+				x-transition:leave-start="translate-x-0 opacity-100"
+				x-transition:leave-end="translate-x-full opacity-0"
+				:class="{
+					'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800': toast.type === 'success',
+					'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800': toast.type === 'error',
+					'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800': toast.type === 'warning',
+					'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800': toast.type === 'info'
+				}"
+				class="flex items-start p-4 rounded-lg border shadow-lg max-w-sm"
+			>
+				<!-- Icon -->
+				<div class="flex-shrink-0">
+					<template x-if="toast.type === 'success'">
+						<span class="material-icons-outlined text-xl text-green-600 dark:text-green-500">check_circle</span>
+					</template>
+					<template x-if="toast.type === 'error'">
+						<span class="material-icons-outlined text-xl text-red-600 dark:text-red-500">cancel</span>
+					</template>
+					<template x-if="toast.type === 'warning'">
+						<span class="material-icons-outlined text-xl text-yellow-600 dark:text-yellow-500">warning</span>
+					</template>
+					<template x-if="toast.type === 'info'">
+						<span class="material-icons-outlined text-xl text-blue-600 dark:text-blue-500">info</span>
+					</template>
+				</div>
+
+				<!-- Content -->
+				<div class="ml-3 flex-1">
+					<template x-if="toast.title">
+						<p
+							x-text="toast.title"
+							:class="{
+								'text-green-800 dark:text-green-400': toast.type === 'success',
+								'text-red-800 dark:text-red-400': toast.type === 'error',
+								'text-yellow-800 dark:text-yellow-400': toast.type === 'warning',
+								'text-blue-800 dark:text-blue-400': toast.type === 'info'
+							}"
+							class="text-sm font-medium"
+						></p>
+					</template>
+					<p
+						x-text="toast.message"
+						:class="{
+							'text-green-700 dark:text-green-300': toast.type === 'success',
+							'text-red-700 dark:text-red-300': toast.type === 'error',
+							'text-yellow-700 dark:text-yellow-300': toast.type === 'warning',
+							'text-blue-700 dark:text-blue-300': toast.type === 'info'
+						}"
+						class="text-sm"
+						:class="{ 'mt-1': toast.title }"
+					></p>
+				</div>
+
+				<!-- Close button -->
+				<button
+					@click="removeToast(toast.id)"
+					type="button"
+					class="ml-3 flex-shrink-0 inline-flex rounded-lg p-1.5 hover:bg-black/5 dark:hover:bg-white/5"
+				>
+					<span class="sr-only">Close</span>
+					<span class="material-icons-outlined text-base">close</span>
+				</button>
+			</div>
+		</template>
+	</div>
+
+	<script>
+		function toastManager() {
+			return {
+				toasts: [],
+				nextId: 1,
+
+				addToast(data) {
+					const id = this.nextId++;
+					const toast = {
+						id,
+						type: data.type || 'info',
+						title: data.title || '',
+						message: data.message || '',
+						visible: false,
+						duration: data.duration || 5000
+					};
+
+					this.toasts.push(toast);
+
+					// Entry animation
+					this.$nextTick(() => {
+						toast.visible = true;
+					});
+
+					// Auto-remove
+					if (toast.duration > 0) {
+						setTimeout(() => {
+							this.removeToast(id);
+						}, toast.duration);
+					}
+				},
+
+				removeToast(id) {
+					const toast = this.toasts.find(t => t.id === id);
+					if (toast) {
+						toast.visible = false;
+						setTimeout(() => {
+							this.toasts = this.toasts.filter(t => t.id !== id);
+						}, 200);
+					}
+				}
+			};
+		}
+
+		// Global helpers to trigger toasts
+		window.toast = {
+			success(message, title = '') {
+				window.dispatchEvent(new CustomEvent('toast', {
+					detail: { type: 'success', message, title }
+				}));
+			},
+			error(message, title = '') {
+				window.dispatchEvent(new CustomEvent('toast', {
+					detail: { type: 'error', message, title }
+				}));
+			},
+			warning(message, title = '') {
+				window.dispatchEvent(new CustomEvent('toast', {
+					detail: { type: 'warning', message, title }
+				}));
+			},
+			info(message, title = '') {
+				window.dispatchEvent(new CustomEvent('toast', {
+					detail: { type: 'info', message, title }
+				}));
+			}
+		};
+	</script>
+}
+
+// ToastFromFlash converts flash messages to toasts
+templ ToastFromFlash(messages []flash.Message) {
+	if len(messages) > 0 {
+		<script>
+			document.addEventListener('DOMContentLoaded', function() {
+				for msg of messages {
+					const toastData = {
+						type: msg.Type,
+						message: msg.Text,
+						title: msg.Title || ''
+					};
+					window.dispatchEvent(new CustomEvent('toast', { detail: toastData }));
+				}
+			});
+		</script>
+	}
+}

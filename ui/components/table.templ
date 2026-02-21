@@ -1,30 +1,31 @@
 package components
 
 import (
-	"github.com/bozz33/sublimeadmin/table"
-	"github.com/bozz33/sublimeadmin/actions"
+	"github.com/bozz33/sublimego/table"
+	"github.com/bozz33/sublimego/actions"
 	"context"
 	"fmt"
 )
 
 // Table displays a table with the provided configuration
 templ Table(ctx context.Context, t *table.Table, data []any) {
-	<div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-		<!-- Table Header: search + filters -->
-		<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+	<div
+		class="relative overflow-x-auto shadow-md sm:rounded-lg bg-white dark:bg-gray-800"
+		x-data="{ selectedIds: [], selectAll: false }"
+	>
+		<!-- Header with search, filters and bulk actions -->
+		<div class="p-4 bg-white dark:bg-gray-900 flex flex-wrap justify-between items-center gap-3 border-b border-gray-200 dark:border-gray-700">
 			<div class="flex items-center gap-3">
 				if t.Searchable {
 					<div class="relative">
-						<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-							<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-							</svg>
-						</span>
+						<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+							<span class="material-icons-outlined text-lg text-gray-500 dark:text-gray-400">search</span>
+						</div>
 						<input
 							type="text"
 							name="search"
-							placeholder="Search..."
-							class="h-9 pl-9 pr-4 w-64 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500"
+							class="block p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg w-80 bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+							placeholder="Rechercher..."
 						/>
 					</div>
 				}
@@ -36,69 +37,91 @@ templ Table(ctx context.Context, t *table.Table, data []any) {
 					</div>
 				}
 			</div>
+			if len(t.BulkActions) > 0 {
+				<div x-show="selectedIds.length > 0" x-cloak class="flex items-center gap-2">
+					<span class="text-sm text-gray-500 dark:text-gray-400" x-text="`${selectedIds.length} selected`"></span>
+					for _, ba := range t.BulkActions {
+						@RenderBulkAction(ba)
+					}
+				</div>
+			}
 		</div>
 
-		<!-- Table -->
-		<div class="overflow-x-auto">
-			<table class="w-full text-sm text-left">
-				<thead class="bg-gray-50 dark:bg-gray-700/50">
-					<tr>
-						for _, col := range t.Columns {
-							<th scope="col" class="px-6 py-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-								<div class="flex items-center gap-1">
-									{ col.GetLabel() }
-									if col.IsSortable() {
-										<svg class="w-3.5 h-3.5 text-gray-400 cursor-pointer hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/>
-										</svg>
-									}
-								</div>
-							</th>
-						}
-						if len(t.Actions) > 0 {
-							<th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"></th>
-						}
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-					if len(data) == 0 {
-						<tr>
-							<td colspan={ fmt.Sprintf("%d", len(t.Columns)+1) } class="px-6 py-16 text-center">
-								<div class="flex flex-col items-center gap-3 text-gray-400">
-									<svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
-									</svg>
-									<p class="text-sm font-medium text-gray-500 dark:text-gray-400">No results found</p>
-								</div>
-							</td>
-						</tr>
-					} else {
-						for _, item := range data {
-							<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-								for _, col := range t.Columns {
-									<td class="px-6 py-4">
-										@RenderCell(ctx, col, item)
-									</td>
-								}
-								if len(t.Actions) > 0 {
-									<td class="px-6 py-4 text-right">
-										<div class="flex justify-end gap-2">
-											for _, action := range t.Actions {
-												@RenderActionButton(action, item)
-											}
-										</div>
-									</td>
-								}
-							</tr>
-						}
+		<!-- Tableau -->
+		<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+			<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+				<tr>
+					if len(t.BulkActions) > 0 {
+						<th scope="col" class="px-4 py-3 w-4">
+							<input
+								type="checkbox"
+								x-model="selectAll"
+								@change="selectAll ? selectedIds = [...$el.closest('table').querySelectorAll('tbody [data-row-id]')].map(el => el.dataset.rowId) : selectedIds = []"
+								class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
+							/>
+						</th>
 					}
-				</tbody>
-			</table>
-		</div>
+					for _, col := range t.Columns {
+						<th scope="col" class="px-6 py-3">
+							<div class="flex items-center">
+								{ col.Label() }
+								if col.IsSortable() {
+									<a href="#" class="ml-1">
+										<span class="material-icons-outlined text-xs">unfold_more</span>
+									</a>
+								}
+							</div>
+						</th>
+					}
+					if len(t.Actions) > 0 {
+						<th scope="col" class="px-6 py-3 text-right">Actions</th>
+					}
+				</tr>
+			</thead>
+			<tbody>
+				if len(data) == 0 {
+					<tr>
+						<td colspan={ fmt.Sprintf("%d", len(t.Columns)+1) } class="px-6 py-8 text-center text-gray-500">
+							Aucun resultat trouve
+						</td>
+					</tr>
+				} else {
+					for _, item := range data {
+						<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+							if len(t.BulkActions) > 0 {
+								<td class="px-4 py-4 w-4">
+									<input
+										type="checkbox"
+										data-row-id={ extractRowID(item) }
+										:value={ extractRowID(item) }
+										x-model="selectedIds"
+										class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
+									/>
+								</td>
+							}
+							for _, col := range t.Columns {
+								<td class="px-6 py-4">
+									@RenderCell(ctx, col, item)
+								</td>
+							}
+							if len(t.Actions) > 0 {
+								<td class="px-6 py-4 text-right">
+									<div class="flex justify-end gap-2">
+										for _, action := range t.Actions {
+											@RenderActionButton(action, item)
+										}
+									</div>
+								</td>
+							}
+						</tr>
+					}
+				}
+			</tbody>
+		</table>
 
 		<!-- Pagination -->
 		if t.Pagination && len(data) > 0 {
-			<div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+			<div class="p-4 border-t border-gray-200 dark:border-gray-700">
 				@Pagination(1, 10, len(data))
 			</div>
 		}
@@ -107,32 +130,69 @@ templ Table(ctx context.Context, t *table.Table, data []any) {
 
 // RenderCell renders a cell according to its type
 templ RenderCell(ctx context.Context, col table.Column, item any) {
-	switch col.GetType() {
+	switch col.Type() {
 		case "text":
 			<div class="text-gray-900 dark:text-white">
-				{ col.GetValue(item) }
+				{ col.Value(item) }
 				if col.IsCopyable() {
 					<button class="ml-2 text-gray-400 hover:text-gray-600" title="Copy">
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
-						</svg>
+						<span class="material-icons-outlined text-sm">content_copy</span>
 					</button>
 				}
 			</div>
 		case "badge":
 			if badgeCol, ok := col.(*table.BadgeColumn); ok {
-				@RenderBadge(badgeCol.GetValue(item), badgeCol.GetColor(badgeCol.GetValue(item)))
+				@RenderBadge(badgeCol.Value(item), badgeCol.GetColor(badgeCol.Value(item)))
 			}
 		case "image":
 			if imageCol, ok := col.(*table.ImageColumn); ok {
 				<img 
-					src={ col.GetValue(item) } 
-					alt={ col.GetLabel() }
+					src={ col.Value(item) } 
+					alt={ col.Label() }
 					class={ "w-10 h-10 object-cover", templ.KV("rounded-full", imageCol.Rounded), templ.KV("rounded", !imageCol.Rounded) }
 				/>
 			}
+		case "boolean":
+			if boolCol, ok := col.(*table.BooleanColumn); ok {
+				if boolCol.Value(item) == boolCol.TrueLabel {
+					<span class="inline-flex items-center gap-1 text-green-600 dark:text-green-400 font-medium text-sm">
+						<span class="material-icons-outlined text-base">check_circle</span>
+						{ boolCol.TrueLabel }
+					</span>
+				} else {
+					<span class="inline-flex items-center gap-1 text-red-500 dark:text-red-400 font-medium text-sm">
+						<span class="material-icons-outlined text-base">cancel</span>
+						{ boolCol.FalseLabel }
+					</span>
+				}
+			}
+		case "date":
+			<span class="text-gray-600 dark:text-gray-400 text-sm">{ col.Value(item) }</span>
 		default:
-			<span>{ col.GetValue(item) }</span>
+			<span>{ col.Value(item) }</span>
+	}
+}
+
+// RenderBulkAction renders a bulk action button in the toolbar.
+templ RenderBulkAction(ba *table.BulkAction) {
+	if ba.RequireConf {
+		<button
+			type="button"
+			@click={ fmt.Sprintf("$dispatch('open-bulk-modal', { title: '%s', desc: '%s', ids: selectedIds })", ba.ConfTitle, ba.ConfDesc) }
+			class={ getBulkActionClasses(ba.GetColor()) }
+		>
+			@ActionIcon(ba.GetIcon())
+			{ ba.GetLabel() }
+		</button>
+	} else {
+		<button
+			type="button"
+			@click={ fmt.Sprintf("$dispatch('bulk-action', { action: '%s', ids: selectedIds })", ba.GetLabel()) }
+			class={ getBulkActionClasses(ba.GetColor()) }
+		>
+			@ActionIcon(ba.GetIcon())
+			{ ba.GetLabel() }
+		</button>
 	}
 }
 
@@ -146,11 +206,11 @@ templ RenderBadge(value, color string) {
 // RenderAction renders an action button (table.Action interface)
 templ RenderAction(action table.Action, item any) {
 	<a 
-		href={ templ.SafeURL(action.GetURL(item)) }
-		class={ getActionClasses(action.GetColor()) }
-		title={ action.GetLabel() }
+		href={ templ.SafeURL(action.URL(item)) }
+		class={ getActionClasses(action.Color()) }
+		title={ action.Label() }
 	>
-		@ActionIcon(action.GetIcon())
+		@ActionIcon(action.Icon())
 	</a>
 }
 
@@ -178,18 +238,18 @@ templ RenderActionButton(action *actions.Action, item any) {
 
 // RenderFilter renders a filter
 templ RenderFilter(filter table.Filter) {
-	switch filter.GetType() {
+	switch filter.Type() {
 		case "select":
 			<select class="block p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-				<option value="">{ filter.GetLabel() }</option>
-				for _, opt := range filter.GetOptions() {
+				<option value="">{ filter.Label() }</option>
+				for _, opt := range filter.FilterOptions() {
 					<option value={ opt.Value }>{ opt.Label }</option>
 				}
 			</select>
 		case "boolean":
 			<select class="block p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
-				<option value="">{ filter.GetLabel() }</option>
-				for _, opt := range filter.GetOptions() {
+				<option value="">{ filter.Label() }</option>
+				for _, opt := range filter.FilterOptions() {
 					<option value={ opt.Value }>{ opt.Label }</option>
 				}
 			</select>
@@ -200,22 +260,13 @@ templ RenderFilter(filter table.Filter) {
 templ ActionIcon(icon string) {
 	switch icon {
 		case "edit":
-			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-			</svg>
+			<span class="material-icons-outlined text-lg">edit</span>
 		case "trash":
-			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-			</svg>
+			<span class="material-icons-outlined text-lg">delete</span>
 		case "eye":
-			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-			</svg>
+			<span class="material-icons-outlined text-lg">visibility</span>
 		default:
-			<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-			</svg>
+			<span class="material-icons-outlined text-lg">{ icon }</span>
 	}
 }
 

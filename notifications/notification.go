@@ -28,6 +28,7 @@ type Notification struct {
 	Icon        string    `json:"icon,omitempty"`
 	ActionURL   string    `json:"action_url,omitempty"`
 	ActionLabel string    `json:"action_label,omitempty"`
+	Duration    int       `json:"duration,omitempty"` // auto-dismiss ms (0 = persistent)
 	Read        bool      `json:"read"`
 	CreatedAt   time.Time `json:"created_at"`
 }
@@ -35,8 +36,8 @@ type Notification struct {
 // Store manages notifications for all users.
 type Store struct {
 	mu            sync.RWMutex
-	notifications map[string][]*Notification
-	subscribers   map[string][]chan *Notification
+	notifications map[string][]*Notification      // userID -> notifications
+	subscribers   map[string][]chan *Notification // userID -> SSE channels
 	maxPerUser    int
 }
 
@@ -58,23 +59,35 @@ func NewStore(maxPerUser int) *Store {
 	}
 }
 
-// SetGlobalStore replaces the global store.
-func SetGlobalStore(s *Store) { globalStore = s }
+// SetGlobalStore replaces the global store (useful for testing or custom config).
+func SetGlobalStore(s *Store) {
+	globalStore = s
+}
 
 // Send sends a notification to a user via the global store.
-func Send(userID string, n *Notification) { globalStore.Send(userID, n) }
+func Send(userID string, n *Notification) {
+	globalStore.Send(userID, n)
+}
 
 // GetUnread returns unread notifications for a user via the global store.
-func GetUnread(userID string) []*Notification { return globalStore.GetUnread(userID) }
+func GetUnread(userID string) []*Notification {
+	return globalStore.GetUnread(userID)
+}
 
 // GetAll returns all notifications for a user via the global store.
-func GetAll(userID string) []*Notification { return globalStore.GetAll(userID) }
+func GetAll(userID string) []*Notification {
+	return globalStore.GetAll(userID)
+}
 
 // MarkRead marks a notification as read via the global store.
-func MarkRead(userID, notifID string) { globalStore.MarkRead(userID, notifID) }
+func MarkRead(userID, notifID string) {
+	globalStore.MarkRead(userID, notifID)
+}
 
 // MarkAllRead marks all notifications as read for a user via the global store.
-func MarkAllRead(userID string) { globalStore.MarkAllRead(userID) }
+func MarkAllRead(userID string) {
+	globalStore.MarkAllRead(userID)
+}
 
 // Subscribe returns a channel that receives new notifications for a user.
 func Subscribe(ctx context.Context, userID string) <-chan *Notification {
@@ -82,7 +95,9 @@ func Subscribe(ctx context.Context, userID string) <-chan *Notification {
 }
 
 // UnreadCount returns the number of unread notifications for a user.
-func UnreadCount(userID string) int { return globalStore.UnreadCount(userID) }
+func UnreadCount(userID string) int {
+	return globalStore.UnreadCount(userID)
+}
 
 // Send sends a notification to a user and broadcasts to SSE subscribers.
 func (s *Store) Send(userID string, n *Notification) {
@@ -99,11 +114,13 @@ func (s *Store) Send(userID string, n *Notification) {
 
 	s.mu.Lock()
 	list := s.notifications[userID]
-	list = append([]*Notification{n}, list...)
+	list = append([]*Notification{n}, list...) // prepend (newest first)
 	if len(list) > s.maxPerUser {
 		list = list[:s.maxPerUser]
 	}
 	s.notifications[userID] = list
+
+	// Broadcast to SSE subscribers
 	subs := s.subscribers[userID]
 	s.mu.Unlock()
 
@@ -111,6 +128,7 @@ func (s *Store) Send(userID string, n *Notification) {
 		select {
 		case ch <- n:
 		default:
+			// subscriber too slow, skip
 		}
 	}
 }
@@ -119,6 +137,7 @@ func (s *Store) Send(userID string, n *Notification) {
 func (s *Store) GetUnread(userID string) []*Notification {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+
 	var result []*Notification
 	for _, n := range s.notifications[userID] {
 		if !n.Read {
@@ -132,6 +151,7 @@ func (s *Store) GetUnread(userID string) []*Notification {
 func (s *Store) GetAll(userID string) []*Notification {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+
 	list := s.notifications[userID]
 	result := make([]*Notification, len(list))
 	copy(result, list)
@@ -142,6 +162,7 @@ func (s *Store) GetAll(userID string) []*Notification {
 func (s *Store) MarkRead(userID, notifID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	for _, n := range s.notifications[userID] {
 		if n.ID == notifID {
 			n.Read = true
@@ -154,6 +175,7 @@ func (s *Store) MarkRead(userID, notifID string) {
 func (s *Store) MarkAllRead(userID string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
+
 	for _, n := range s.notifications[userID] {
 		n.Read = true
 	}
@@ -163,6 +185,7 @@ func (s *Store) MarkAllRead(userID string) {
 func (s *Store) UnreadCount(userID string) int {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+
 	count := 0
 	for _, n := range s.notifications[userID] {
 		if !n.Read {
@@ -173,15 +196,19 @@ func (s *Store) UnreadCount(userID string) int {
 }
 
 // Subscribe returns a channel that receives new notifications for a user.
+// The channel is automatically cleaned up when ctx is cancelled.
 func (s *Store) Subscribe(ctx context.Context, userID string) <-chan *Notification {
 	ch := make(chan *Notification, 16)
+
 	s.mu.Lock()
 	s.subscribers[userID] = append(s.subscribers[userID], ch)
 	s.mu.Unlock()
+
 	go func() {
 		<-ctx.Done()
 		s.mu.Lock()
 		defer s.mu.Unlock()
+
 		subs := s.subscribers[userID]
 		for i, sub := range subs {
 			if sub == ch {
@@ -191,6 +218,7 @@ func (s *Store) Subscribe(ctx context.Context, userID string) <-chan *Notificati
 		}
 		close(ch)
 	}()
+
 	return ch
 }
 
@@ -198,22 +226,22 @@ func (s *Store) Subscribe(ctx context.Context, userID string) <-chan *Notificati
 
 // Info creates an info-level notification.
 func Info(title string) *Notification {
-	return &Notification{Title: title, Level: LevelInfo, Icon: "information-circle"}
+	return &Notification{Title: title, Level: LevelInfo, Icon: "info", Duration: 5000}
 }
 
 // Success creates a success-level notification.
 func Success(title string) *Notification {
-	return &Notification{Title: title, Level: LevelSuccess, Icon: "check-circle"}
+	return &Notification{Title: title, Level: LevelSuccess, Icon: "check_circle", Duration: 4000}
 }
 
 // Warning creates a warning-level notification.
 func Warning(title string) *Notification {
-	return &Notification{Title: title, Level: LevelWarning, Icon: "exclamation-triangle"}
+	return &Notification{Title: title, Level: LevelWarning, Icon: "warning", Duration: 6000}
 }
 
 // Danger creates a danger-level notification.
 func Danger(title string) *Notification {
-	return &Notification{Title: title, Level: LevelDanger, Icon: "x-circle"}
+	return &Notification{Title: title, Level: LevelDanger, Icon: "error", Duration: 0}
 }
 
 // WithBody sets the notification body.
@@ -235,8 +263,51 @@ func (n *Notification) WithIcon(icon string) *Notification {
 	return n
 }
 
+// WithDuration sets the auto-dismiss duration in milliseconds (0 = persistent).
+func (n *Notification) WithDuration(ms int) *Notification {
+	n.Duration = ms
+	return n
+}
+
+// Persistent marks the notification as non-dismissible (duration = 0).
+func (n *Notification) Persistent() *Notification {
+	n.Duration = 0
+	return n
+}
+
 // SendTo sends this notification to a user via the global store.
-func (n *Notification) SendTo(userID string) { Send(userID, n) }
+func (n *Notification) SendTo(userID string) {
+	Send(userID, n)
+}
+
+// SendToAll broadcasts this notification to all users in the given list.
+func (n *Notification) SendToAll(userIDs []string) {
+	for _, id := range userIDs {
+		copy := *n
+		copy.ID = fmt.Sprintf("%d-%s", time.Now().UnixNano(), id)
+		Send(id, &copy)
+	}
+}
+
+// Broadcast sends a notification to all users currently tracked in the global store.
+func Broadcast(n *Notification) {
+	globalStore.Broadcast(n)
+}
+
+// Broadcast sends a notification to all users currently tracked in this store.
+func (s *Store) Broadcast(n *Notification) {
+	s.mu.RLock()
+	userIDs := make([]string, 0, len(s.notifications))
+	for id := range s.notifications {
+		userIDs = append(userIDs, id)
+	}
+	s.mu.RUnlock()
+	for _, id := range userIDs {
+		copy := *n
+		copy.ID = fmt.Sprintf("%d-%s", time.Now().UnixNano(), id)
+		s.Send(id, &copy)
+	}
+}
 
 // MarshalSSE formats the notification as a Server-Sent Events message.
 func (n *Notification) MarshalSSE() ([]byte, error) {

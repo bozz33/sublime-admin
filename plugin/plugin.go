@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// Plugin is the interface that all sublime-admin plugins must implement.
+// Plugin is the interface that all SublimeGo plugins must implement.
 type Plugin interface {
 	// Name returns the unique identifier of the plugin.
 	Name() string
@@ -20,6 +20,7 @@ var (
 )
 
 // Register adds a plugin to the global registry.
+// Typically called from a plugin's init() function.
 func Register(p Plugin) {
 	mu.Lock()
 	defer mu.Unlock()
@@ -36,6 +37,7 @@ func All() []Plugin {
 }
 
 // Boot calls Boot() on every registered plugin in registration order.
+// Returns the first error encountered.
 func Boot() error {
 	mu.RLock()
 	list := make([]Plugin, len(plugins))

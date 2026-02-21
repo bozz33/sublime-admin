@@ -1,16 +1,21 @@
 package layouts
 
-// Auth is the split-screen layout for login/register pages.
+// Auth is the layout for login/register pages (without sidebar).
+// Hybrid configuration: Tailwind CDN + Fonts CDN + local Alpine.js
 templ Auth(title string) {
 	<!DOCTYPE html>
-	<html lang="en" x-data="{ darkMode: localStorage.getItem('theme') === 'dark' }" x-init="$watch('darkMode', val => localStorage.setItem('theme', val ? 'dark' : 'light'))" :class="{ 'dark': darkMode }">
+	<html lang="en" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>{ title } - { GetPanelConfig().Name }</title>
+			
+			<!-- Favicon -->
 			if GetPanelConfig().Favicon != "" {
 				<link rel="icon" href={ GetPanelConfig().Favicon }/>
 			}
+			
+			<!-- Tailwind CSS CDN v4 -->
 			<script src="https://cdn.tailwindcss.com"></script>
 			<script>
 				tailwind.config = {
@@ -29,80 +34,28 @@ templ Auth(title string) {
 					}
 				}
 			</script>
+			
+			<!-- Fonts -->
 			<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+			<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
+			
+			<!-- Custom styles (local) -->
 			<link href="/assets/css/custom.css" rel="stylesheet"/>
+		
+			<!-- Alpine.js (local) -->
 			<script src="/assets/js/alpine.min.js" defer></script>
 			<style>[x-cloak] { display: none !important; }</style>
 		</head>
 		<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
-			<div class="min-h-screen flex">
-				<!-- Left: Form -->
-				<div class="flex-1 flex flex-col justify-center px-4 sm:px-6 lg:px-20 xl:px-24">
-					<div class="mx-auto w-full max-w-sm">
-						<!-- Logo -->
-						<div class="flex items-center gap-3 mb-8">
-							if GetPanelConfig().Logo != "" {
-								<img src={ GetPanelConfig().Logo } alt={ GetPanelConfig().Name } class="h-12 w-12 rounded-xl object-cover flex-shrink-0"/>
-							} else {
-								<div class="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
-									<svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-									</svg>
-								</div>
-							}
-							<span class="font-bold text-xl text-gray-900 dark:text-white">{ GetPanelConfig().Name }</span>
-						</div>
-						{ children... }
-					</div>
-				</div>
-
-				<!-- Right: Branded panel -->
-				<div class="hidden lg:flex lg:flex-1 bg-primary-500 relative overflow-hidden">
-					<div class="absolute inset-0 bg-gradient-to-br from-primary-400 to-primary-700"></div>
-					<div class="absolute inset-0 opacity-10">
-						<svg class="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-							<defs>
-								<pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-									<path d="M 10 0 L 0 0 0 10" fill="none" stroke="white" stroke-width="0.5"/>
-								</pattern>
-							</defs>
-							<rect width="100" height="100" fill="url(#grid)"/>
-						</svg>
-					</div>
-					<div class="relative z-10 flex flex-col justify-center px-12 text-white">
-						<div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-8">
-							<svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/>
-							</svg>
-						</div>
-						<h2 class="text-4xl font-bold mb-4">{ GetPanelConfig().Name }</h2>
-						<p class="text-lg text-white/80 mb-8 max-w-md">Secure, fast and modern admin panel for your application.</p>
-						<div class="flex items-center gap-8">
-							<div>
-								<p class="text-3xl font-bold">100%</p>
-								<p class="text-sm text-white/70">Secure</p>
-							</div>
-							<div>
-								<p class="text-3xl font-bold">Fast</p>
-								<p class="text-sm text-white/70">Performance</p>
-							</div>
-							<div>
-								<p class="text-3xl font-bold">Open</p>
-								<p class="text-sm text-white/70">Source</p>
-							</div>
-						</div>
-					</div>
-				</div>
+			<!-- Centered Container - Style Filament -->
+			<div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+				{ children... }
 			</div>
-
+			
 			<!-- Dark mode toggle -->
-			<button @click="darkMode = !darkMode" class="fixed bottom-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors z-50">
-				<svg x-show="!darkMode" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z"/>
-				</svg>
-				<svg x-show="darkMode" x-cloak class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z"/>
-				</svg>
+			<button @click="darkMode = !darkMode" class="fixed bottom-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+				<span x-show="!darkMode" class="material-icons-outlined">dark_mode</span>
+				<span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span>
 			</button>
 		</body>
 	</html>
