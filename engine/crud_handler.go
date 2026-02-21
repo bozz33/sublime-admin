@@ -1,7 +1,9 @@
 package engine
 
 import (
+	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -24,7 +26,12 @@ func NewCRUDHandler(r Resource) *CRUDHandler {
 func (h *CRUDHandler) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	component := h.Resource.Table(ctx)
-	render(w, r, h.Resource.PluralLabel(), component)
+	renderWithHeader(w, r,
+		h.Resource.PluralLabel(),
+		h.Resource.PluralLabel(), "",
+		"/"+h.Resource.Slug()+"/create", "New "+h.Resource.Label(),
+		component,
+	)
 }
 
 // Create displays the creation form.
@@ -37,7 +44,12 @@ func (h *CRUDHandler) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	component := h.Resource.Form(ctx, nil)
-	render(w, r, "Create "+h.Resource.Label(), component)
+	renderWithHeader(w, r,
+		"Create "+h.Resource.Label(),
+		"Create "+h.Resource.Label(), "Fill in the details below.",
+		"", "",
+		component,
+	)
 }
 
 // Edit displays the edit form.
@@ -51,7 +63,12 @@ func (h *CRUDHandler) Edit(w http.ResponseWriter, r *http.Request, id string) {
 	}
 
 	component := h.Resource.Form(ctx, item)
-	render(w, r, "Edit "+h.Resource.Label(), component)
+	renderWithHeader(w, r,
+		"Edit "+h.Resource.Label(),
+		"Edit "+h.Resource.Label(), "Update the details below.",
+		"", "",
+		component,
+	)
 }
 
 // Store handles creation.
@@ -183,5 +200,17 @@ func extractID(s string) (int, error) {
 // render is a helper to display a component in the layout.
 func render(w http.ResponseWriter, r *http.Request, title string, content templ.Component) {
 	fullPage := layouts.Page(title, content)
+	fullPage.Render(r.Context(), w)
+}
+
+// renderWithHeader wraps content with a PageHeader then renders inside the layout.
+func renderWithHeader(w http.ResponseWriter, r *http.Request, title, heading, description, createURL, createLabel string, content templ.Component) {
+	composed := templ.ComponentFunc(func(ctx context.Context, wr io.Writer) error {
+		if err := layouts.PageHeader(heading, description, createURL, createLabel).Render(ctx, wr); err != nil {
+			return err
+		}
+		return content.Render(ctx, wr)
+	})
+	fullPage := layouts.Page(title, composed)
 	fullPage.Render(r.Context(), w)
 }
