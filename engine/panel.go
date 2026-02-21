@@ -75,7 +75,7 @@ type Panel struct {
 func NewPanel(id string) *Panel {
 	return &Panel{
 		ID:           id,
-		BrandName:    "SublimeGo",
+		BrandName:    "SublimeAdmin",
 		PrimaryColor: "green",
 		DarkMode:     false,
 
@@ -308,11 +308,11 @@ func toNavItems(items []navItem) []layouts.NavItem {
 // It also calls syncConfig() and plugin.BootAll() exactly once.
 func (p *Panel) Router() http.Handler {
 	if err := p.runBeforeBoot(); err != nil {
-		panic("sublimego: before_boot hook failed: " + err.Error())
+		panic("sublimeadmin: before_boot hook failed: " + err.Error())
 	}
 	p.syncConfig()
 	if err := plugin.Boot(); err != nil {
-		panic("sublimego: plugin boot failed: " + err.Error())
+		panic("sublimeadmin: plugin boot failed: " + err.Error())
 	}
 	mux := http.NewServeMux()
 	p.registerStaticRoutes(mux)
@@ -326,7 +326,7 @@ func (p *Panel) Router() http.Handler {
 	}
 	handler = SecurityHeadersMiddleware(handler)
 	if err := p.runAfterBoot(); err != nil {
-		panic("sublimego: after_boot hook failed: " + err.Error())
+		panic("sublimeadmin: after_boot hook failed: " + err.Error())
 	}
 	return handler
 }

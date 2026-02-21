@@ -39,7 +39,7 @@ func NewLoader(opts ...Option) *Loader {
 		},
 		ConfigName:        "config",
 		ConfigType:        "yaml",
-		EnvPrefix:         "SUBLIMEGO",
+		EnvPrefix:         "SublimeAdmin",
 		RequireConfigFile: false,
 	}
 
@@ -99,7 +99,7 @@ func (l *Loader) configure() error {
 // setDefaults sets default values.
 func (l *Loader) setDefaults() {
 	l.v.SetDefault("environment", "development")
-	l.v.SetDefault("app.name", "SublimeGo")
+	l.v.SetDefault("app.name", "SublimeAdmin")
 	l.v.SetDefault("app.version", "1.0.0")
 	l.v.SetDefault("app.debug", false)
 
@@ -112,7 +112,7 @@ func (l *Loader) setDefaults() {
 	l.v.SetDefault("server.max_header_bytes", 1<<20) // 1 MB
 
 	l.v.SetDefault("database.driver", "sqlite")
-	l.v.SetDefault("database.url", "file:sublimego.db?cache=shared&_fk=1")
+	l.v.SetDefault("database.url", "file:app.db?cache=shared&_fk=1")
 	l.v.SetDefault("database.max_open_conns", 25)
 	l.v.SetDefault("database.max_idle_conns", 5)
 	l.v.SetDefault("database.conn_max_lifetime", 5*time.Minute)

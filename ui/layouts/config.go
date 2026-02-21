@@ -13,7 +13,7 @@ type FooterLink struct {
 
 // PanelConfig contains the admin panel configuration — Filament-style.
 type PanelConfig struct {
-	Name         string // Panel name (ex: "SublimeGo")
+	Name         string // Panel name (ex: "SublimeAdmin")
 	Path         string // Base path (ex: "/admin")
 	Logo         string // Logo URL (optional)
 	Favicon      string // Favicon URL (optional)
@@ -38,7 +38,7 @@ type PanelConfig struct {
 // DefaultPanelConfig returns the default configuration
 func DefaultPanelConfig() *PanelConfig {
 	return &PanelConfig{
-		Name:               "SublimeGo",
+		Name:               "SublimeAdmin",
 		Path:               "/admin",
 		PrimaryColor:       "green",
 		DarkMode:           false,

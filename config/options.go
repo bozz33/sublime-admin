@@ -109,6 +109,6 @@ func WithDockerDefaults() Option {
 	return func(opts *LoadOptions) {
 		opts.ConfigPaths = []string{}
 		opts.RequireConfigFile = false
-		opts.EnvPrefix = "SUBLIMEGO"
+		opts.EnvPrefix = "SublimeAdmin"
 	}
 }

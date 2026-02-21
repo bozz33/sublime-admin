@@ -31,7 +31,7 @@ type MFAConfig struct {
 // DefaultMFAConfig returns sensible defaults for TOTP-based MFA.
 func DefaultMFAConfig() *MFAConfig {
 	return &MFAConfig{
-		Issuer:            "SublimeGo",
+		Issuer:            "SublimeAdmin",
 		Digits:            6,
 		Period:            30,
 		Skew:              1,

@@ -15,7 +15,7 @@ func TestNewPanel_Defaults(t *testing.T) {
 	if p.ID != "admin" {
 		t.Errorf("expected ID=admin, got %s", p.ID)
 	}
-	if p.BrandName != "SublimeGo" {
+	if p.BrandName != "SublimeAdmin" {
 		t.Errorf("expected BrandName=SublimeGo, got %s", p.BrandName)
 	}
 	if p.PrimaryColor != "green" {

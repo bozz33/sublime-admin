@@ -27,7 +27,7 @@ var initCmd = &cobra.Command{
 5. Configuration Multi-Panel
 6. Creation de l'Administrateur Systeme`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		fmt.Println("Demarrage de l'initialisation de SublimeGo...")
+		fmt.Println("Demarrage de l'Initializing application...")
 
 		if err := setupEnv(); err != nil {
 			return err
@@ -56,7 +56,7 @@ var initCmd = &cobra.Command{
 		}
 
 		fmt.Println("\nInitialisation terminee avec succes !")
-		fmt.Println("Lancez 'sublimego serve' pour demarrer.")
+		fmt.Println("Run 'yourapp serve' pour demarrer.")
 		return nil
 	},
 }
@@ -68,7 +68,7 @@ func init() {
 func setupEnv() error {
 	if _, err := os.Stat(".env"); os.IsNotExist(err) {
 		fmt.Println("Creation du fichier .env...")
-		content := "APP_ENV=local\nAPP_KEY=" + generateSecureKey() + "\nDB_DRIVER=sqlite3\nDB_URL=file:sublimego.db?cache=shared&_fk=1\n"
+		content := "APP_ENV=local\nAPP_KEY=" + generateSecureKey() + "\nDB_DRIVER=sqlite3\nDB_URL=file:app.db?cache=shared&_fk=1\n"
 		return os.WriteFile(".env", []byte(content), 0644)
 	}
 	fmt.Println("Fichier .env existant detecte.")
@@ -82,7 +82,7 @@ func setupConfig() error {
 		os.MkdirAll("config", 0755)
 
 		content := `app:
-  name: "SublimeGo App"
+  name: "Your App"
   debug: true
   port: 8080
 
@@ -158,7 +158,7 @@ func runGoGenerate() error {
 }
 
 func runMigration() error {
-	client, err := ent.Open("sqlite3", "file:sublimego.db?cache=shared&_fk=1")
+	client, err := ent.Open("sqlite3", "file:app.db?cache=shared&_fk=1")
 	if err != nil {
 		return fmt.Errorf("failed opening connection: %w", err)
 	}
@@ -175,11 +175,11 @@ func createSystemAdmin() error {
 	fmt.Println("\nConfiguration de l'Administrateur Systeme")
 
 	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Email [admin@sublimego.dev]: ")
+	fmt.Print("Email [admin@example.com]: ")
 	email, _ := reader.ReadString('\n')
 	email = strings.TrimSpace(email)
 	if email == "" {
-		email = "admin@sublimego.dev"
+		email = "admin@example.com"
 	}
 
 	fmt.Print("Mot de passe [password]: ")
@@ -194,7 +194,7 @@ func createSystemAdmin() error {
 		return err
 	}
 
-	client, err := ent.Open("sqlite3", "file:sublimego.db?cache=shared&_fk=1")
+	client, err := ent.Open("sqlite3", "file:app.db?cache=shared&_fk=1")
 	if err != nil {
 		return fmt.Errorf("failed opening connection: %w", err)
 	}

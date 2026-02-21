@@ -38,7 +38,7 @@ var (
 // Commande racine (infrastructure)
 
 var rootCmd = &cobra.Command{
-	Use:   "sublimego",
+	Use:   "SublimeAdmin",
 	Short: "SublimeGo - The Go Admin Framework",
 	Long: `SublimeGo is a production-grade admin framework for Go.
 	

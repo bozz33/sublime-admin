@@ -13,7 +13,7 @@ var buildCmd = &cobra.Command{
 	Use:     "build",
 	Aliases: []string{"b"},
 	Short:   "Build the application for production",
-	Long: `Build the SublimeGo application for production.
+	Long: `Build the Your Application for production.
 
 This command runs a complete build pipeline:
 1. Generate Templ templates (templ generate)
@@ -46,7 +46,7 @@ This command runs a complete build pipeline:
 		}
 
 		// Build avec informations de version
-		outputPath := filepath.Join(binDir, "sublimego")
+		outputPath := filepath.Join(binDir, "SublimeAdmin")
 		ldflags := fmt.Sprintf("-X main.Version=%s -X main.GitCommit=%s -X main.BuildDate=%s",
 			version, gitCommit, buildDate)
 
