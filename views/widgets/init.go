@@ -2,7 +2,7 @@ package widgets
 
 import (
 	"github.com/a-h/templ"
-	"github.com/bozz33/sublimego/widget"
+	"github.com/bozz33/sublimeadmin/widget"
 )
 
 func init() {

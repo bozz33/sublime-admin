@@ -13,12 +13,12 @@ Use this package as a dependency in your existing Go project.
 
 SublimeGo is split into two complementary repositories:
 
-| | [SublimeGo](https://github.com/bozz33/SublimeGo) | [sublime-admin](https://github.com/bozz33/sublime-admin) |
+| | [SublimeGo](https://github.com/bozz33/sublimeadmin) | [sublime-admin](https://github.com/bozz33/sublime-admin) |
 |---|---|---|
 | **Type** | Complete starter project | Core framework library |
 | **Use when** | Starting a new admin panel project | Adding admin panel to an existing Go project |
 | **Includes** | DB setup, Ent schemas, CLI, examples, views | Framework packages only |
-| **Import** | `github.com/bozz33/sublimego` | `github.com/bozz33/sublimeadmin` |
+| **Import** | `github.com/bozz33/sublimeadmin` | `github.com/bozz33/sublimeadmin` |
 
 > **Not sure which to pick?** Start with **SublimeGo**  it includes everything out of the box.
 
@@ -220,20 +220,20 @@ http.ListenAndServe(":8080", engine.TenantMiddleware(resolver, true)(router))
 ## Documentation
 
 Full documentation, guides, and examples are available in the
-[SublimeGo starter project](https://github.com/bozz33/SublimeGo):
+[SublimeGo starter project](https://github.com/bozz33/sublimeadmin):
 
-- [ARCHITECTURE.md](https://github.com/bozz33/SublimeGo/blob/main/ARCHITECTURE.md)
-- [RESOURCES_GUIDE.md](https://github.com/bozz33/SublimeGo/blob/main/RESOURCES_GUIDE.md)
-- [PANEL_CONFIG.md](https://github.com/bozz33/SublimeGo/blob/main/PANEL_CONFIG.md)
-- [TEMPLATING.md](https://github.com/bozz33/SublimeGo/blob/main/TEMPLATING.md)
-- [CONTRIBUTING.md](https://github.com/bozz33/SublimeGo/blob/main/CONTRIBUTING.md)
+- [ARCHITECTURE.md](https://github.com/bozz33/sublimeadmin/blob/main/ARCHITECTURE.md)
+- [RESOURCES_GUIDE.md](https://github.com/bozz33/sublimeadmin/blob/main/RESOURCES_GUIDE.md)
+- [PANEL_CONFIG.md](https://github.com/bozz33/sublimeadmin/blob/main/PANEL_CONFIG.md)
+- [TEMPLATING.md](https://github.com/bozz33/sublimeadmin/blob/main/TEMPLATING.md)
+- [CONTRIBUTING.md](https://github.com/bozz33/sublimeadmin/blob/main/CONTRIBUTING.md)
 
 ---
 
 ## Contributing
 
 Contributions are welcome  please read
-[CONTRIBUTING.md](https://github.com/bozz33/SublimeGo/blob/main/CONTRIBUTING.md)
+[CONTRIBUTING.md](https://github.com/bozz33/sublimeadmin/blob/main/CONTRIBUTING.md)
 for guidelines.
 
 ---

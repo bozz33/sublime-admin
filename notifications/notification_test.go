@@ -3,7 +3,7 @@ package notifications_test
 import (
 	"testing"
 
-	"github.com/bozz33/sublimego/notifications"
+	"github.com/bozz33/sublimeadmin/notifications"
 )
 
 func TestInfoBuilder(t *testing.T) {

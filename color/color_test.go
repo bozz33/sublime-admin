@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/bozz33/sublimego/color"
+	"github.com/bozz33/sublimeadmin/color"
 )
 
 func TestPaletteCSSVars(t *testing.T) {

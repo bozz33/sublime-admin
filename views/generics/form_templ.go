@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
-	"github.com/bozz33/sublimego/form"
+	"github.com/bozz33/sublimeadmin/form"
 )
 
 func Form(f *form.Form) templ.Component {

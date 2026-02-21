@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/bozz33/sublimego/search"
+	"github.com/bozz33/sublimeadmin/search"
 )
 
 func TestBaseSearchableDefaults(t *testing.T) {

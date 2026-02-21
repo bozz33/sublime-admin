@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bozz33/sublimego/internal/ent"
-	"github.com/bozz33/sublimego/engine"
+	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
+	"github.com/bozz33/sublimeadmin/engine"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )

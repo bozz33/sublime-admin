@@ -104,9 +104,9 @@ import (
     "net/http"
 
     "github.com/alexedwards/scs/v2"
-    "github.com/bozz33/sublimego/auth"
-    "github.com/bozz33/sublimego/engine"
-    "github.com/bozz33/sublimego/notifications"
+    "github.com/bozz33/sublimeadmin/auth"
+    "github.com/bozz33/sublimeadmin/engine"
+    "github.com/bozz33/sublimeadmin/notifications"
 )
 
 func main() {
@@ -195,7 +195,7 @@ if auth.UseRecoveryCode(user, submittedCode) {
 ## Render Hooks Setup
 
 ```go
-import "github.com/bozz33/sublimego/hooks"
+import "github.com/bozz33/sublimeadmin/hooks"
 
 // Inject a custom banner after the main content
 hooks.Register(hooks.AfterContent, func(ctx context.Context) templ.Component {
@@ -213,7 +213,7 @@ hooks.Register(hooks.InHead, func(ctx context.Context) templ.Component {
 ## Plugin Setup
 
 ```go
-import "github.com/bozz33/sublimego/plugin"
+import "github.com/bozz33/sublimeadmin/plugin"
 
 type AuditPlugin struct{}
 

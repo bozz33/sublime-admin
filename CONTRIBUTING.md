@@ -24,7 +24,7 @@ make install-tools
 
 ```bash
 # 1. Fork and clone
-git clone https://github.com/bozz33/sublimego.git
+git clone https://github.com/bozz33/sublimeadmin.git
 cd sublimego
 
 # 2. Download dependencies
@@ -149,7 +149,7 @@ func NewStore(...) *Store { ... }          // New prefix for constructors
 func (t *Table) WithColumns(...) *Table { ... }
 
 // Errors  package apperrors, not errors
-import apperrors "github.com/bozz33/sublimego/errors"
+import apperrors "github.com/bozz33/sublimeadmin/errors"
 ```
 
 ### Package Structure

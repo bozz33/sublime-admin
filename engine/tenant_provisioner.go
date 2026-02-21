@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bozz33/sublimego/internal/ent"
+	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 	_ "github.com/mattn/go-sqlite3"
 )
 

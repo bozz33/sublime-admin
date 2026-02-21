@@ -3,8 +3,8 @@ package engine_test
 import (
 	"testing"
 
-	"github.com/bozz33/sublimego/color"
-	"github.com/bozz33/sublimego/engine"
+	"github.com/bozz33/sublimeadmin/color"
+	"github.com/bozz33/sublimeadmin/engine"
 )
 
 func TestDefaultColorScheme(t *testing.T) {

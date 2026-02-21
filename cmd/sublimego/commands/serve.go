@@ -13,9 +13,9 @@ import (
 
 	entsql "entgo.io/ent/dialect/sql"
 	"github.com/alexedwards/scs/v2"
-	"github.com/bozz33/sublimego/internal/ent"
-	"github.com/bozz33/sublimego/auth"
-	"github.com/bozz33/sublimego/engine"
+	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
+	"github.com/bozz33/sublimeadmin/auth"
+	"github.com/bozz33/sublimeadmin/engine"
 	"github.com/spf13/cobra"
 )
 

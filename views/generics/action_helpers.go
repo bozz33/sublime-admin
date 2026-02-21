@@ -3,7 +3,7 @@ package generics
 import (
 	"fmt"
 
-	"github.com/bozz33/sublimego/actions"
+	"github.com/bozz33/sublimeadmin/actions"
 )
 
 // actionModalDispatch builds the Alpine.js $dispatch call string for a confirmation modal.

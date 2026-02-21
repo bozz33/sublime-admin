@@ -9,7 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/bozz33/sublimego/actions"
+	"github.com/bozz33/sublimeadmin/actions"
 )
 
 // ActionConfirmModal renders a reusable confirmation modal driven by Alpine.js events.

@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/bozz33/sublimego/ui/layouts"
+	"github.com/bozz33/sublimeadmin/ui/layouts"
 )
 
 func TestNewPanel_Defaults(t *testing.T) {

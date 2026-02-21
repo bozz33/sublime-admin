@@ -11,8 +11,8 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"context"
 	"fmt"
-	"github.com/bozz33/sublimego/actions"
-	"github.com/bozz33/sublimego/table"
+	"github.com/bozz33/sublimeadmin/actions"
+	"github.com/bozz33/sublimeadmin/table"
 )
 
 // Table displays a table with the provided configuration

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/bozz33/sublimego/export"
-	importer "github.com/bozz33/sublimego/import"
+	"github.com/bozz33/sublimeadmin/export"
+	importer "github.com/bozz33/sublimeadmin/import"
 )
 
 // ExportHandler serves CSV/Excel exports for a resource.

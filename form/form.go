@@ -3,7 +3,7 @@ package form
 import (
 	"context"
 
-	"github.com/bozz33/sublimego/validation"
+	"github.com/bozz33/sublimeadmin/validation"
 )
 
 // Form is the main container.

@@ -96,7 +96,7 @@ sublimego/
 
        
 
-               Ent ORM  (internal/ent/)                  
+               Ent ORM  (your-project/internal/ent/)                  
    Schemas  Migrations  Type-safe queries              
 
 ```
@@ -258,7 +258,7 @@ This is intentional and follows the standard Go pattern for optional CGO depende
 The `errors/` package (imported as `apperrors`) provides structured, HTTP-aware errors:
 
 ```go
-import apperrors "github.com/bozz33/sublimego/errors"
+import apperrors "github.com/bozz33/sublimeadmin/errors"
 
 err := apperrors.NotFound("user not found")
 err := apperrors.Forbidden("access denied")

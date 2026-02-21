@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/bozz33/sublimego/engine"
+	"github.com/bozz33/sublimeadmin/engine"
 )
 
 func TestTenantProvisioner(t *testing.T) {

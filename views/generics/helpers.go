@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/bozz33/sublimego/engine"
+	"github.com/bozz33/sublimeadmin/engine"
 )
 
 // getValueStr returns the value as a string

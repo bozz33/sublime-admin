@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/bozz33/sublimego/internal/scanner"
+	"github.com/bozz33/sublimeadmin/internal/scanner"
 )
 
 func main() {

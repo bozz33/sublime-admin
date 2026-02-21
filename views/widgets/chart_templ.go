@@ -9,7 +9,7 @@ import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
 import (
-	"github.com/bozz33/sublimego/widget"
+	"github.com/bozz33/sublimeadmin/widget"
 )
 
 func Chart(w *widget.ChartWidget) templ.Component {

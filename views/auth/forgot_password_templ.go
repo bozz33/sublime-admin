@@ -8,7 +8,7 @@ package auth
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/bozz33/sublimego/ui/layouts"
+import "github.com/bozz33/sublimeadmin/ui/layouts"
 
 // ForgotPasswordPage renders the forgot password request form.
 func ForgotPasswordPage(flashError string, flashSuccess string) templ.Component {

@@ -8,7 +8,7 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/bozz33/sublimego/internal/ent"
+	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 	"github.com/spf13/cobra"
 )
 

@@ -246,7 +246,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/bozz33/sublimego/internal/ent"
+	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 )
 
 // Seed%s inserts test data for %s

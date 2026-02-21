@@ -13,7 +13,7 @@ and automatic admin panel integration.
 go run -mod=mod entgo.io/ent/cmd/ent new Product
 ```
 
-Edit `internal/ent/schema/product.go`:
+Edit `your-project/internal/ent/schema/product.go`:
 
 ```go
 package schema
@@ -49,7 +49,7 @@ func (Product) Indexes() []ent.Index {
 ### 2. Generate Ent Code
 
 ```bash
-go generate ./internal/ent
+go generate ./your-project/internal/ent
 ```
 
 ### 3. Generate the Resource Scaffold
@@ -98,12 +98,12 @@ import (
     "strconv"
 
     "github.com/a-h/templ"
-    "github.com/bozz33/sublimego/engine"
-    "github.com/bozz33/sublimego/form"
-    "github.com/bozz33/sublimego/table"
-    "github.com/bozz33/sublimego/views"
-    "github.com/bozz33/sublimego/internal/ent"
-    entproduct "github.com/bozz33/sublimego/internal/ent/product"
+    "github.com/bozz33/sublimeadmin/engine"
+    "github.com/bozz33/sublimeadmin/form"
+    "github.com/bozz33/sublimeadmin/table"
+    "github.com/bozz33/sublimeadmin/views"
+    "github.com/bozz33/sublimeadmin/your-project/internal/ent"
+    entproduct "github.com/bozz33/sublimeadmin/your-project/internal/ent/product"
 )
 
 type ProductResource struct {

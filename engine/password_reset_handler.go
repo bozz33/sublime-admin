@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/a-h/templ"
-	authpkg "github.com/bozz33/sublimego/auth"
-	"github.com/bozz33/sublimego/internal/ent"
-	"github.com/bozz33/sublimego/internal/ent/user"
-	"github.com/bozz33/sublimego/mailer"
-	authtemplates "github.com/bozz33/sublimego/views/auth"
+	authpkg "github.com/bozz33/sublimeadmin/auth"
+	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
+	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client/user"
+	"github.com/bozz33/sublimeadmin/mailer"
+	authtemplates "github.com/bozz33/sublimeadmin/views/auth"
 )
 
 // resetToken holds a password reset token with expiry.

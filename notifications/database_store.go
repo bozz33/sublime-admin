@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bozz33/sublimego/internal/ent"
-	entnotif "github.com/bozz33/sublimego/internal/ent/notification"
+	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
+	entnotif "// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client/notification"
 )
 
 // DatabaseStore is a persistent notification store backed by Ent.

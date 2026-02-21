@@ -10,8 +10,8 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
-	authpkg "github.com/bozz33/sublimego/auth"
-	"github.com/bozz33/sublimego/ui/layouts"
+	authpkg "github.com/bozz33/sublimeadmin/auth"
+	"github.com/bozz33/sublimeadmin/ui/layouts"
 )
 
 // ProfilePage renders the authenticated user's profile page.

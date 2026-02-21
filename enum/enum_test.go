@@ -3,7 +3,7 @@ package enum_test
 import (
 	"testing"
 
-	"github.com/bozz33/sublimego/enum"
+	"github.com/bozz33/sublimeadmin/enum"
 )
 
 // --- test enum type ---

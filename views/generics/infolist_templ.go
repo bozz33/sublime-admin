@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
-	"github.com/bozz33/sublimego/infolist"
+	"github.com/bozz33/sublimeadmin/infolist"
 )
 
 // Infolist renders a read-only detail view (equivalent to Filament's Infolist).

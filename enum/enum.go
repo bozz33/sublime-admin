@@ -3,7 +3,7 @@
 // their metadata to form fields, table columns, badges, and navigation items.
 package enum
 
-import "github.com/bozz33/sublimego/form"
+import "github.com/bozz33/sublimeadmin/form"
 
 // HasLabel is implemented by enums that have a human-readable label.
 type HasLabel interface {

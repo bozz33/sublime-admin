@@ -10,7 +10,7 @@ import templruntime "github.com/a-h/templ/runtime"
 
 import (
 	"fmt"
-	"github.com/bozz33/sublimego/engine"
+	"github.com/bozz33/sublimeadmin/engine"
 )
 
 // RelationTableState holds the data needed to render a relation sub-table.

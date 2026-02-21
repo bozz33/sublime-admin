@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/a-h/templ"
-	"github.com/bozz33/sublimego/ui/layouts"
+	"github.com/bozz33/sublimeadmin/ui/layouts"
 )
 
 const contextKeyListQuery contextKey = "list_query"

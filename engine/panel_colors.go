@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"github.com/bozz33/sublimego/color"
+	"github.com/bozz33/sublimeadmin/color"
 )
 
 // ColorScheme defines all semantic colors used in the panel.
