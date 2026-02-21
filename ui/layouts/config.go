@@ -1,5 +1,11 @@
 package layouts
 
+// FooterLink is a configurable link in the footer
+type FooterLink struct {
+	Label string
+	URL   string
+}
+
 // PanelConfig contains the admin panel configuration
 // Filament style - centralized configuration
 type PanelConfig struct {
@@ -14,6 +20,15 @@ type PanelConfig struct {
 	PasswordReset     bool      // Enable password reset
 	Profile           bool      // Enable profile page
 	Navigation        []NavItem // Navigation items
+
+	// Topbar features
+	SearchBar         bool   // Show global search bar in topbar (default: true)
+	Notifications     bool   // Show notifications bell in topbar (default: true)
+	SearchPlaceholder string // Placeholder text for search bar
+
+	// Footer
+	FooterEnabled bool         // Show footer (default: true)
+	FooterLinks   []FooterLink // Configurable footer links
 }
 
 // DefaultPanelConfig returns the default configuration
@@ -28,6 +43,14 @@ func DefaultPanelConfig() *PanelConfig {
 		PasswordReset:     true,
 		Profile:           true,
 		Navigation:        []NavItem{},
+		SearchBar:         true,
+		Notifications:     true,
+		SearchPlaceholder: "Search...",
+		FooterEnabled:     true,
+		FooterLinks: []FooterLink{
+			{Label: "Documentation", URL: "#"},
+			{Label: "Support", URL: "#"},
+		},
 	}
 }
 

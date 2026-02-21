@@ -8,11 +8,11 @@ templ Base(title string) {
 		lang="en" 
 		class="h-full"
 		x-data="{ 
-			darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches),
-			sidebarOpen: false,
-			sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true'
+			darkMode: localStorage.getItem('darkMode') === 'true',
+			sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false',
+			sidebarMobileOpen: false
 		}"
-		x-init="$watch('darkMode', val => localStorage.setItem('theme', val ? 'dark' : 'light'))"
+		x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val)); $watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val))"
 		:class="{ 'dark': darkMode }"
 	>
 	<head>
@@ -76,27 +76,42 @@ templ Base(title string) {
 		<!-- Main Content Area -->
 		<div 
 			id="main-content"
-			class="min-h-screen transition-all duration-300"
-			:class="sidebarCollapsed ? 'lg:pl-20' : 'lg:pl-64'"
+			class="flex-1 flex flex-col min-h-screen transition-all duration-300"
+			:class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'"
 		>
 			<!-- Header -->
 			@Topbar(ctx)
 
 			<!-- Main Content -->
-			<main class="p-4 md:p-6 lg:p-8">
-				<!-- Flash Messages Container -->
-				<div id="flash-container" class="mb-6">
-					@Flash()
+			<main class="flex-1 p-4 lg:p-6">
+				<div class="max-w-7xl mx-auto">
+					<!-- Flash Messages Container -->
+					<div id="flash-container" class="mb-6">
+						@Flash()
+					</div>
+					
+					<!-- Page Content -->
+					{ children... }
 				</div>
-				
-				<!-- Page Content -->
-				{ children... }
 			</main>
 			
 			<!-- Footer -->
-			<footer class="px-4 py-6 text-center text-sm text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800">
-				<p>© 2024 { GetPanelConfig().Name }. All rights reserved.</p>
-			</footer>
+			if GetPanelConfig().FooterEnabled {
+				<footer class="mt-auto border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+					<div class="max-w-7xl mx-auto px-4 lg:px-6 py-4">
+						<div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+							<p>© 2024 { GetPanelConfig().Name }. All rights reserved.</p>
+							if len(GetPanelConfig().FooterLinks) > 0 {
+								<div class="flex gap-6">
+									for _, link := range GetPanelConfig().FooterLinks {
+										<a href={ templ.SafeURL(link.URL) } class="hover:text-primary-600 transition-colors">{ link.Label }</a>
+									}
+								</div>
+							}
+						</div>
+					</div>
+				</footer>
+			}
 		</div>
 
 		<!-- Toast Container -->

@@ -44,6 +44,7 @@ templ Topbar(ctx context.Context) {
 					</svg>
 				</button>
 				<!-- Global search -->
+			if GetPanelConfig().SearchBar {
 				<div class="hidden md:block relative">
 					<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
 						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -52,10 +53,11 @@ templ Topbar(ctx context.Context) {
 					</span>
 					<input
 						type="text"
-						placeholder="Search..."
+						placeholder={ GetPanelConfig().SearchPlaceholder }
 						class="w-64 lg:w-80 h-10 pl-10 pr-4 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:text-white dark:placeholder-gray-400"
 					/>
 				</div>
+			}
 			</div>
 
 			<!-- Right: dark mode + notifications + user -->
@@ -76,6 +78,7 @@ templ Topbar(ctx context.Context) {
 				</button>
 
 				<!-- Notifications -->
+			if GetPanelConfig().Notifications {
 				<div x-data="{ open: false }" class="relative">
 					<button
 						@click="open = !open"
@@ -130,6 +133,7 @@ templ Topbar(ctx context.Context) {
 						</div>
 					</div>
 				</div>
+			}
 
 				<!-- Separator -->
 				<div class="hidden lg:block w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
