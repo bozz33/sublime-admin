@@ -1,0 +1,46 @@
+package {{.PackageName}}
+
+import (
+	"context"
+	"io"
+
+	"github.com/a-h/templ"
+	"github.com/bozz33/sublimego/engine"
+	"github.com/bozz33/sublimego/views/generics"
+)
+
+// Table returns the list view component.
+// It uses BuildTableState which automatically applies active filters from context.
+func (r *{{.TypeName}}) Table(ctx context.Context) templ.Component {
+	state, err := r.BuildTableState(ctx, r.CanCreate(ctx), r.CanDelete(ctx))
+	if err != nil {
+		return templ.ComponentFunc(func(ctx context.Context, w io.Writer) error {
+			_, werr := io.WriteString(w, "<p class=\"text-red-500\">Error loading table: "+err.Error()+"</p>")
+			return werr
+		})
+	}
+	return generics.List(state)
+}
+
+// tableColumns returns the column definitions for this resource.
+// Called automatically by BuildTableState via SetTableColumns.
+// TODO: customise columns and call r.SetTableColumns(...) in your constructor.
+//
+// Example:
+//
+//	func New(db *ent.Client) *{{.TypeName}} {
+//		res := &{{.TypeName}}{db: db}
+//		res.SetTableColumns(
+//			engine.Column{Key: "ID",   Label: "ID"},
+//			engine.Column{Key: "Name", Label: "Name"},
+//			engine.Column{Key: "Email",Label: "Email"},
+//			engine.Column{Key: "CreatedAt", Label: "Created", Type: "date"},
+//		)
+//		res.SetExportURL("/" + res.Slug() + "/export")
+//		res.SetTableBulkActions(
+//			engine.BulkActionDef{Key: "delete", Label: "Delete selected",
+//				Icon: "delete_outline", Color: "danger",
+//				URL: "/" + res.Slug() + "/bulk-delete"},
+//		)
+//		return res
+//	}
