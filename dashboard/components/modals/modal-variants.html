@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modals - Composants UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
+    <header class="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-3">
+                    <a href="../index.html" class="text-sm text-gray-500 hover:text-primary-600">← Retour</a>
+                    <span class="text-gray-300">|</span>
+                    <h1 class="font-semibold text-gray-900 dark:text-white">Modals</h1>
+                </div>
+                <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span x-show="!darkMode" class="material-icons-outlined">dark_mode</span>
+                    <span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+<!-- 
+  Modal Components - All Variants
+  Nourriture Solidaire Dashboard
+  
+  Usage: Use with Alpine.js for interactivity
+-->
+
+<!-- ============================================
+     BASIC MODAL
+     ============================================ -->
+<div x-data="{ open: false }">
+  <!-- Trigger Button -->
+  <button @click="open = true" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">
+    Ouvrir Modal
+  </button>
+  
+  <!-- Modal -->
+  <div x-show="open" x-cloak class="fixed inset-0 z-50 overflow-y-auto" aria-modal="true">
+    <!-- Backdrop -->
+    <div x-show="open" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="open = false" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+    
+    <!-- Modal Content -->
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div x-show="open" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
+        <div class="p-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Titre du Modal</h3>
+          <p class="text-gray-600 dark:text-gray-400 mt-2">Contenu du modal avec une description.</p>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 rounded-b-2xl flex justify-end gap-3">
+          <button @click="open = false" class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium rounded-lg">Annuler</button>
+          <button class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Confirmer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     MODAL WITH CLOSE BUTTON
+     ============================================ -->
+<div x-data="{ open: false }">
+  <button @click="open = true" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Modal avec X</button>
+  
+  <div x-show="open" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+    <div @click="open = false" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div x-show="open" x-transition class="relative w-full max-w-md bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
+        <!-- Close Button -->
+        <button @click="open = false" class="absolute top-4 right-4 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400">
+          <span class="material-icons-outlined">close</span>
+        </button>
+        <div class="p-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white pr-8">Titre du Modal</h3>
+          <p class="text-gray-600 dark:text-gray-400 mt-2">Ce modal a un bouton de fermeture en haut à droite.</p>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 rounded-b-2xl flex justify-end gap-3">
+          <button @click="open = false" class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 text-sm font-medium rounded-lg">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     CONFIRMATION MODAL (DELETE)
+     ============================================ -->
+<div x-data="{ open: false }">
+  <button @click="open = true" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg">Supprimer</button>
+  
+  <div x-show="open" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+    <div @click="open = false" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div x-show="open" x-transition class="relative w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 text-center">
+        <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="material-icons-outlined text-red-500 text-3xl">delete</span>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Supprimer l'offre ?</h3>
+        <p class="text-gray-600 dark:text-gray-400 mt-2">Cette action est irréversible. L'offre sera définitivement supprimée.</p>
+        <div class="flex gap-3 mt-6">
+          <button @click="open = false" class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium rounded-lg">Annuler</button>
+          <button class="flex-1 px-4 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg">Supprimer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     SUCCESS MODAL
+     ============================================ -->
+<div x-data="{ open: false }">
+  <button @click="open = true" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg">Succès</button>
+  
+  <div x-show="open" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+    <div @click="open = false" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div x-show="open" x-transition class="relative w-full max-w-sm bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 text-center">
+        <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span class="material-icons-outlined text-green-500 text-3xl">check_circle</span>
+        </div>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Réservation confirmée !</h3>
+        <p class="text-gray-600 dark:text-gray-400 mt-2">Votre réservation a été enregistrée avec succès. Vous recevrez un email de confirmation.</p>
+        <button @click="open = false" class="w-full mt-6 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Continuer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     FORM MODAL
+     ============================================ -->
+<div x-data="{ open: false }">
+  <button @click="open = true" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">
+    <span class="material-icons-outlined text-lg mr-1">add</span>
+    Nouvelle offre
+  </button>
+  
+  <div x-show="open" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+    <div @click="open = false" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div x-show="open" x-transition class="relative w-full max-w-lg bg-white dark:bg-gray-800 rounded-2xl shadow-xl">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Créer une offre</h3>
+          <button @click="open = false" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400">
+            <span class="material-icons-outlined">close</span>
+          </button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Titre de l'offre</label>
+            <input type="text" class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm" placeholder="Ex: Légumes bio frais">
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Catégorie</label>
+            <select class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+              <option>Légumes</option>
+              <option>Fruits</option>
+              <option>Pain</option>
+              <option>Produits laitiers</option>
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Quantité</label>
+              <input type="text" class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm" placeholder="Ex: 15 kg">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Date d'expiration</label>
+              <input type="date" class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm">
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Description</label>
+            <textarea rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm resize-none" placeholder="Décrivez votre offre..."></textarea>
+          </div>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 rounded-b-2xl flex justify-end gap-3">
+          <button @click="open = false" class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm font-medium rounded-lg">Annuler</button>
+          <button class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Créer l'offre</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     LARGE MODAL WITH SCROLL
+     ============================================ -->
+<div x-data="{ open: false }">
+  <button @click="open = true" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Grand Modal</button>
+  
+  <div x-show="open" x-cloak class="fixed inset-0 z-50 overflow-y-auto">
+    <div @click="open = false" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div class="flex min-h-full items-center justify-center p-4">
+      <div x-show="open" x-transition class="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-xl max-h-[90vh] flex flex-col">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between flex-shrink-0">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Détails de l'offre</h3>
+          <button @click="open = false" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400">
+            <span class="material-icons-outlined">close</span>
+          </button>
+        </div>
+        <div class="p-6 overflow-y-auto flex-1">
+          <div class="h-48 bg-gradient-to-br from-green-400 to-green-600 rounded-xl mb-6"></div>
+          <h4 class="text-xl font-bold text-gray-900 dark:text-white">Légumes Bio Frais</h4>
+          <p class="text-gray-600 dark:text-gray-400 mt-2">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.</p>
+          <div class="grid grid-cols-2 gap-4 mt-6">
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <p class="text-sm text-gray-500">Quantité</p>
+              <p class="text-lg font-semibold text-gray-900 dark:text-white">15 kg</p>
+            </div>
+            <div class="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+              <p class="text-sm text-gray-500">Expiration</p>
+              <p class="text-lg font-semibold text-gray-900 dark:text-white">Dans 2 jours</p>
+            </div>
+          </div>
+        </div>
+        <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700/50 rounded-b-2xl flex justify-end gap-3 flex-shrink-0">
+          <button @click="open = false" class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 text-sm font-medium rounded-lg">Fermer</button>
+          <button class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Réserver</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     FULLSCREEN MODAL
+     ============================================ -->
+<div x-data="{ open: false }">
+  <button @click="open = true" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Plein écran</button>
+  
+  <div x-show="open" x-cloak class="fixed inset-0 z-50 bg-white dark:bg-gray-900">
+    <div class="h-full flex flex-col">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Modal Plein Écran</h3>
+        <button @click="open = false" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-400">
+          <span class="material-icons-outlined">close</span>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-6">
+        <p class="text-gray-600 dark:text-gray-400">Contenu du modal plein écran...</p>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
+        <button @click="open = false" class="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-sm font-medium rounded-lg">Fermer</button>
+        <button class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     SIDE PANEL (DRAWER)
+     ============================================ -->
+<div x-data="{ open: false }">
+  <button @click="open = true" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Panneau latéral</button>
+  
+  <div x-show="open" x-cloak class="fixed inset-0 z-50">
+    <div @click="open = false" x-show="open" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-black/50 backdrop-blur-sm"></div>
+    <div x-show="open" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="translate-x-0" x-transition:leave-end="translate-x-full" class="fixed right-0 top-0 h-full w-full max-w-md bg-white dark:bg-gray-800 shadow-xl flex flex-col">
+      <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Détails</h3>
+        <button @click="open = false" class="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400">
+          <span class="material-icons-outlined">close</span>
+        </button>
+      </div>
+      <div class="flex-1 overflow-y-auto p-6">
+        <p class="text-gray-600 dark:text-gray-400">Contenu du panneau latéral...</p>
+      </div>
+      <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+        <button @click="open = false" class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg">Annuler</button>
+        <button class="flex-1 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Sauvegarder</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+    </main>
+</body>
+</html>

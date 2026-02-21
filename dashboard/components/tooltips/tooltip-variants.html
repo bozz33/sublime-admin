@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tooltips - Composants UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
+    <header class="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-3">
+                    <a href="../index.html" class="text-sm text-gray-500 hover:text-primary-600">← Retour</a>
+                    <span class="text-gray-300">|</span>
+                    <h1 class="font-semibold text-gray-900 dark:text-white">Tooltips</h1>
+                </div>
+                <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span x-show="!darkMode" class="material-icons-outlined">dark_mode</span>
+                    <span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+<!-- 
+  Tooltip Components - All Variants
+  Nourriture Solidaire Dashboard
+  
+  Usage: Use with Alpine.js or CSS :hover for interactivity
+-->
+
+<!-- ============================================
+     CSS-ONLY TOOLTIPS (USING DATA ATTRIBUTES)
+     ============================================ -->
+
+<style>
+  /* CSS Tooltip Base */
+  .tooltip-css {
+    position: relative;
+  }
+  .tooltip-css::before,
+  .tooltip-css::after {
+    position: absolute;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    z-index: 100;
+  }
+  .tooltip-css::before {
+    content: attr(data-tooltip);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    color: white;
+    background: #1f2937;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  }
+  .tooltip-css::after {
+    content: '';
+    border: 6px solid transparent;
+  }
+  .tooltip-css:hover::before,
+  .tooltip-css:hover::after {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  /* Top position (default) */
+  .tooltip-top::before {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: 8px;
+  }
+  .tooltip-top::after {
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-bottom: -4px;
+    border-top-color: #1f2937;
+  }
+  
+  /* Bottom position */
+  .tooltip-bottom::before {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+  }
+  .tooltip-bottom::after {
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: -4px;
+    border-bottom-color: #1f2937;
+  }
+  
+  /* Left position */
+  .tooltip-left::before {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 8px;
+  }
+  .tooltip-left::after {
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: -4px;
+    border-left-color: #1f2937;
+  }
+  
+  /* Right position */
+  .tooltip-right::before {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: 8px;
+  }
+  .tooltip-right::after {
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-left: -4px;
+    border-right-color: #1f2937;
+  }
+</style>
+
+<!-- ============================================
+     BASIC TOOLTIPS - POSITIONS
+     ============================================ -->
+<div class="flex items-center justify-center gap-8 py-12">
+  <!-- Top -->
+  <button class="tooltip-css tooltip-top px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm" data-tooltip="Tooltip en haut">
+    Haut
+  </button>
+  
+  <!-- Bottom -->
+  <button class="tooltip-css tooltip-bottom px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm" data-tooltip="Tooltip en bas">
+    Bas
+  </button>
+  
+  <!-- Left -->
+  <button class="tooltip-css tooltip-left px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm" data-tooltip="Tooltip à gauche">
+    Gauche
+  </button>
+  
+  <!-- Right -->
+  <button class="tooltip-css tooltip-right px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm" data-tooltip="Tooltip à droite">
+    Droite
+  </button>
+</div>
+
+<!-- ============================================
+     ALPINE.JS TOOLTIPS
+     ============================================ -->
+
+<!-- Basic Alpine Tooltip -->
+<div x-data="{ show: false }" class="relative inline-block">
+  <button @mouseenter="show = true" @mouseleave="show = false" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">
+    Hover me
+  </button>
+  <div x-show="show" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-1" class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 dark:bg-gray-700 text-white text-xs font-medium rounded-lg shadow-lg whitespace-nowrap z-50">
+    Ceci est un tooltip
+    <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+  </div>
+</div>
+
+<!-- ============================================
+     TOOLTIP ON ICONS
+     ============================================ -->
+<div class="flex items-center gap-4">
+  <div x-data="{ show: false }" class="relative">
+    <button @mouseenter="show = true" @mouseleave="show = false" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
+      <span class="material-icons-outlined">edit</span>
+    </button>
+    <div x-show="show" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-50">
+      Modifier
+    </div>
+  </div>
+  
+  <div x-data="{ show: false }" class="relative">
+    <button @mouseenter="show = true" @mouseleave="show = false" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
+      <span class="material-icons-outlined">delete</span>
+    </button>
+    <div x-show="show" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-50">
+      Supprimer
+    </div>
+  </div>
+  
+  <div x-data="{ show: false }" class="relative">
+    <button @mouseenter="show = true" @mouseleave="show = false" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
+      <span class="material-icons-outlined">share</span>
+    </button>
+    <div x-show="show" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded whitespace-nowrap z-50">
+      Partager
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     TOOLTIP WITH RICH CONTENT
+     ============================================ -->
+<div x-data="{ show: false }" class="relative inline-block">
+  <button @mouseenter="show = true" @mouseleave="show = false" class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm">
+    <img src="https://ui-avatars.com/api/?name=Marie+D&background=22c55e&color=fff" class="w-6 h-6 rounded-full">
+    Marie Dupont
+  </button>
+  <div x-show="show" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl w-64 z-50">
+    <div class="flex items-center gap-3 mb-3">
+      <img src="https://ui-avatars.com/api/?name=Marie+Dupont&background=22c55e&color=fff" class="w-12 h-12 rounded-full">
+      <div>
+        <p class="font-medium text-gray-900 dark:text-white">Marie Dupont</p>
+        <p class="text-xs text-gray-500">Bénévole depuis 2022</p>
+      </div>
+    </div>
+    <div class="grid grid-cols-3 gap-2 text-center">
+      <div>
+        <p class="text-lg font-bold text-gray-900 dark:text-white">156</p>
+        <p class="text-xs text-gray-500">Collectes</p>
+      </div>
+      <div>
+        <p class="text-lg font-bold text-gray-900 dark:text-white">4.9</p>
+        <p class="text-xs text-gray-500">Note</p>
+      </div>
+      <div>
+        <p class="text-lg font-bold text-gray-900 dark:text-white">2</p>
+        <p class="text-xs text-gray-500">Années</p>
+      </div>
+    </div>
+    <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-2 border-8 border-transparent border-t-white dark:border-t-gray-800"></div>
+  </div>
+</div>
+
+<!-- ============================================
+     TOOLTIP WITH DESCRIPTION
+     ============================================ -->
+<div x-data="{ show: false }" class="relative inline-block">
+  <button @mouseenter="show = true" @mouseleave="show = false" class="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
+    Qu'est-ce qu'un point relais ?
+    <span class="material-icons-outlined text-base">help_outline</span>
+  </button>
+  <div x-show="show" x-cloak x-transition class="absolute bottom-full left-0 mb-2 p-3 bg-gray-900 text-white text-sm rounded-lg shadow-lg w-72 z-50">
+    <p class="font-medium mb-1">Point Relais</p>
+    <p class="text-gray-300 text-xs">Un point relais est un lieu de collecte où les bénévoles peuvent récupérer les offres alimentaires réservées. Chaque point a des horaires d'ouverture spécifiques.</p>
+  </div>
+</div>
+
+<!-- ============================================
+     TOOLTIP ON TRUNCATED TEXT
+     ============================================ -->
+<div x-data="{ show: false }" class="relative inline-block max-w-xs">
+  <p @mouseenter="show = true" @mouseleave="show = false" class="truncate text-sm text-gray-900 dark:text-white cursor-help">
+    Ceci est un texte très long qui sera tronqué et affichera un tooltip au survol pour montrer le texte complet
+  </p>
+  <div x-show="show" x-cloak x-transition class="absolute bottom-full left-0 mb-2 p-3 bg-gray-900 text-white text-xs rounded-lg shadow-lg max-w-sm z-50">
+    Ceci est un texte très long qui sera tronqué et affichera un tooltip au survol pour montrer le texte complet
+  </div>
+</div>
+
+<!-- ============================================
+     TOOLTIP COLORS
+     ============================================ -->
+<div class="flex items-center gap-4">
+  <!-- Dark (default) -->
+  <div x-data="{ show: false }" class="relative">
+    <button @mouseenter="show = true" @mouseleave="show = false" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-sm">Dark</button>
+    <div x-show="show" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded z-50">Tooltip sombre</div>
+  </div>
+  
+  <!-- Light -->
+  <div x-data="{ show: false }" class="relative">
+    <button @mouseenter="show = true" @mouseleave="show = false" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-sm">Light</button>
+    <div x-show="show" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-white border border-gray-200 text-gray-900 text-xs rounded shadow-lg z-50">Tooltip clair</div>
+  </div>
+  
+  <!-- Primary -->
+  <div x-data="{ show: false }" class="relative">
+    <button @mouseenter="show = true" @mouseleave="show = false" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-sm">Primary</button>
+    <div x-show="show" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-primary-500 text-white text-xs rounded z-50">Tooltip primaire</div>
+  </div>
+  
+  <!-- Error -->
+  <div x-data="{ show: false }" class="relative">
+    <button @mouseenter="show = true" @mouseleave="show = false" class="px-3 py-1.5 bg-gray-200 dark:bg-gray-700 rounded text-sm">Error</button>
+    <div x-show="show" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-red-500 text-white text-xs rounded z-50">Tooltip erreur</div>
+  </div>
+</div>
+
+<!-- ============================================
+     POPOVER (CLICK TO SHOW)
+     ============================================ -->
+<div x-data="{ show: false }" class="relative inline-block">
+  <button @click="show = !show" class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm hover:bg-gray-50 dark:hover:bg-gray-700">
+    <span class="material-icons-outlined text-lg">info</span>
+    Plus d'infos
+  </button>
+  <div x-show="show" x-cloak @click.away="show = false" x-transition class="absolute top-full left-0 mt-2 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl w-80 z-50">
+    <div class="flex items-start justify-between mb-3">
+      <h4 class="font-semibold text-gray-900 dark:text-white">Information importante</h4>
+      <button @click="show = false" class="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400">
+        <span class="material-icons-outlined text-sm">close</span>
+      </button>
+    </div>
+    <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Ceci est un popover qui s'affiche au clic et peut contenir du contenu plus riche qu'un simple tooltip.</p>
+    <div class="flex gap-2">
+      <button @click="show = false" class="flex-1 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm rounded-lg">Fermer</button>
+      <button class="flex-1 px-3 py-1.5 bg-primary-500 text-white text-sm rounded-lg">Action</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     TOOLTIP ON DISABLED ELEMENT
+     ============================================ -->
+<div x-data="{ show: false }" class="relative inline-block">
+  <div @mouseenter="show = true" @mouseleave="show = false">
+    <button disabled class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-400 text-sm rounded-lg cursor-not-allowed">
+      Bouton désactivé
+    </button>
+  </div>
+  <div x-show="show" x-cloak x-transition class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap z-50">
+    Cette action n'est pas disponible actuellement
+  </div>
+</div>
+
+    </main>
+</body>
+</html>

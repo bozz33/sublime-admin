@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', sidebarOpen: true, sidebarMobileOpen: false }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaires - Nourriture Solidaire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } }
+        }
+    </script>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-50">
+            <div class="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
+                <a href="index.html" class="flex items-center gap-3"><div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0"><span class="material-icons-outlined text-white">eco</span></div><span x-show="sidebarOpen" x-cloak class="font-bold text-lg text-gray-800 dark:text-white whitespace-nowrap">Nourriture Solidaire</span></a>
+            </div>
+            <nav class="flex-1 overflow-y-auto scrollbar-hide py-4 px-3">
+                <ul class="space-y-1">
+                    <li><a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">dashboard</span><span x-show="sidebarOpen" x-cloak>Dashboard</span></a></li>
+                    <li><a href="users.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">people</span><span x-show="sidebarOpen" x-cloak>Utilisateurs</span></a></li>
+                    <li><a href="form-elements.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium"><span class="material-icons-outlined text-xl">edit_note</span><span x-show="sidebarOpen" x-cloak>Formulaires</span></a></li>
+                    <li><a href="tables.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">table_chart</span><span x-show="sidebarOpen" x-cloak>Tables</span></a></li>
+                    <li><a href="charts.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">bar_chart</span><span x-show="sidebarOpen" x-cloak>Graphiques</span></a></li>
+                    <li><a href="ui-elements.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">widgets</span><span x-show="sidebarOpen" x-cloak>UI Elements</span></a></li>
+                    <li><a href="profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">person</span><span x-show="sidebarOpen" x-cloak>Profil</span></a></li>
+                    <li><a href="settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">settings</span><span x-show="sidebarOpen" x-cloak>Paramètres</span></a></li>
+                </ul>
+            </nav>
+            <div class="p-4 border-t border-gray-200 dark:border-gray-700"><button @click="sidebarOpen = !sidebarOpen" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl" x-text="sidebarOpen ? 'chevron_left' : 'chevron_right'"></span><span x-show="sidebarOpen" x-cloak class="text-sm">Réduire</span></button></div>
+        </aside>
+
+        <!-- Mobile Sidebar -->
+        <div x-show="sidebarMobileOpen" x-cloak @click="sidebarMobileOpen = false" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+        <aside x-show="sidebarMobileOpen" x-cloak x-transition class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-50 lg:hidden overflow-y-auto">
+            <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700"><a href="index.html" class="flex items-center gap-3"><div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center"><span class="material-icons-outlined text-white">eco</span></div><span class="font-bold text-lg">Nourriture Solidaire</span></a><button @click="sidebarMobileOpen = false" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined">close</span></button></div>
+            <nav class="py-4 px-3"><ul class="space-y-1"><li><a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100"><span class="material-icons-outlined text-xl">dashboard</span>Dashboard</a></li><li><a href="form-elements.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary-50 text-primary-600 font-medium"><span class="material-icons-outlined text-xl">edit_note</span>Formulaires</a></li><li><a href="tables.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 hover:bg-gray-100"><span class="material-icons-outlined text-xl">table_chart</span>Tables</a></li></ul></nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div :class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'" class="flex-1 flex flex-col min-h-screen transition-all duration-300">
+            <!-- Header -->
+            <header class="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between h-16 px-4 lg:px-6">
+                    <div class="flex items-center gap-4"><button @click="sidebarMobileOpen = true" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined">menu</span></button><div class="hidden md:block relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span class="material-icons-outlined text-xl">search</span></span><input type="text" placeholder="Rechercher..." class="w-64 lg:w-80 h-10 pl-10 pr-4 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div></div>
+                    <div class="flex items-center gap-2 lg:gap-4"><button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><span x-show="!darkMode" class="material-icons-outlined">dark_mode</span><span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span></button><div class="hidden lg:block w-px h-6 bg-gray-200 dark:bg-gray-700"></div><div class="flex items-center gap-3 p-1"><div class="hidden lg:block text-right"><p class="text-sm font-semibold">Admin User</p><p class="text-xs text-gray-500">Super Administrateur</p></div><img src="https://ui-avatars.com/api/?name=Admin+User&background=22c55e&color=fff" alt="Avatar" class="w-9 h-9 rounded-full"></div></div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 p-4 lg:p-6">
+                <div class="max-w-7xl mx-auto">
+                    <!-- Breadcrumb -->
+                    <div class="flex items-center gap-2 text-sm text-gray-500 mb-6"><a href="index.html" class="hover:text-primary-600">Dashboard</a><span class="material-icons-outlined text-sm">chevron_right</span><span class="text-gray-900 dark:text-white">Formulaires</span></div>
+                    <div class="mb-6"><h1 class="text-2xl font-bold text-gray-900 dark:text-white">Éléments de Formulaire</h1><p class="text-gray-500 mt-1">Composants de formulaire pour vos interfaces</p></div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Default Inputs -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Inputs par défaut</h3></div>
+                            <div class="p-6 space-y-5">
+                                <!-- Text Input -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Input texte</label>
+                                    <input type="text" class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Entrez du texte...">
+                                </div>
+                                <!-- Email Input -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email</label>
+                                    <input type="email" class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="exemple@email.com">
+                                </div>
+                                <!-- Password Input -->
+                                <div x-data="{ show: false }">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Mot de passe</label>
+                                    <div class="relative">
+                                        <input :type="show ? 'text' : 'password'" class="w-full h-11 px-4 pr-12 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Entrez votre mot de passe">
+                                        <button @click="show = !show" type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"><span class="material-icons-outlined text-xl" x-text="show ? 'visibility_off' : 'visibility'"></span></button>
+                                    </div>
+                                </div>
+                                <!-- Disabled Input -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Input désactivé</label>
+                                    <input type="text" disabled class="w-full h-11 px-4 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-sm text-gray-400 cursor-not-allowed" value="Champ désactivé">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Input with Icons -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Inputs avec icônes</h3></div>
+                            <div class="p-6 space-y-5">
+                                <!-- Left Icon -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Icône à gauche</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span class="material-icons-outlined text-xl">person</span></span>
+                                        <input type="text" class="w-full h-11 pl-11 pr-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Nom d'utilisateur">
+                                    </div>
+                                </div>
+                                <!-- Right Icon -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Icône à droite</label>
+                                    <div class="relative">
+                                        <input type="email" class="w-full h-11 pl-4 pr-11 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Votre email">
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><span class="material-icons-outlined text-xl">email</span></span>
+                                    </div>
+                                </div>
+                                <!-- Both Icons -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Icônes des deux côtés</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span class="material-icons-outlined text-xl">phone</span></span>
+                                        <input type="tel" class="w-full h-11 px-11 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Numéro de téléphone">
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-green-500"><span class="material-icons-outlined text-xl">check_circle</span></span>
+                                    </div>
+                                </div>
+                                <!-- Search Input -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Recherche</label>
+                                    <div class="relative">
+                                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span class="material-icons-outlined text-xl">search</span></span>
+                                        <input type="search" class="w-full h-11 pl-11 pr-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" placeholder="Rechercher...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Select & Textarea -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Select & Textarea</h3></div>
+                            <div class="p-6 space-y-5">
+                                <!-- Select -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Sélection</label>
+                                    <div class="relative">
+                                        <select class="w-full h-11 px-4 pr-10 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent appearance-none">
+                                            <option value="">Sélectionnez une option</option>
+                                            <option value="1">Fruits & Légumes</option>
+                                            <option value="2">Boulangerie</option>
+                                            <option value="3">Produits Laitiers</option>
+                                            <option value="4">Plats Préparés</option>
+                                        </select>
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"><span class="material-icons-outlined text-xl">expand_more</span></span>
+                                    </div>
+                                </div>
+                                <!-- Multiple Select -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Sélection multiple</label>
+                                    <select multiple class="w-full h-32 px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                                        <option value="1">Paris</option>
+                                        <option value="2">Lyon</option>
+                                        <option value="3">Marseille</option>
+                                        <option value="4">Toulouse</option>
+                                        <option value="5">Bordeaux</option>
+                                    </select>
+                                </div>
+                                <!-- Textarea -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Zone de texte</label>
+                                    <textarea rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none" placeholder="Décrivez votre offre alimentaire..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Checkboxes & Radios -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Checkboxes & Radios</h3></div>
+                            <div class="p-6 space-y-6">
+                                <!-- Checkboxes -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Catégories disponibles</label>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked class="w-5 h-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500"><span class="text-sm text-gray-700 dark:text-gray-300">Fruits & Légumes</span></label>
+                                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" class="w-5 h-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500"><span class="text-sm text-gray-700 dark:text-gray-300">Boulangerie</span></label>
+                                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" checked class="w-5 h-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500"><span class="text-sm text-gray-700 dark:text-gray-300">Produits Laitiers</span></label>
+                                        <label class="flex items-center gap-3 cursor-pointer"><input type="checkbox" disabled class="w-5 h-5 rounded border-gray-300 text-primary-500 focus:ring-primary-500 opacity-50"><span class="text-sm text-gray-400">Option désactivée</span></label>
+                                    </div>
+                                </div>
+                                <!-- Radios -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Type de collecte</label>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center gap-3 cursor-pointer"><input type="radio" name="collectType" checked class="w-5 h-5 border-gray-300 text-primary-500 focus:ring-primary-500"><span class="text-sm text-gray-700 dark:text-gray-300">Retrait sur place</span></label>
+                                        <label class="flex items-center gap-3 cursor-pointer"><input type="radio" name="collectType" class="w-5 h-5 border-gray-300 text-primary-500 focus:ring-primary-500"><span class="text-sm text-gray-700 dark:text-gray-300">Livraison</span></label>
+                                        <label class="flex items-center gap-3 cursor-pointer"><input type="radio" name="collectType" class="w-5 h-5 border-gray-300 text-primary-500 focus:ring-primary-500"><span class="text-sm text-gray-700 dark:text-gray-300">Point relais</span></label>
+                                    </div>
+                                </div>
+                                <!-- Toggle Switch -->
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Notifications</label>
+                                    <div class="space-y-3">
+                                        <label class="flex items-center justify-between cursor-pointer">
+                                            <span class="text-sm text-gray-700 dark:text-gray-300">Notifications email</span>
+                                            <div x-data="{ enabled: true }" @click="enabled = !enabled" class="relative w-11 h-6 rounded-full transition-colors cursor-pointer" :class="enabled ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'">
+                                                <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="enabled ? 'translate-x-5' : ''"></span>
+                                            </div>
+                                        </label>
+                                        <label class="flex items-center justify-between cursor-pointer">
+                                            <span class="text-sm text-gray-700 dark:text-gray-300">Notifications push</span>
+                                            <div x-data="{ enabled: false }" @click="enabled = !enabled" class="relative w-11 h-6 rounded-full transition-colors cursor-pointer" :class="enabled ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'">
+                                                <span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="enabled ? 'translate-x-5' : ''"></span>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- File Upload -->
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 lg:col-span-2">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Upload de fichiers</h3></div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Simple File Input -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Fichier simple</label>
+                                        <input type="file" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-600 hover:file:bg-primary-100 dark:file:bg-primary-900/30 dark:file:text-primary-400">
+                                    </div>
+                                    <!-- Multiple Files -->
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Fichiers multiples</label>
+                                        <input type="file" multiple class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-600 hover:file:bg-blue-100 dark:file:bg-blue-900/30 dark:file:text-blue-400">
+                                    </div>
+                                </div>
+                                <!-- Drag & Drop Zone -->
+                                <div class="mt-6">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Zone de dépôt</label>
+                                    <div class="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:border-primary-500 transition-colors cursor-pointer">
+                                        <div class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4"><span class="material-icons-outlined text-gray-400 text-2xl">cloud_upload</span></div>
+                                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-1">Glissez-déposez vos fichiers ici</p>
+                                        <p class="text-xs text-gray-400">ou <span class="text-primary-600 hover:underline">parcourez</span> pour sélectionner</p>
+                                        <p class="text-xs text-gray-400 mt-2">PNG, JPG, PDF jusqu'à 10MB</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="mt-auto border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div class="max-w-7xl mx-auto px-4 lg:px-6 py-4"><div class="flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500"><p>© 2024 Nourriture Solidaire. Tous droits réservés.</p><div class="flex gap-6"><a href="#" class="hover:text-primary-600">Documentation</a><a href="#" class="hover:text-primary-600">Support</a></div></div></div>
+            </footer>
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html>

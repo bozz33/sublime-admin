@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparison Tables - Composants UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
+    <header class="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-3">
+                    <a href="../index.html" class="text-sm text-gray-500 hover:text-primary-600">← Retour</a>
+                    <span class="text-gray-300">|</span>
+                    <h1 class="font-semibold text-gray-900 dark:text-white">Tables de Comparaison</h1>
+                </div>
+                <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span x-show="!darkMode" class="material-icons-outlined">dark_mode</span>
+                    <span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-12">
+
+<!-- TABLE COMPARAISON PRODUITS -->
+<section>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Comparaison de Produits</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <!-- Header -->
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <h3 class="font-semibold text-gray-900 dark:text-white">Comparer les offres</h3>
+                    <span class="material-icons-outlined text-gray-400 text-lg cursor-help">info</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">+ Ajouter une offre</button>
+                    <button class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50">Réinitialiser</button>
+                </div>
+            </div>
+            <!-- Tabs -->
+            <div class="flex flex-wrap items-center gap-2 mt-4">
+                <button class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg">Informations générales</button>
+                <button class="px-4 py-2 text-sm font-medium text-white bg-primary-500 rounded-lg">Informations techniques</button>
+                <button class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg">Livraison</button>
+                <button class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg">Évaluations</button>
+            </div>
+        </div>
+        
+        <!-- Products Header -->
+        <div class="grid grid-cols-4 gap-4 p-6 border-b border-gray-200 dark:border-gray-700">
+            <div></div>
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto mb-3 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-green-600 text-3xl">eco</span>
+                </div>
+                <h4 class="font-semibold text-gray-900 dark:text-white">Légumes Bio</h4>
+            </div>
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto mb-3 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-orange-600 text-3xl">bakery_dining</span>
+                </div>
+                <h4 class="font-semibold text-gray-900 dark:text-white">Pain Artisanal</h4>
+            </div>
+            <div class="text-center">
+                <div class="w-20 h-20 mx-auto mb-3 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-red-600 text-3xl">local_florist</span>
+                </div>
+                <h4 class="font-semibold text-gray-900 dark:text-white">Fruits Frais</h4>
+            </div>
+        </div>
+
+        <!-- Comparison Rows -->
+        <div class="divide-y divide-gray-200 dark:divide-gray-700">
+            <!-- Section Header -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-3">
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">Informations générales</span>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 px-6 py-4">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Marque</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Bio Farm</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Boulangerie Martin</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Verger Local</div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 px-6 py-4 bg-gray-50/50 dark:bg-gray-700/25">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Nom du produit</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Légumes Bio Frais</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Pain Complet</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Fruits de Saison</div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 px-6 py-4">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Catégorie</div>
+                <div class="text-sm text-center"><span class="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">Légumes</span></div>
+                <div class="text-sm text-center"><span class="px-2 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full">Boulangerie</span></div>
+                <div class="text-sm text-center"><span class="px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full">Fruits</span></div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 px-6 py-4 bg-gray-50/50 dark:bg-gray-700/25">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Prix</div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-white text-center">15€</div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-white text-center">5€</div>
+                <div class="text-sm font-semibold text-gray-900 dark:text-white text-center">12€</div>
+            </div>
+
+            <!-- Section Header -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-3">
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">Informations techniques</span>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 px-6 py-4">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Poids</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">5 kg</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">500 g</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">3 kg</div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 px-6 py-4 bg-gray-50/50 dark:bg-gray-700/25">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Conservation</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">7 jours</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">3 jours</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">5 jours</div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 px-6 py-4">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Température</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">4-8°C</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Ambiante</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">4-8°C</div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 px-6 py-4 bg-gray-50/50 dark:bg-gray-700/25">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Bio certifié</div>
+                <div class="text-center"><span class="material-icons-outlined text-green-500">check_circle</span></div>
+                <div class="text-center"><span class="material-icons-outlined text-red-500">cancel</span></div>
+                <div class="text-center"><span class="material-icons-outlined text-green-500">check_circle</span></div>
+            </div>
+
+            <!-- Section Header -->
+            <div class="bg-gray-50 dark:bg-gray-700/50 px-6 py-3">
+                <span class="text-sm font-semibold text-gray-900 dark:text-white">Livraison</span>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 px-6 py-4">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Zone</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Île-de-France</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Paris uniquement</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Île-de-France</div>
+            </div>
+            
+            <div class="grid grid-cols-4 gap-4 px-6 py-4 bg-gray-50/50 dark:bg-gray-700/25">
+                <div class="text-sm font-medium text-gray-500 dark:text-gray-400">Délai</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">24-48h</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">Même jour</div>
+                <div class="text-sm text-gray-900 dark:text-white text-center">24-48h</div>
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="grid grid-cols-4 gap-4 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+            <div></div>
+            <div class="text-center">
+                <button class="w-full px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg inline-flex items-center justify-center gap-2">
+                    <span class="material-icons-outlined text-lg">shopping_cart</span>
+                    Réserver
+                </button>
+            </div>
+            <div class="text-center">
+                <button class="w-full px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg inline-flex items-center justify-center gap-2">
+                    <span class="material-icons-outlined text-lg">shopping_cart</span>
+                    Réserver
+                </button>
+            </div>
+            <div class="text-center">
+                <button class="w-full px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg inline-flex items-center justify-center gap-2">
+                    <span class="material-icons-outlined text-lg">shopping_cart</span>
+                    Réserver
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- TABLE COMPARAISON PRICING -->
+<section>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Comparaison des Abonnements</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead>
+                    <tr class="border-b border-gray-200 dark:border-gray-700">
+                        <th class="px-6 py-4 text-left"></th>
+                        <th class="px-6 py-4 text-center">
+                            <div class="text-lg font-semibold text-gray-900 dark:text-white">Gratuit</div>
+                            <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">0€<span class="text-sm font-normal text-gray-500">/mois</span></div>
+                        </th>
+                        <th class="px-6 py-4 text-center bg-primary-50 dark:bg-primary-900/20">
+                            <span class="px-2 py-1 bg-primary-500 text-white text-xs font-medium rounded-full mb-2 inline-block">Populaire</span>
+                            <div class="text-lg font-semibold text-gray-900 dark:text-white">Pro</div>
+                            <div class="text-2xl font-bold text-primary-600 mt-1">29€<span class="text-sm font-normal text-gray-500">/mois</span></div>
+                        </th>
+                        <th class="px-6 py-4 text-center">
+                            <div class="text-lg font-semibold text-gray-900 dark:text-white">Entreprise</div>
+                            <div class="text-2xl font-bold text-gray-900 dark:text-white mt-1">99€<span class="text-sm font-normal text-gray-500">/mois</span></div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                    <tr>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">Offres par mois</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white text-center">10</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white text-center bg-primary-50/50 dark:bg-primary-900/10">100</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white text-center">Illimité</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">Points relais</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white text-center">1</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white text-center bg-primary-50/50 dark:bg-primary-900/10">5</td>
+                        <td class="px-6 py-4 text-sm text-gray-900 dark:text-white text-center">Illimité</td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">Statistiques</td>
+                        <td class="px-6 py-4 text-center"><span class="material-icons-outlined text-gray-300">remove</span></td>
+                        <td class="px-6 py-4 text-center bg-primary-50/50 dark:bg-primary-900/10"><span class="material-icons-outlined text-green-500">check_circle</span></td>
+                        <td class="px-6 py-4 text-center"><span class="material-icons-outlined text-green-500">check_circle</span></td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">Support prioritaire</td>
+                        <td class="px-6 py-4 text-center"><span class="material-icons-outlined text-gray-300">remove</span></td>
+                        <td class="px-6 py-4 text-center bg-primary-50/50 dark:bg-primary-900/10"><span class="material-icons-outlined text-green-500">check_circle</span></td>
+                        <td class="px-6 py-4 text-center"><span class="material-icons-outlined text-green-500">check_circle</span></td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4 text-sm font-medium text-gray-500 dark:text-gray-400">API Access</td>
+                        <td class="px-6 py-4 text-center"><span class="material-icons-outlined text-gray-300">remove</span></td>
+                        <td class="px-6 py-4 text-center bg-primary-50/50 dark:bg-primary-900/10"><span class="material-icons-outlined text-gray-300">remove</span></td>
+                        <td class="px-6 py-4 text-center"><span class="material-icons-outlined text-green-500">check_circle</span></td>
+                    </tr>
+                    <tr>
+                        <td class="px-6 py-4"></td>
+                        <td class="px-6 py-4 text-center">
+                            <button class="px-6 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Commencer</button>
+                        </td>
+                        <td class="px-6 py-4 text-center bg-primary-50/50 dark:bg-primary-900/10">
+                            <button class="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg">Choisir Pro</button>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            <button class="px-6 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Contacter</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+    </main>
+</body>
+</html>

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats Widgets - Composants UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
+    <header class="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-3">
+                    <a href="../index.html" class="text-sm text-gray-500 hover:text-primary-600">← Retour</a>
+                    <span class="text-gray-300">|</span>
+                    <h1 class="font-semibold text-gray-900 dark:text-white">Stats Widgets</h1>
+                </div>
+                <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span x-show="!darkMode" class="material-icons-outlined">dark_mode</span>
+                    <span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-12">
+
+<!-- ============================================
+     STATS CARDS ROW
+     ============================================ -->
+<section>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Cartes Statistiques</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Total Offers -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Offres Totales</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">1,234</p>
+                    <div class="flex items-center gap-1 mt-2">
+                        <span class="material-icons-outlined text-green-500 text-sm">trending_up</span>
+                        <span class="text-sm text-green-600 dark:text-green-400 font-medium">+12.5%</span>
+                        <span class="text-xs text-gray-400">vs mois dernier</span>
+                    </div>
+                </div>
+                <div class="w-14 h-14 bg-primary-100 dark:bg-primary-900/30 rounded-2xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-primary-600 text-2xl">inventory_2</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Active Users -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Utilisateurs Actifs</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">856</p>
+                    <div class="flex items-center gap-1 mt-2">
+                        <span class="material-icons-outlined text-green-500 text-sm">trending_up</span>
+                        <span class="text-sm text-green-600 dark:text-green-400 font-medium">+8.2%</span>
+                        <span class="text-xs text-gray-400">vs mois dernier</span>
+                    </div>
+                </div>
+                <div class="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-2xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-blue-600 text-2xl">people</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Food Saved -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Kg Sauvés</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">4,521</p>
+                    <div class="flex items-center gap-1 mt-2">
+                        <span class="material-icons-outlined text-green-500 text-sm">trending_up</span>
+                        <span class="text-sm text-green-600 dark:text-green-400 font-medium">+23.1%</span>
+                        <span class="text-xs text-gray-400">vs mois dernier</span>
+                    </div>
+                </div>
+                <div class="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-2xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-green-600 text-2xl">eco</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Collection Points -->
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Points Relais</p>
+                    <p class="text-3xl font-bold text-gray-900 dark:text-white mt-1">48</p>
+                    <div class="flex items-center gap-1 mt-2">
+                        <span class="material-icons-outlined text-red-500 text-sm">trending_down</span>
+                        <span class="text-sm text-red-600 dark:text-red-400 font-medium">-2.3%</span>
+                        <span class="text-xs text-gray-400">vs mois dernier</span>
+                    </div>
+                </div>
+                <div class="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-2xl flex items-center justify-center">
+                    <span class="material-icons-outlined text-purple-600 text-2xl">place</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================
+     STATS WITH MINI CHART
+     ============================================ -->
+<section>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Stats avec Mini Graphiques</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Collectes cette semaine</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">156</p>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full">
+                    <span class="material-icons-outlined text-xs">arrow_upward</span>
+                    12%
+                </span>
+            </div>
+            <div id="mini-chart-1" class="h-16"></div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Nouveaux utilisateurs</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">42</p>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium rounded-full">
+                    <span class="material-icons-outlined text-xs">arrow_upward</span>
+                    8%
+                </span>
+            </div>
+            <div id="mini-chart-2" class="h-16"></div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Taux de réservation</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">78%</p>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-medium rounded-full">
+                    <span class="material-icons-outlined text-xs">arrow_downward</span>
+                    3%
+                </span>
+            </div>
+            <div id="mini-chart-3" class="h-16"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================
+     PROGRESS STATS
+     ============================================ -->
+<section>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Stats avec Progression</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="font-medium text-gray-900 dark:text-white mb-4">Objectif Mensuel</h3>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Collectes</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">156 / 200</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-primary-500 rounded-full" style="width: 78%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Kg sauvés</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">4,521 / 5,000</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-green-500 rounded-full" style="width: 90%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Nouveaux bénévoles</span>
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">28 / 50</span>
+                    </div>
+                    <div class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-500 rounded-full" style="width: 56%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+            <h3 class="font-medium text-gray-900 dark:text-white mb-4">Répartition par Catégorie</h3>
+            <div class="space-y-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                        <span class="material-icons-outlined text-green-600">eco</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">Légumes</span>
+                            <span class="text-sm text-gray-500">35%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-green-500 rounded-full" style="width: 35%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-orange-100 dark:bg-orange-900/30 rounded-lg flex items-center justify-center">
+                        <span class="material-icons-outlined text-orange-600">bakery_dining</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">Pain</span>
+                            <span class="text-sm text-gray-500">28%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-orange-500 rounded-full" style="width: 28%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center">
+                        <span class="material-icons-outlined text-yellow-600">egg</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">Produits laitiers</span>
+                            <span class="text-sm text-gray-500">22%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-yellow-500 rounded-full" style="width: 22%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-lg flex items-center justify-center">
+                        <span class="material-icons-outlined text-red-600">lunch_dining</span>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-900 dark:text-white">Autres</span>
+                            <span class="text-sm text-gray-500">15%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                            <div class="h-full bg-red-500 rounded-full" style="width: 15%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================
+     CIRCULAR PROGRESS STATS
+     ============================================ -->
+<section>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Stats Circulaires</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div class="relative w-24 h-24 mx-auto mb-4">
+                <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="none" class="text-gray-200 dark:text-gray-700"></circle>
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="none" stroke-dasharray="251" stroke-dashoffset="50" stroke-linecap="round" class="text-primary-500"></circle>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xl font-bold text-gray-900 dark:text-white">80%</span>
+                </div>
+            </div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">Taux de succès</p>
+            <p class="text-xs text-gray-500 mt-1">Collectes réussies</p>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div class="relative w-24 h-24 mx-auto mb-4">
+                <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="none" class="text-gray-200 dark:text-gray-700"></circle>
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="none" stroke-dasharray="251" stroke-dashoffset="88" stroke-linecap="round" class="text-blue-500"></circle>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xl font-bold text-gray-900 dark:text-white">65%</span>
+                </div>
+            </div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">Satisfaction</p>
+            <p class="text-xs text-gray-500 mt-1">Retours positifs</p>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div class="relative w-24 h-24 mx-auto mb-4">
+                <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="none" class="text-gray-200 dark:text-gray-700"></circle>
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="none" stroke-dasharray="251" stroke-dashoffset="25" stroke-linecap="round" class="text-green-500"></circle>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xl font-bold text-gray-900 dark:text-white">90%</span>
+                </div>
+            </div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">Disponibilité</p>
+            <p class="text-xs text-gray-500 mt-1">Points relais actifs</p>
+        </div>
+        
+        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div class="relative w-24 h-24 mx-auto mb-4">
+                <svg class="w-full h-full transform -rotate-90">
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="none" class="text-gray-200 dark:text-gray-700"></circle>
+                    <circle cx="48" cy="48" r="40" stroke="currentColor" stroke-width="8" fill="none" stroke-dasharray="251" stroke-dashoffset="113" stroke-linecap="round" class="text-yellow-500"></circle>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xl font-bold text-gray-900 dark:text-white">55%</span>
+                </div>
+            </div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">Objectif</p>
+            <p class="text-xs text-gray-500 mt-1">Progression annuelle</p>
+        </div>
+    </div>
+</section>
+
+    </main>
+    
+    <script>
+        // Mini charts initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartOptions = {
+                chart: { type: 'area', height: 64, sparkline: { enabled: true } },
+                stroke: { curve: 'smooth', width: 2 },
+                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0, stops: [0, 100] } },
+                tooltip: { enabled: false }
+            };
+            
+            new ApexCharts(document.querySelector("#mini-chart-1"), {
+                ...chartOptions,
+                series: [{ data: [25, 66, 41, 89, 63, 25, 44, 12, 36, 9, 54] }],
+                colors: ['#22c55e']
+            }).render();
+            
+            new ApexCharts(document.querySelector("#mini-chart-2"), {
+                ...chartOptions,
+                series: [{ data: [12, 14, 2, 47, 42, 15, 47, 75, 65, 19, 14] }],
+                colors: ['#3b82f6']
+            }).render();
+            
+            new ApexCharts(document.querySelector("#mini-chart-3"), {
+                ...chartOptions,
+                series: [{ data: [47, 45, 74, 32, 56, 31, 44, 33, 45, 19, 32] }],
+                colors: ['#f59e0b']
+            }).render();
+        });
+    </script>
+</body>
+</html>

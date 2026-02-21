@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', sidebarOpen: true, sidebarMobileOpen: false, activeTab: 'general' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paramètres - Nourriture Solidaire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-50">
+            <div class="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700"><a href="index.html" class="flex items-center gap-3"><div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0"><span class="material-icons-outlined text-white">eco</span></div><span x-show="sidebarOpen" x-cloak class="font-bold text-lg text-gray-800 dark:text-white whitespace-nowrap">Nourriture Solidaire</span></a></div>
+            <nav class="flex-1 overflow-y-auto scrollbar-hide py-4 px-3">
+                <ul class="space-y-1">
+                    <li><a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">dashboard</span><span x-show="sidebarOpen" x-cloak>Dashboard</span></a></li>
+                    <li><a href="form-elements.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">edit_note</span><span x-show="sidebarOpen" x-cloak>Formulaires</span></a></li>
+                    <li><a href="tables.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">table_chart</span><span x-show="sidebarOpen" x-cloak>Tables</span></a></li>
+                    <li><a href="profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">person</span><span x-show="sidebarOpen" x-cloak>Profil</span></a></li>
+                    <li><a href="settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium"><span class="material-icons-outlined text-xl">settings</span><span x-show="sidebarOpen" x-cloak>Paramètres</span></a></li>
+                </ul>
+            </nav>
+            <div class="p-4 border-t border-gray-200 dark:border-gray-700"><button @click="sidebarOpen = !sidebarOpen" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl" x-text="sidebarOpen ? 'chevron_left' : 'chevron_right'"></span><span x-show="sidebarOpen" x-cloak class="text-sm">Réduire</span></button></div>
+        </aside>
+
+        <!-- Mobile Sidebar -->
+        <div x-show="sidebarMobileOpen" x-cloak @click="sidebarMobileOpen = false" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+        <aside x-show="sidebarMobileOpen" x-cloak x-transition class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 z-50 lg:hidden overflow-y-auto">
+            <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700"><a href="index.html" class="flex items-center gap-3"><div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center"><span class="material-icons-outlined text-white">eco</span></div><span class="font-bold text-lg">Nourriture Solidaire</span></a><button @click="sidebarMobileOpen = false" class="p-2 rounded-lg hover:bg-gray-100"><span class="material-icons-outlined">close</span></button></div>
+        </aside>
+
+        <!-- Main Content -->
+        <div :class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'" class="flex-1 flex flex-col min-h-screen transition-all duration-300">
+            <!-- Header -->
+            <header class="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between h-16 px-4 lg:px-6">
+                    <div class="flex items-center gap-4"><button @click="sidebarMobileOpen = true" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined">menu</span></button></div>
+                    <div class="flex items-center gap-2 lg:gap-4"><button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><span x-show="!darkMode" class="material-icons-outlined">dark_mode</span><span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span></button><img src="https://ui-avatars.com/api/?name=Admin+User&background=22c55e&color=fff" alt="Avatar" class="w-9 h-9 rounded-full"></div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 p-4 lg:p-6">
+                <div class="max-w-4xl mx-auto">
+                    <div class="mb-6"><h1 class="text-2xl font-bold text-gray-900 dark:text-white">Paramètres</h1><p class="text-gray-500 mt-1">Gérez les paramètres de votre compte et de l'application</p></div>
+
+                    <!-- Tabs -->
+                    <div class="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl mb-6 overflow-x-auto">
+                        <button @click="activeTab = 'general'" :class="activeTab === 'general' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''" class="px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap">Général</button>
+                        <button @click="activeTab = 'notifications'" :class="activeTab === 'notifications' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''" class="px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap">Notifications</button>
+                        <button @click="activeTab = 'security'" :class="activeTab === 'security' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''" class="px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap">Sécurité</button>
+                        <button @click="activeTab = 'appearance'" :class="activeTab === 'appearance' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''" class="px-4 py-2 text-sm font-medium rounded-lg transition-all whitespace-nowrap">Apparence</button>
+                    </div>
+
+                    <!-- General Settings -->
+                    <div x-show="activeTab === 'general'" class="space-y-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Informations de l'organisation</h3></div>
+                            <div class="p-6 space-y-5">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nom de l'organisation</label>
+                                    <input type="text" value="Nourriture Solidaire" class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Email de contact</label>
+                                    <input type="email" value="contact@nourriture-solidaire.fr" class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Adresse</label>
+                                    <textarea rows="3" class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none">12 Rue de la Solidarité, 75001 Paris, France</textarea>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Langue</label>
+                                        <select class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                            <option value="fr" selected>Français</option>
+                                            <option value="en">English</option>
+                                            <option value="es">Español</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Fuseau horaire</label>
+                                        <select class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                            <option value="europe/paris" selected>Europe/Paris (UTC+1)</option>
+                                            <option value="europe/london">Europe/London (UTC)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end"><button class="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors">Sauvegarder</button></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications Settings -->
+                    <div x-show="activeTab === 'notifications'" x-cloak class="space-y-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Préférences de notification</h3></div>
+                            <div class="p-6 space-y-6">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-900 dark:text-white">Notifications par email</p><p class="text-xs text-gray-500">Recevoir des emails pour les nouvelles offres</p></div>
+                                    <div x-data="{ enabled: true }" @click="enabled = !enabled" class="relative w-11 h-6 rounded-full transition-colors cursor-pointer" :class="enabled ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'"><span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="enabled ? 'translate-x-5' : ''"></span></div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-900 dark:text-white">Notifications push</p><p class="text-xs text-gray-500">Recevoir des notifications dans le navigateur</p></div>
+                                    <div x-data="{ enabled: true }" @click="enabled = !enabled" class="relative w-11 h-6 rounded-full transition-colors cursor-pointer" :class="enabled ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'"><span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="enabled ? 'translate-x-5' : ''"></span></div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-900 dark:text-white">Alertes de modération</p><p class="text-xs text-gray-500">Être notifié des signalements utilisateurs</p></div>
+                                    <div x-data="{ enabled: true }" @click="enabled = !enabled" class="relative w-11 h-6 rounded-full transition-colors cursor-pointer" :class="enabled ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'"><span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="enabled ? 'translate-x-5' : ''"></span></div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-900 dark:text-white">Rapports hebdomadaires</p><p class="text-xs text-gray-500">Recevoir un résumé chaque semaine</p></div>
+                                    <div x-data="{ enabled: false }" @click="enabled = !enabled" class="relative w-11 h-6 rounded-full transition-colors cursor-pointer" :class="enabled ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'"><span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="enabled ? 'translate-x-5' : ''"></span></div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-900 dark:text-white">Offres expirées</p><p class="text-xs text-gray-500">Alertes pour les offres non collectées</p></div>
+                                    <div x-data="{ enabled: true }" @click="enabled = !enabled" class="relative w-11 h-6 rounded-full transition-colors cursor-pointer" :class="enabled ? 'bg-primary-500' : 'bg-gray-300 dark:bg-gray-600'"><span class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform" :class="enabled ? 'translate-x-5' : ''"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Settings -->
+                    <div x-show="activeTab === 'security'" x-cloak class="space-y-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Changer le mot de passe</h3></div>
+                            <div class="p-6 space-y-5">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Mot de passe actuel</label>
+                                    <input type="password" class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="••••••••">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Nouveau mot de passe</label>
+                                    <input type="password" class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="••••••••">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">Confirmer le mot de passe</label>
+                                    <input type="password" class="w-full h-11 px-4 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" placeholder="••••••••">
+                                </div>
+                                <div class="flex justify-end"><button class="px-6 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors">Mettre à jour</button></div>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Authentification à deux facteurs</h3></div>
+                            <div class="p-6">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-900 dark:text-white">Activer 2FA</p><p class="text-xs text-gray-500">Ajouter une couche de sécurité supplémentaire</p></div>
+                                    <button class="px-4 py-2 border border-primary-500 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 text-sm font-medium rounded-lg transition-colors">Configurer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-red-200 dark:border-red-800">
+                            <div class="px-6 py-4 border-b border-red-200 dark:border-red-800"><h3 class="text-lg font-semibold text-red-600">Zone de danger</h3></div>
+                            <div class="p-6">
+                                <div class="flex items-center justify-between">
+                                    <div><p class="text-sm font-medium text-gray-900 dark:text-white">Supprimer le compte</p><p class="text-xs text-gray-500">Cette action est irréversible</p></div>
+                                    <button class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors">Supprimer</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Appearance Settings -->
+                    <div x-show="activeTab === 'appearance'" x-cloak class="space-y-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Thème</h3></div>
+                            <div class="p-6">
+                                <div class="grid grid-cols-3 gap-4">
+                                    <button @click="darkMode = false" :class="!darkMode ? 'ring-2 ring-primary-500' : ''" class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary-500 transition-colors">
+                                        <div class="w-full h-20 bg-white border border-gray-200 rounded-lg mb-3 flex items-center justify-center"><span class="material-icons-outlined text-gray-400">light_mode</span></div>
+                                        <p class="text-sm font-medium text-center">Clair</p>
+                                    </button>
+                                    <button @click="darkMode = true" :class="darkMode ? 'ring-2 ring-primary-500' : ''" class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary-500 transition-colors">
+                                        <div class="w-full h-20 bg-gray-800 border border-gray-700 rounded-lg mb-3 flex items-center justify-center"><span class="material-icons-outlined text-gray-400">dark_mode</span></div>
+                                        <p class="text-sm font-medium text-center">Sombre</p>
+                                    </button>
+                                    <button class="p-4 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-primary-500 transition-colors">
+                                        <div class="w-full h-20 bg-gradient-to-r from-white to-gray-800 border border-gray-200 rounded-lg mb-3 flex items-center justify-center"><span class="material-icons-outlined text-gray-400">contrast</span></div>
+                                        <p class="text-sm font-medium text-center">Système</p>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700">
+                            <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700"><h3 class="text-lg font-semibold text-gray-900 dark:text-white">Couleur d'accent</h3></div>
+                            <div class="p-6">
+                                <div class="flex gap-3">
+                                    <button class="w-10 h-10 rounded-full bg-green-500 ring-2 ring-offset-2 ring-green-500"></button>
+                                    <button class="w-10 h-10 rounded-full bg-blue-500 hover:ring-2 hover:ring-offset-2 hover:ring-blue-500 transition-all"></button>
+                                    <button class="w-10 h-10 rounded-full bg-purple-500 hover:ring-2 hover:ring-offset-2 hover:ring-purple-500 transition-all"></button>
+                                    <button class="w-10 h-10 rounded-full bg-red-500 hover:ring-2 hover:ring-offset-2 hover:ring-red-500 transition-all"></button>
+                                    <button class="w-10 h-10 rounded-full bg-yellow-500 hover:ring-2 hover:ring-offset-2 hover:ring-yellow-500 transition-all"></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="mt-auto border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div class="max-w-7xl mx-auto px-4 lg:px-6 py-4"><div class="text-sm text-gray-500 text-center">© 2024 Nourriture Solidaire. Tous droits réservés.</div></div>
+            </footer>
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html>

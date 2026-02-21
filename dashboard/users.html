@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', sidebarOpen: true, sidebarMobileOpen: false }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Utilisateurs - Nourriture Solidaire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 500: '#22c55e', 600: '#16a34a', 900: '#14532d' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside :class="sidebarOpen ? 'w-64' : 'w-20'" class="hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-50">
+            <div class="flex items-center h-16 px-4 border-b border-gray-200 dark:border-gray-700"><a href="index.html" class="flex items-center gap-3"><div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0"><span class="material-icons-outlined text-white">eco</span></div><span x-show="sidebarOpen" x-cloak class="font-bold text-lg text-gray-800 dark:text-white whitespace-nowrap">Nourriture Solidaire</span></a></div>
+            <nav class="flex-1 overflow-y-auto scrollbar-hide py-4 px-3">
+                <ul class="space-y-1">
+                    <li><a href="index.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">dashboard</span><span x-show="sidebarOpen" x-cloak>Dashboard</span></a></li>
+                    <li><a href="users.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium"><span class="material-icons-outlined text-xl">people</span><span x-show="sidebarOpen" x-cloak>Utilisateurs</span></a></li>
+                    <li><a href="food-offers.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">fastfood</span><span x-show="sidebarOpen" x-cloak>Offres Alimentaires</span></a></li>
+                    <li><a href="tables.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">table_chart</span><span x-show="sidebarOpen" x-cloak>Tables</span></a></li>
+                    <li><a href="form-elements.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">edit_note</span><span x-show="sidebarOpen" x-cloak>Formulaires</span></a></li>
+                    <li><a href="profile.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">person</span><span x-show="sidebarOpen" x-cloak>Profil</span></a></li>
+                    <li><a href="settings.html" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl">settings</span><span x-show="sidebarOpen" x-cloak>Paramètres</span></a></li>
+                </ul>
+            </nav>
+            <div class="p-4 border-t border-gray-200 dark:border-gray-700"><button @click="sidebarOpen = !sidebarOpen" class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined text-xl" x-text="sidebarOpen ? 'chevron_left' : 'chevron_right'"></span><span x-show="sidebarOpen" x-cloak class="text-sm">Réduire</span></button></div>
+        </aside>
+
+        <!-- Mobile Sidebar -->
+        <div x-show="sidebarMobileOpen" x-cloak @click="sidebarMobileOpen = false" class="fixed inset-0 bg-black/50 z-40 lg:hidden"></div>
+        <aside x-show="sidebarMobileOpen" x-cloak x-transition class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 z-50 lg:hidden overflow-y-auto">
+            <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700"><a href="index.html" class="flex items-center gap-3"><div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center"><span class="material-icons-outlined text-white">eco</span></div><span class="font-bold text-lg">Nourriture Solidaire</span></a><button @click="sidebarMobileOpen = false" class="p-2 rounded-lg hover:bg-gray-100"><span class="material-icons-outlined">close</span></button></div>
+        </aside>
+
+        <!-- Main Content -->
+        <div :class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'" class="flex-1 flex flex-col min-h-screen transition-all duration-300">
+            <!-- Header -->
+            <header class="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between h-16 px-4 lg:px-6">
+                    <div class="flex items-center gap-4"><button @click="sidebarMobileOpen = true" class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><span class="material-icons-outlined">menu</span></button><div class="hidden md:block relative"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><span class="material-icons-outlined text-xl">search</span></span><input type="text" placeholder="Rechercher un utilisateur..." class="w-64 lg:w-80 h-10 pl-10 pr-4 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"></div></div>
+                    <div class="flex items-center gap-2 lg:gap-4"><button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"><span x-show="!darkMode" class="material-icons-outlined">dark_mode</span><span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span></button><img src="https://ui-avatars.com/api/?name=Admin+User&background=22c55e&color=fff" alt="Avatar" class="w-9 h-9 rounded-full"></div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 p-4 lg:p-6">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex items-center gap-2 text-sm text-gray-500 mb-6"><a href="index.html" class="hover:text-primary-600">Dashboard</a><span class="material-icons-outlined text-sm">chevron_right</span><span class="text-gray-900 dark:text-white">Utilisateurs</span></div>
+
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div><h1 class="text-2xl font-bold text-gray-900 dark:text-white">Utilisateurs</h1><p class="text-gray-500 mt-1">Gérez les utilisateurs de la plateforme</p></div>
+                        <button class="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-500 hover:bg-primary-600 text-white text-sm font-medium rounded-lg transition-colors"><span class="material-icons-outlined text-lg">person_add</span>Ajouter un utilisateur</button>
+                    </div>
+
+                    <!-- Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center gap-3"><div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center"><span class="material-icons-outlined text-blue-600">people</span></div><div><p class="text-2xl font-bold">1,284</p><p class="text-xs text-gray-500">Total utilisateurs</p></div></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center gap-3"><div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center"><span class="material-icons-outlined text-green-600">volunteer_activism</span></div><div><p class="text-2xl font-bold">456</p><p class="text-xs text-gray-500">Bénévoles</p></div></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center gap-3"><div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg flex items-center justify-center"><span class="material-icons-outlined text-yellow-600">store</span></div><div><p class="text-2xl font-bold">328</p><p class="text-xs text-gray-500">Donneurs</p></div></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                            <div class="flex items-center gap-3"><div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center"><span class="material-icons-outlined text-purple-600">groups</span></div><div><p class="text-2xl font-bold">500</p><p class="text-xs text-gray-500">Bénéficiaires</p></div></div>
+                        </div>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex-1 min-w-[200px]">
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Rechercher</label>
+                                <input type="text" placeholder="Nom, email..." class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                            </div>
+                            <div class="w-40">
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Rôle</label>
+                                <select class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                    <option value="">Tous</option>
+                                    <option>Bénévole</option>
+                                    <option>Donneur</option>
+                                    <option>Bénéficiaire</option>
+                                    <option>Admin</option>
+                                </select>
+                            </div>
+                            <div class="w-40">
+                                <label class="block text-xs font-medium text-gray-500 mb-1">Statut</label>
+                                <select class="w-full h-10 px-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+                                    <option value="">Tous</option>
+                                    <option>Actif</option>
+                                    <option>En attente</option>
+                                    <option>Inactif</option>
+                                </select>
+                            </div>
+                            <div class="flex items-end">
+                                <button class="h-10 px-4 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-sm font-medium rounded-lg transition-colors">Filtrer</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Users Table -->
+                    <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-gray-50 dark:bg-gray-700/50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left"><input type="checkbox" class="rounded border-gray-300 text-primary-500 focus:ring-primary-500"></th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Utilisateur</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Rôle</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Statut</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Inscrit le</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td class="px-6 py-4"><input type="checkbox" class="rounded border-gray-300 text-primary-500 focus:ring-primary-500"></td>
+                                        <td class="px-6 py-4"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=Marie+Dupont&background=22c55e&color=fff" class="w-10 h-10 rounded-full"><div><p class="text-sm font-medium text-gray-900 dark:text-white">Marie Dupont</p><p class="text-xs text-gray-500">marie.dupont@email.com</p></div></div></td>
+                                        <td class="px-6 py-4"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"><span class="material-icons-outlined text-xs">volunteer_activism</span>Bénévole</span></td>
+                                        <td class="px-6 py-4"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Actif</span></td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">15 Jan 2024</td>
+                                        <td class="px-6 py-4"><div class="flex items-center gap-1"><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-600"><span class="material-icons-outlined text-lg">visibility</span></button><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-primary-600"><span class="material-icons-outlined text-lg">edit</span></button><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-red-600"><span class="material-icons-outlined text-lg">delete</span></button></div></td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td class="px-6 py-4"><input type="checkbox" class="rounded border-gray-300 text-primary-500 focus:ring-primary-500"></td>
+                                        <td class="px-6 py-4"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=Jean+Martin&background=3b82f6&color=fff" class="w-10 h-10 rounded-full"><div><p class="text-sm font-medium text-gray-900 dark:text-white">Jean Martin</p><p class="text-xs text-gray-500">jean.martin@boulangerie.fr</p></div></div></td>
+                                        <td class="px-6 py-4"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"><span class="material-icons-outlined text-xs">store</span>Donneur</span></td>
+                                        <td class="px-6 py-4"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Actif</span></td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">12 Jan 2024</td>
+                                        <td class="px-6 py-4"><div class="flex items-center gap-1"><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-600"><span class="material-icons-outlined text-lg">visibility</span></button><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-primary-600"><span class="material-icons-outlined text-lg">edit</span></button><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-red-600"><span class="material-icons-outlined text-lg">delete</span></button></div></td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td class="px-6 py-4"><input type="checkbox" class="rounded border-gray-300 text-primary-500 focus:ring-primary-500"></td>
+                                        <td class="px-6 py-4"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=Sophie+Bernard&background=8b5cf6&color=fff" class="w-10 h-10 rounded-full"><div><p class="text-sm font-medium text-gray-900 dark:text-white">Sophie Bernard</p><p class="text-xs text-gray-500">sophie.b@email.com</p></div></div></td>
+                                        <td class="px-6 py-4"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400"><span class="material-icons-outlined text-xs">groups</span>Bénéficiaire</span></td>
+                                        <td class="px-6 py-4"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">En attente</span></td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">10 Jan 2024</td>
+                                        <td class="px-6 py-4"><div class="flex items-center gap-1"><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-600"><span class="material-icons-outlined text-lg">visibility</span></button><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-primary-600"><span class="material-icons-outlined text-lg">edit</span></button><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-red-600"><span class="material-icons-outlined text-lg">delete</span></button></div></td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td class="px-6 py-4"><input type="checkbox" class="rounded border-gray-300 text-primary-500 focus:ring-primary-500"></td>
+                                        <td class="px-6 py-4"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=Pierre+Leroy&background=ef4444&color=fff" class="w-10 h-10 rounded-full"><div><p class="text-sm font-medium text-gray-900 dark:text-white">Pierre Leroy</p><p class="text-xs text-gray-500">p.leroy@admin.fr</p></div></div></td>
+                                        <td class="px-6 py-4"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400"><span class="material-icons-outlined text-xs">admin_panel_settings</span>Admin</span></td>
+                                        <td class="px-6 py-4"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Actif</span></td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">5 Jan 2024</td>
+                                        <td class="px-6 py-4"><div class="flex items-center gap-1"><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-600"><span class="material-icons-outlined text-lg">visibility</span></button><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-primary-600"><span class="material-icons-outlined text-lg">edit</span></button><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-red-600"><span class="material-icons-outlined text-lg">delete</span></button></div></td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                        <td class="px-6 py-4"><input type="checkbox" class="rounded border-gray-300 text-primary-500 focus:ring-primary-500"></td>
+                                        <td class="px-6 py-4"><div class="flex items-center gap-3"><img src="https://ui-avatars.com/api/?name=Claire+Moreau&background=22c55e&color=fff" class="w-10 h-10 rounded-full"><div><p class="text-sm font-medium text-gray-900 dark:text-white">Claire Moreau</p><p class="text-xs text-gray-500">claire.m@email.com</p></div></div></td>
+                                        <td class="px-6 py-4"><span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"><span class="material-icons-outlined text-xs">volunteer_activism</span>Bénévole</span></td>
+                                        <td class="px-6 py-4"><span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Inactif</span></td>
+                                        <td class="px-6 py-4 text-sm text-gray-500">1 Jan 2024</td>
+                                        <td class="px-6 py-4"><div class="flex items-center gap-1"><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-blue-600"><span class="material-icons-outlined text-lg">visibility</span></button><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-primary-600"><span class="material-icons-outlined text-lg">edit</span></button><button class="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-red-600"><span class="material-icons-outlined text-lg">delete</span></button></div></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <p class="text-sm text-gray-500">Affichage de <span class="font-medium">1</span> à <span class="font-medium">5</span> sur <span class="font-medium">1,284</span></p>
+                            <div class="flex items-center gap-2">
+                                <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50" disabled>Précédent</button>
+                                <button class="px-3 py-1.5 rounded-lg bg-primary-500 text-white text-sm font-medium">1</button>
+                                <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">2</button>
+                                <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">3</button>
+                                <span class="text-gray-400">...</span>
+                                <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">257</button>
+                                <button class="px-3 py-1.5 rounded-lg border border-gray-200 dark:border-gray-600 text-sm text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700">Suivant</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="mt-auto border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <div class="max-w-7xl mx-auto px-4 lg:px-6 py-4"><div class="text-sm text-gray-500 text-center">© 2024 Nourriture Solidaire. Tous droits réservés.</div></div>
+            </footer>
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html>

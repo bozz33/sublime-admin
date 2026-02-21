@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Navigation - Composants UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
+    <header class="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-3">
+                    <a href="../index.html" class="text-sm text-gray-500 hover:text-primary-600">← Retour</a>
+                    <span class="text-gray-300">|</span>
+                    <h1 class="font-semibold text-gray-900 dark:text-white">Navigation</h1>
+                </div>
+                <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span x-show="!darkMode" class="material-icons-outlined">dark_mode</span>
+                    <span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-4xl mx-auto px-4 py-8 space-y-8">
+<!-- 
+  Navigation Components - All Variants
+  Nourriture Solidaire Dashboard
+-->
+
+<!-- ============================================
+     BREADCRUMB - BASIC
+     ============================================ -->
+<nav class="flex items-center gap-2 text-sm">
+  <a href="#" class="text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">Accueil</a>
+  <span class="material-icons-outlined text-gray-400 text-sm">chevron_right</span>
+  <a href="#" class="text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">Offres</a>
+  <span class="material-icons-outlined text-gray-400 text-sm">chevron_right</span>
+  <span class="text-gray-900 dark:text-white font-medium">Légumes Bio</span>
+</nav>
+
+<!-- ============================================
+     BREADCRUMB - WITH ICONS
+     ============================================ -->
+<nav class="flex items-center gap-2 text-sm">
+  <a href="#" class="flex items-center gap-1 text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+    <span class="material-icons-outlined text-lg">home</span>
+  </a>
+  <span class="material-icons-outlined text-gray-400 text-sm">chevron_right</span>
+  <a href="#" class="flex items-center gap-1 text-gray-500 hover:text-primary-600 dark:hover:text-primary-400">
+    <span class="material-icons-outlined text-sm">inventory_2</span>
+    Offres
+  </a>
+  <span class="material-icons-outlined text-gray-400 text-sm">chevron_right</span>
+  <span class="text-gray-900 dark:text-white font-medium">Détails</span>
+</nav>
+
+<!-- ============================================
+     BREADCRUMB - SLASH SEPARATOR
+     ============================================ -->
+<nav class="flex items-center gap-2 text-sm">
+  <a href="#" class="text-gray-500 hover:text-primary-600">Dashboard</a>
+  <span class="text-gray-400">/</span>
+  <a href="#" class="text-gray-500 hover:text-primary-600">Utilisateurs</a>
+  <span class="text-gray-400">/</span>
+  <span class="text-gray-900 dark:text-white font-medium">Marie Dupont</span>
+</nav>
+
+<!-- ============================================
+     TABS - BASIC
+     ============================================ -->
+<div x-data="{ activeTab: 'general' }" class="border-b border-gray-200 dark:border-gray-700">
+  <nav class="flex gap-8">
+    <button @click="activeTab = 'general'" :class="activeTab === 'general' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'" class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+      Général
+    </button>
+    <button @click="activeTab = 'notifications'" :class="activeTab === 'notifications' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'" class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+      Notifications
+    </button>
+    <button @click="activeTab = 'security'" :class="activeTab === 'security' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'" class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+      Sécurité
+    </button>
+  </nav>
+</div>
+
+<!-- ============================================
+     TABS - PILLS
+     ============================================ -->
+<div x-data="{ activeTab: 'all' }" class="flex gap-1 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+  <button @click="activeTab = 'all'" :class="activeTab === 'all' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''" class="px-4 py-2 text-sm font-medium rounded-lg transition-all">
+    Tout
+  </button>
+  <button @click="activeTab = 'available'" :class="activeTab === 'available' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''" class="px-4 py-2 text-sm font-medium rounded-lg transition-all">
+    Disponible
+  </button>
+  <button @click="activeTab = 'reserved'" :class="activeTab === 'reserved' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''" class="px-4 py-2 text-sm font-medium rounded-lg transition-all">
+    Réservé
+  </button>
+  <button @click="activeTab = 'collected'" :class="activeTab === 'collected' ? 'bg-white dark:bg-gray-700 shadow-sm' : ''" class="px-4 py-2 text-sm font-medium rounded-lg transition-all">
+    Collecté
+  </button>
+</div>
+
+<!-- ============================================
+     TABS - WITH ICONS
+     ============================================ -->
+<div x-data="{ activeTab: 'overview' }" class="border-b border-gray-200 dark:border-gray-700">
+  <nav class="flex gap-6">
+    <button @click="activeTab = 'overview'" :class="activeTab === 'overview' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+      <span class="material-icons-outlined text-lg">dashboard</span>
+      Vue d'ensemble
+    </button>
+    <button @click="activeTab = 'analytics'" :class="activeTab === 'analytics' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+      <span class="material-icons-outlined text-lg">analytics</span>
+      Statistiques
+    </button>
+    <button @click="activeTab = 'reports'" :class="activeTab === 'reports' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500 hover:text-gray-700'" class="flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+      <span class="material-icons-outlined text-lg">description</span>
+      Rapports
+    </button>
+  </nav>
+</div>
+
+<!-- ============================================
+     TABS - WITH BADGE
+     ============================================ -->
+<div x-data="{ activeTab: 'inbox' }" class="border-b border-gray-200 dark:border-gray-700">
+  <nav class="flex gap-6">
+    <button @click="activeTab = 'inbox'" :class="activeTab === 'inbox' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500'" class="flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+      Boîte de réception
+      <span class="px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400 text-xs font-bold rounded-full">12</span>
+    </button>
+    <button @click="activeTab = 'sent'" :class="activeTab === 'sent' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500'" class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+      Envoyés
+    </button>
+    <button @click="activeTab = 'archived'" :class="activeTab === 'archived' ? 'border-primary-500 text-primary-600' : 'border-transparent text-gray-500'" class="py-4 px-1 border-b-2 font-medium text-sm transition-colors">
+      Archivés
+    </button>
+  </nav>
+</div>
+
+<!-- ============================================
+     TABS - VERTICAL
+     ============================================ -->
+<div x-data="{ activeTab: 'profile' }" class="flex gap-6">
+  <nav class="w-48 space-y-1">
+    <button @click="activeTab = 'profile'" :class="activeTab === 'profile' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-500' : 'text-gray-600 dark:text-gray-400 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg border-l-2 transition-colors">
+      <span class="material-icons-outlined text-lg">person</span>
+      Profil
+    </button>
+    <button @click="activeTab = 'account'" :class="activeTab === 'account' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-500' : 'text-gray-600 dark:text-gray-400 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg border-l-2 transition-colors">
+      <span class="material-icons-outlined text-lg">manage_accounts</span>
+      Compte
+    </button>
+    <button @click="activeTab = 'notifications'" :class="activeTab === 'notifications' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-500' : 'text-gray-600 dark:text-gray-400 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg border-l-2 transition-colors">
+      <span class="material-icons-outlined text-lg">notifications</span>
+      Notifications
+    </button>
+    <button @click="activeTab = 'security'" :class="activeTab === 'security' ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 border-primary-500' : 'text-gray-600 dark:text-gray-400 border-transparent hover:bg-gray-50 dark:hover:bg-gray-800'" class="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium rounded-lg border-l-2 transition-colors">
+      <span class="material-icons-outlined text-lg">security</span>
+      Sécurité
+    </button>
+  </nav>
+  <div class="flex-1 p-6 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+    <p class="text-gray-600 dark:text-gray-400">Contenu de l'onglet <span x-text="activeTab" class="font-medium"></span></p>
+  </div>
+</div>
+
+<!-- ============================================
+     PAGINATION - BASIC
+     ============================================ -->
+<nav class="flex items-center justify-center gap-1">
+  <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500 disabled:opacity-50" disabled>
+    <span class="material-icons-outlined">chevron_left</span>
+  </button>
+  <button class="w-10 h-10 rounded-lg bg-primary-500 text-white font-medium">1</button>
+  <button class="w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium">2</button>
+  <button class="w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium">3</button>
+  <span class="px-2 text-gray-400">...</span>
+  <button class="w-10 h-10 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 font-medium">10</button>
+  <button class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500">
+    <span class="material-icons-outlined">chevron_right</span>
+  </button>
+</nav>
+
+<!-- ============================================
+     PAGINATION - WITH INFO
+     ============================================ -->
+<div class="flex items-center justify-between">
+  <p class="text-sm text-gray-500">
+    Affichage de <span class="font-medium text-gray-900 dark:text-white">1</span> à <span class="font-medium text-gray-900 dark:text-white">10</span> sur <span class="font-medium text-gray-900 dark:text-white">97</span> résultats
+  </p>
+  <nav class="flex items-center gap-1">
+    <button class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm text-gray-700 dark:text-gray-300 disabled:opacity-50" disabled>
+      Précédent
+    </button>
+    <button class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800 text-sm text-gray-700 dark:text-gray-300">
+      Suivant
+    </button>
+  </nav>
+</div>
+
+<!-- ============================================
+     PAGINATION - COMPACT
+     ============================================ -->
+<nav class="inline-flex rounded-lg border border-gray-300 dark:border-gray-600 overflow-hidden">
+  <button class="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 border-r border-gray-300 dark:border-gray-600">
+    <span class="material-icons-outlined text-lg">chevron_left</span>
+  </button>
+  <span class="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-800">
+    Page <span class="font-medium">1</span> sur <span class="font-medium">10</span>
+  </span>
+  <button class="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-500 border-l border-gray-300 dark:border-gray-600">
+    <span class="material-icons-outlined text-lg">chevron_right</span>
+  </button>
+</nav>
+
+<!-- ============================================
+     STEPS - HORIZONTAL
+     ============================================ -->
+<nav class="flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500 text-white font-semibold">
+      <span class="material-icons-outlined">check</span>
+    </div>
+    <div>
+      <p class="text-sm font-medium text-gray-900 dark:text-white">Informations</p>
+      <p class="text-xs text-gray-500">Complété</p>
+    </div>
+  </div>
+  <div class="flex-1 h-0.5 bg-primary-500 mx-4"></div>
+  <div class="flex items-center gap-3">
+    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-primary-500 text-white font-semibold">2</div>
+    <div>
+      <p class="text-sm font-medium text-gray-900 dark:text-white">Détails</p>
+      <p class="text-xs text-gray-500">En cours</p>
+    </div>
+  </div>
+  <div class="flex-1 h-0.5 bg-gray-200 dark:bg-gray-700 mx-4"></div>
+  <div class="flex items-center gap-3">
+    <div class="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 font-semibold">3</div>
+    <div>
+      <p class="text-sm font-medium text-gray-500">Confirmation</p>
+      <p class="text-xs text-gray-400">En attente</p>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================
+     STEPS - VERTICAL
+     ============================================ -->
+<nav class="space-y-4">
+  <div class="flex gap-4">
+    <div class="flex flex-col items-center">
+      <div class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-500 text-white text-sm font-semibold">
+        <span class="material-icons-outlined text-sm">check</span>
+      </div>
+      <div class="w-0.5 h-12 bg-primary-500 mt-2"></div>
+    </div>
+    <div class="pt-1">
+      <p class="text-sm font-medium text-gray-900 dark:text-white">Offre créée</p>
+      <p class="text-xs text-gray-500 mt-0.5">23 Jan 2024, 10:30</p>
+    </div>
+  </div>
+  <div class="flex gap-4">
+    <div class="flex flex-col items-center">
+      <div class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-500 text-white text-sm font-semibold">
+        <span class="material-icons-outlined text-sm">check</span>
+      </div>
+      <div class="w-0.5 h-12 bg-primary-500 mt-2"></div>
+    </div>
+    <div class="pt-1">
+      <p class="text-sm font-medium text-gray-900 dark:text-white">Réservation confirmée</p>
+      <p class="text-xs text-gray-500 mt-0.5">23 Jan 2024, 14:15</p>
+    </div>
+  </div>
+  <div class="flex gap-4">
+    <div class="flex flex-col items-center">
+      <div class="flex items-center justify-center w-8 h-8 rounded-full bg-primary-500 text-white text-sm font-semibold animate-pulse">3</div>
+      <div class="w-0.5 h-12 bg-gray-200 dark:bg-gray-700 mt-2"></div>
+    </div>
+    <div class="pt-1">
+      <p class="text-sm font-medium text-gray-900 dark:text-white">En cours de collecte</p>
+      <p class="text-xs text-gray-500 mt-0.5">En attente...</p>
+    </div>
+  </div>
+  <div class="flex gap-4">
+    <div class="flex flex-col items-center">
+      <div class="flex items-center justify-center w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-500 text-sm font-semibold">4</div>
+    </div>
+    <div class="pt-1">
+      <p class="text-sm font-medium text-gray-500">Collecte terminée</p>
+      <p class="text-xs text-gray-400 mt-0.5">-</p>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================
+     SIDEBAR NAVIGATION
+     ============================================ -->
+<nav class="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
+  <div class="space-y-1">
+    <p class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Menu Principal</p>
+    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium">
+      <span class="material-icons-outlined text-xl">dashboard</span>
+      Dashboard
+    </a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+      <span class="material-icons-outlined text-xl">inventory_2</span>
+      Offres
+      <span class="ml-auto px-2 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-600 text-xs font-bold rounded-full">24</span>
+    </a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+      <span class="material-icons-outlined text-xl">people</span>
+      Utilisateurs
+    </a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+      <span class="material-icons-outlined text-xl">place</span>
+      Points Relais
+    </a>
+  </div>
+  <div class="mt-6 space-y-1">
+    <p class="px-3 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Paramètres</p>
+    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+      <span class="material-icons-outlined text-xl">settings</span>
+      Configuration
+    </a>
+    <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+      <span class="material-icons-outlined text-xl">help</span>
+      Aide
+    </a>
+  </div>
+</nav>
+
+<!-- ============================================
+     BOTTOM NAVIGATION (MOBILE)
+     ============================================ -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-4 py-2 flex items-center justify-around">
+  <a href="#" class="flex flex-col items-center gap-1 py-2 px-3 text-primary-600 dark:text-primary-400">
+    <span class="material-icons-outlined">home</span>
+    <span class="text-xs font-medium">Accueil</span>
+  </a>
+  <a href="#" class="flex flex-col items-center gap-1 py-2 px-3 text-gray-500">
+    <span class="material-icons-outlined">search</span>
+    <span class="text-xs">Recherche</span>
+  </a>
+  <a href="#" class="flex flex-col items-center gap-1 py-2 px-3 text-gray-500 relative">
+    <span class="material-icons-outlined">notifications</span>
+    <span class="absolute top-1 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+    <span class="text-xs">Alertes</span>
+  </a>
+  <a href="#" class="flex flex-col items-center gap-1 py-2 px-3 text-gray-500">
+    <span class="material-icons-outlined">person</span>
+    <span class="text-xs">Profil</span>
+  </a>
+</nav>
+
+    </main>
+</body>
+</html>

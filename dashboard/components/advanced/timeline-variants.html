@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Timeline - Composants UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+    <style>[x-cloak] { display: none !important; }</style>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
+    <header class="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div class="max-w-7xl mx-auto px-4 lg:px-8">
+            <div class="flex items-center justify-between h-14">
+                <div class="flex items-center gap-3">
+                    <a href="../index.html" class="text-sm text-gray-500 hover:text-primary-600">← Retour</a>
+                    <span class="text-gray-300">|</span>
+                    <h1 class="font-semibold text-gray-900 dark:text-white">Timeline</h1>
+                </div>
+                <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                    <span x-show="!darkMode" class="material-icons-outlined">dark_mode</span>
+                    <span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span>
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="max-w-4xl mx-auto px-4 py-8 space-y-12">
+
+<!-- ============================================
+     VERTICAL TIMELINE - LEFT
+     ============================================ -->
+<section>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Timeline Verticale</h2>
+    <div class="relative pl-8 border-l-2 border-gray-200 dark:border-gray-700 space-y-8">
+        <!-- Item 1 - Completed -->
+        <div class="relative">
+            <div class="absolute -left-10 w-4 h-4 bg-primary-500 rounded-full border-4 border-white dark:border-gray-900"></div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-medium text-primary-600 dark:text-primary-400">Complété</span>
+                    <span class="text-xs text-gray-500">23 Jan 2024, 10:30</span>
+                </div>
+                <h4 class="font-medium text-gray-900 dark:text-white">Offre créée</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">L'offre "Légumes Bio Frais" a été publiée avec succès.</p>
+            </div>
+        </div>
+        
+        <!-- Item 2 - Completed -->
+        <div class="relative">
+            <div class="absolute -left-10 w-4 h-4 bg-primary-500 rounded-full border-4 border-white dark:border-gray-900"></div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-medium text-primary-600 dark:text-primary-400">Complété</span>
+                    <span class="text-xs text-gray-500">23 Jan 2024, 14:15</span>
+                </div>
+                <h4 class="font-medium text-gray-900 dark:text-white">Réservation confirmée</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Marie Dupont a réservé cette offre.</p>
+            </div>
+        </div>
+        
+        <!-- Item 3 - In Progress -->
+        <div class="relative">
+            <div class="absolute -left-10 w-4 h-4 bg-yellow-500 rounded-full border-4 border-white dark:border-gray-900 animate-pulse"></div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl border-2 border-yellow-200 dark:border-yellow-800 p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-medium text-yellow-600 dark:text-yellow-400">En cours</span>
+                    <span class="text-xs text-gray-500">Aujourd'hui</span>
+                </div>
+                <h4 class="font-medium text-gray-900 dark:text-white">En attente de collecte</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Le bénéficiaire doit récupérer l'offre au point relais.</p>
+            </div>
+        </div>
+        
+        <!-- Item 4 - Pending -->
+        <div class="relative opacity-50">
+            <div class="absolute -left-10 w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded-full border-4 border-white dark:border-gray-900"></div>
+            <div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-medium text-gray-500">En attente</span>
+                    <span class="text-xs text-gray-400">-</span>
+                </div>
+                <h4 class="font-medium text-gray-900 dark:text-white">Collecte terminée</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">L'offre sera marquée comme collectée.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================
+     ACTIVITY TIMELINE
+     ============================================ -->
+<section>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Timeline d'Activité</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+        <div class="space-y-6">
+            <div class="flex gap-4">
+                <div class="relative flex flex-col items-center">
+                    <div class="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                        <span class="material-icons-outlined text-green-600 text-lg">check_circle</span>
+                    </div>
+                    <div class="w-0.5 h-full bg-gray-200 dark:bg-gray-700 mt-2"></div>
+                </div>
+                <div class="flex-1 pb-6">
+                    <div class="flex items-center gap-2">
+                        <img src="https://ui-avatars.com/api/?name=Marie+D&background=22c55e&color=fff" class="w-6 h-6 rounded-full">
+                        <span class="font-medium text-gray-900 dark:text-white">Marie Dupont</span>
+                        <span class="text-gray-500 text-sm">a collecté une offre</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Légumes Bio Frais - 15 kg</p>
+                    <span class="text-xs text-gray-400 mt-2 block">Il y a 2 heures</span>
+                </div>
+            </div>
+            
+            <div class="flex gap-4">
+                <div class="relative flex flex-col items-center">
+                    <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                        <span class="material-icons-outlined text-blue-600 text-lg">add_circle</span>
+                    </div>
+                    <div class="w-0.5 h-full bg-gray-200 dark:bg-gray-700 mt-2"></div>
+                </div>
+                <div class="flex-1 pb-6">
+                    <div class="flex items-center gap-2">
+                        <img src="https://ui-avatars.com/api/?name=Jean+M&background=3b82f6&color=fff" class="w-6 h-6 rounded-full">
+                        <span class="font-medium text-gray-900 dark:text-white">Jean Martin</span>
+                        <span class="text-gray-500 text-sm">a publié une nouvelle offre</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Pains Frais - 20 unités</p>
+                    <span class="text-xs text-gray-400 mt-2 block">Il y a 4 heures</span>
+                </div>
+            </div>
+            
+            <div class="flex gap-4">
+                <div class="relative flex flex-col items-center">
+                    <div class="w-10 h-10 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                        <span class="material-icons-outlined text-yellow-600 text-lg">bookmark</span>
+                    </div>
+                    <div class="w-0.5 h-full bg-gray-200 dark:bg-gray-700 mt-2"></div>
+                </div>
+                <div class="flex-1 pb-6">
+                    <div class="flex items-center gap-2">
+                        <img src="https://ui-avatars.com/api/?name=Sophie+B&background=eab308&color=fff" class="w-6 h-6 rounded-full">
+                        <span class="font-medium text-gray-900 dark:text-white">Sophie Bernard</span>
+                        <span class="text-gray-500 text-sm">a réservé une offre</span>
+                    </div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Fruits de Saison - 10 kg</p>
+                    <span class="text-xs text-gray-400 mt-2 block">Il y a 6 heures</span>
+                </div>
+            </div>
+            
+            <div class="flex gap-4">
+                <div class="relative flex flex-col items-center">
+                    <div class="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center">
+                        <span class="material-icons-outlined text-purple-600 text-lg">person_add</span>
+                    </div>
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                        <img src="https://ui-avatars.com/api/?name=Pierre+L&background=8b5cf6&color=fff" class="w-6 h-6 rounded-full">
+                        <span class="font-medium text-gray-900 dark:text-white">Pierre Lefebvre</span>
+                        <span class="text-gray-500 text-sm">a rejoint la plateforme</span>
+                    </div>
+                    <span class="text-xs text-gray-400 mt-2 block">Hier</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============================================
+     HORIZONTAL TIMELINE
+     ============================================ -->
+<section>
+    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Timeline Horizontale</h2>
+    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 overflow-x-auto">
+        <div class="flex items-start min-w-max">
+            <div class="flex flex-col items-center">
+                <div class="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white">
+                    <span class="material-icons-outlined text-lg">check</span>
+                </div>
+                <div class="mt-3 text-center">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">Inscription</p>
+                    <p class="text-xs text-gray-500">01 Jan</p>
+                </div>
+            </div>
+            <div class="w-24 h-0.5 bg-primary-500 mt-5"></div>
+            <div class="flex flex-col items-center">
+                <div class="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white">
+                    <span class="material-icons-outlined text-lg">check</span>
+                </div>
+                <div class="mt-3 text-center">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">Vérification</p>
+                    <p class="text-xs text-gray-500">02 Jan</p>
+                </div>
+            </div>
+            <div class="w-24 h-0.5 bg-primary-500 mt-5"></div>
+            <div class="flex flex-col items-center">
+                <div class="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white font-semibold">3</div>
+                <div class="mt-3 text-center">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">Formation</p>
+                    <p class="text-xs text-primary-600">En cours</p>
+                </div>
+            </div>
+            <div class="w-24 h-0.5 bg-gray-200 dark:bg-gray-700 mt-5"></div>
+            <div class="flex flex-col items-center opacity-50">
+                <div class="w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center text-gray-500 font-semibold">4</div>
+                <div class="mt-3 text-center">
+                    <p class="text-sm font-medium text-gray-500">Activation</p>
+                    <p class="text-xs text-gray-400">-</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+    </main>
+</body>
+</html>

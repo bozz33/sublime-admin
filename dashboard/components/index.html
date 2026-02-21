@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true', sidebarOpen: true, sidebarMobileOpen: false }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Composants UI - Nourriture Solidaire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/main.css">
+    <script>tailwind.config = { darkMode: 'class', theme: { extend: { colors: { primary: { 50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac', 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 800: '#166534', 900: '#14532d' } }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }</script>
+</head>
+<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="sticky top-0 z-50 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+            <div class="max-w-7xl mx-auto px-4 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-4">
+                        <a href="../index.html" class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center">
+                                <span class="material-icons-outlined text-white">eco</span>
+                            </div>
+                            <span class="font-bold text-lg text-gray-800 dark:text-white">Nourriture Solidaire</span>
+                        </a>
+                        <span class="hidden sm:inline-flex px-2.5 py-0.5 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 text-xs font-medium rounded-full">UI Kit</span>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <a href="../index.html" class="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">← Retour au Dashboard</a>
+                        <button @click="darkMode = !darkMode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <span x-show="!darkMode" class="material-icons-outlined">dark_mode</span>
+                            <span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 lg:px-8 py-8">
+            <!-- Hero Section -->
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">Bibliothèque de Composants</h1>
+                <p class="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">Une collection complète de composants UI réutilisables pour construire votre tableau de bord Nourriture Solidaire.</p>
+            </div>
+
+            <!-- Components Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <!-- Alerts -->
+                <a href="alerts/alert-basic.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-green-100 dark:bg-green-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-green-600 text-2xl">notifications</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Alertes</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Messages d'information, succès, erreur et avertissement.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Info</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Success</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Warning</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Error</span>
+                    </div>
+                </a>
+
+                <!-- Buttons -->
+                <a href="buttons/button-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-blue-600 text-2xl">smart_button</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Boutons</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Boutons primaires, secondaires, outline, ghost et plus.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Primary</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Outline</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Icon</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Loading</span>
+                    </div>
+                </a>
+
+                <!-- Badges -->
+                <a href="badges/badge-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-purple-600 text-2xl">label</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Badges</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Badges de statut, rôles, notifications et tags.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Status</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Dot</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Icon</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Removable</span>
+                    </div>
+                </a>
+
+                <!-- Cards -->
+                <a href="cards/card-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-yellow-600 text-2xl">dashboard</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Cartes</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Cartes de statistiques, offres, utilisateurs et plus.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Stats</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Offer</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">User</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Empty</span>
+                    </div>
+                </a>
+
+                <!-- Forms -->
+                <a href="forms/input-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-red-600 text-2xl">edit_note</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Formulaires</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Inputs, selects, checkboxes, toggles et uploads.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Input</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Select</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Toggle</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Upload</span>
+                    </div>
+                </a>
+
+                <!-- Modals -->
+                <a href="modals/modal-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-indigo-600 text-2xl">open_in_new</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Modals</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Dialogues, confirmations, formulaires et panneaux.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Basic</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Confirm</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Form</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Drawer</span>
+                    </div>
+                </a>
+
+                <!-- Dropdowns -->
+                <a href="dropdowns/dropdown-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-cyan-100 dark:bg-cyan-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-cyan-600 text-2xl">expand_more</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Dropdowns</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Menus déroulants, filtres et sélecteurs.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Menu</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Filter</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">User</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Search</span>
+                    </div>
+                </a>
+
+                <!-- Tables -->
+                <a href="tables/table-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-orange-100 dark:bg-orange-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-orange-600 text-2xl">table_chart</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Tables Basiques</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Tables de données avec tri, sélection et pagination.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Basic</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Sortable</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Selectable</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Striped</span>
+                    </div>
+                </a>
+
+                <!-- Table Headers -->
+                <a href="tables/table-headers.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-amber-600 text-2xl">view_headline</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Table Headers</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">En-têtes de tables avec recherche, filtres et actions.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Search</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Filters</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Actions</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Tabs</span>
+                    </div>
+                </a>
+
+                <!-- Data Tables -->
+                <a href="tables/data-tables.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-emerald-600 text-2xl">dataset</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Data Tables</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Tables avancées avec images, progression et rôles.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Products</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Users</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Tasks</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Progress</span>
+                    </div>
+                </a>
+
+                <!-- Comparison Tables -->
+                <a href="tables/comparison-table.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-sky-100 dark:bg-sky-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-sky-600 text-2xl">compare</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Comparison Tables</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Tables de comparaison produits et pricing.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Products</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Pricing</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Features</span>
+                    </div>
+                </a>
+
+                <!-- Navigation -->
+                <a href="navigation/navigation-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-teal-100 dark:bg-teal-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-teal-600 text-2xl">menu</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Navigation</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Breadcrumbs, tabs, pagination et steps.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Breadcrumb</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Tabs</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Pagination</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Steps</span>
+                    </div>
+                </a>
+
+                <!-- Sidebars -->
+                <a href="navigation/sidebar-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-violet-100 dark:bg-violet-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-violet-600 text-2xl">view_sidebar</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Sidebars</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Menus latéraux avec projets, contacts et notifications.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Basic</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Projects</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Contacts</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Profile</span>
+                    </div>
+                </a>
+
+                <!-- CRUD Forms -->
+                <a href="forms/crud-forms.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-rose-100 dark:bg-rose-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-rose-600 text-2xl">edit_note</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">CRUD Forms</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Formulaires produits et événements avec upload.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Add Product</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Edit</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Event</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Upload</span>
+                    </div>
+                </a>
+
+                <!-- Feedback -->
+                <a href="feedback/feedback-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-pink-100 dark:bg-pink-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-pink-600 text-2xl">hourglass_empty</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Feedback</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Toasts, progress bars, spinners et skeletons.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Toast</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Progress</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Spinner</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Skeleton</span>
+                    </div>
+                </a>
+
+                <!-- Avatars -->
+                <a href="avatars/avatar-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-emerald-600 text-2xl">account_circle</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Avatars</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Avatars utilisateurs, groupes et indicateurs de statut.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Sizes</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Status</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Group</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Badge</span>
+                    </div>
+                </a>
+
+                <!-- Tooltips -->
+                <a href="tooltips/tooltip-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                    <div class="w-12 h-12 bg-slate-100 dark:bg-slate-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                        <span class="material-icons-outlined text-slate-600 text-2xl">chat_bubble</span>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Tooltips</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Infobulles, popovers et messages contextuels.</p>
+                    <div class="flex flex-wrap gap-2 mt-4">
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Basic</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Positions</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Rich</span>
+                        <span class="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-xs rounded">Popover</span>
+                    </div>
+                </a>
+
+            </div>
+
+            <!-- Advanced Components Section -->
+            <div class="mt-16">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Composants Avancés</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <!-- Accordions -->
+                    <a href="advanced/accordion-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                        <div class="w-12 h-12 bg-amber-100 dark:bg-amber-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <span class="material-icons-outlined text-amber-600 text-2xl">expand_circle_down</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Accordions</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Panneaux dépliables, FAQ et sections collapsibles.</p>
+                    </a>
+
+                    <!-- Timeline -->
+                    <a href="advanced/timeline-variants.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                        <div class="w-12 h-12 bg-violet-100 dark:bg-violet-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <span class="material-icons-outlined text-violet-600 text-2xl">timeline</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Timeline</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Chronologies verticales, horizontales et activités.</p>
+                    </a>
+
+                    <!-- Stats Widgets -->
+                    <a href="advanced/stats-widgets.html" class="group bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg hover:border-primary-500 transition-all">
+                        <div class="w-12 h-12 bg-rose-100 dark:bg-rose-900/30 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                            <span class="material-icons-outlined text-rose-600 text-2xl">insights</span>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Stats Widgets</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Cartes statistiques, graphiques et indicateurs.</p>
+                    </a>
+
+                </div>
+            </div>
+
+            <!-- Quick Reference -->
+            <div class="mt-16">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Référence Rapide</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    
+                    <!-- Colors -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Couleurs</h3>
+                        <div class="grid grid-cols-5 gap-2">
+                            <div class="space-y-2">
+                                <div class="w-full h-10 bg-primary-500 rounded-lg"></div>
+                                <p class="text-xs text-center text-gray-500">Primary</p>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="w-full h-10 bg-green-500 rounded-lg"></div>
+                                <p class="text-xs text-center text-gray-500">Success</p>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="w-full h-10 bg-yellow-500 rounded-lg"></div>
+                                <p class="text-xs text-center text-gray-500">Warning</p>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="w-full h-10 bg-red-500 rounded-lg"></div>
+                                <p class="text-xs text-center text-gray-500">Error</p>
+                            </div>
+                            <div class="space-y-2">
+                                <div class="w-full h-10 bg-blue-500 rounded-lg"></div>
+                                <p class="text-xs text-center text-gray-500">Info</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Typography -->
+                    <div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Typographie</h3>
+                        <div class="space-y-2">
+                            <p class="text-2xl font-bold text-gray-900 dark:text-white">Heading 2XL Bold</p>
+                            <p class="text-xl font-semibold text-gray-900 dark:text-white">Heading XL Semibold</p>
+                            <p class="text-lg font-medium text-gray-900 dark:text-white">Heading LG Medium</p>
+                            <p class="text-base text-gray-600 dark:text-gray-400">Body text base</p>
+                            <p class="text-sm text-gray-500">Small text</p>
+                            <p class="text-xs text-gray-400">Extra small text</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Usage Guide -->
+            <div class="mt-12 bg-primary-50 dark:bg-primary-900/20 rounded-2xl p-6 border border-primary-200 dark:border-primary-800">
+                <h3 class="text-lg font-semibold text-primary-800 dark:text-primary-300 mb-3">Comment utiliser ces composants</h3>
+                <ol class="list-decimal list-inside space-y-2 text-sm text-primary-700 dark:text-primary-400">
+                    <li>Ouvrez le fichier HTML du composant souhaité</li>
+                    <li>Copiez le code HTML du composant</li>
+                    <li>Collez-le dans votre page</li>
+                    <li>Personnalisez les classes Tailwind selon vos besoins</li>
+                    <li>Pour les composants interactifs, assurez-vous d'avoir Alpine.js inclus</li>
+                </ol>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 mt-16">
+            <div class="max-w-7xl mx-auto px-4 lg:px-8 py-6">
+                <div class="text-sm text-gray-500 text-center">
+                    © 2024 Nourriture Solidaire. Bibliothèque de composants UI.
+                </div>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>
