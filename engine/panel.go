@@ -13,7 +13,6 @@ import (
 	"github.com/alexedwards/scs/v2"
 	"github.com/bozz33/sublimeadmin/auth"
 	"github.com/bozz33/sublimeadmin/export"
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 	"github.com/bozz33/sublimeadmin/mailer"
 	"github.com/bozz33/sublimeadmin/middleware"
 	"github.com/bozz33/sublimeadmin/notifications"

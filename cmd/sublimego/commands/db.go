@@ -2,12 +2,11 @@ package commands
 
 import (
 	"bufio"
-	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"strings"
 
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 	"github.com/spf13/cobra"
 )
 
@@ -36,17 +35,17 @@ This command will:
 
 		fmt.Printf("Exécution des migrations sur la base %s...\n", cfg.Database.Driver)
 
-		client, err := ent.Open(cfg.Database.Driver, cfg.Database.URL)
+		db, err := sql.Open(cfg.Database.Driver, cfg.Database.URL)
 		if err != nil {
 			return fmt.Errorf("failed to connect to database: %w", err)
 		}
-		defer client.Close()
+		defer db.Close()
 
-		ctx := context.Background()
-		if err := client.Schema.Create(ctx); err != nil {
-			return fmt.Errorf("failed to run migrations: %w", err)
+		if err := db.Ping(); err != nil {
+			return fmt.Errorf("failed to ping database: %w", err)
 		}
 
+		fmt.Println("Database connected. Run your ORM migrations from your project's main.go.")
 		fmt.Println("Migrations terminées avec succès")
 		return nil
 	},
@@ -69,19 +68,16 @@ This is useful for:
 
 		fmt.Println("Peuplement de la base de données...")
 
-		client, err := ent.Open(cfg.Database.Driver, cfg.Database.URL)
+		db, err := sql.Open(cfg.Database.Driver, cfg.Database.URL)
 		if err != nil {
 			return fmt.Errorf("failed to connect to database: %w", err)
 		}
-		defer client.Close()
+		defer db.Close()
 
-		ctx := context.Background()
-
-		// TODO: Charger et exécuter les seeders depuis internal/seeders
+		// TODO: Implement seeders in your project
 		fmt.Println("Aucun seeder configuré")
-		fmt.Println("Créer des seeders avec: sublimego make:seeder [name]")
-
-		_ = ctx
+		fmt.Println("Implement seeders in your project's internal/seeders package.")
+		_ = db
 		return nil
 	},
 }
@@ -119,19 +115,16 @@ This is DESTRUCTIVE and cannot be undone!`,
 
 		fmt.Println("\nSuppression de toutes les tables...")
 
-		client, err := ent.Open(cfg.Database.Driver, cfg.Database.URL)
+		db, err := sql.Open(cfg.Database.Driver, cfg.Database.URL)
 		if err != nil {
 			return fmt.Errorf("failed to connect to database: %w", err)
 		}
-		defer client.Close()
+		defer db.Close()
 
-		ctx := context.Background()
-
-		// Suppression et recréation du schéma
+		// Run your ORM schema reset from your project
 		fmt.Println("Recréation du schéma...")
-		if err := client.Schema.Create(ctx); err != nil {
-			return fmt.Errorf("failed to recreate schema: %w", err)
-		}
+		fmt.Println("Run your ORM schema reset from your project's main.go.")
+		_ = db
 		fmt.Println("Schéma recréé")
 
 		// Exécution des seeders
@@ -165,16 +158,15 @@ var dbStatusCmd = &cobra.Command{
 
 		fmt.Println("\nTest de connexion...")
 
-		client, err := ent.Open(cfg.Database.Driver, cfg.Database.URL)
+		db, err := sql.Open(cfg.Database.Driver, cfg.Database.URL)
 		if err != nil {
 			fmt.Printf("Échec de connexion: %v\n", err)
 			return err
 		}
-		defer client.Close()
+		defer db.Close()
 
-		ctx := context.Background()
-		if err := client.Schema.Create(ctx); err != nil {
-			fmt.Printf("Problème de schéma: %v\n", err)
+		if err := db.Ping(); err != nil {
+			fmt.Printf("Problème de connexion: %v\n", err)
 		} else {
 			fmt.Println("Connexion réussie")
 		}

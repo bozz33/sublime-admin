@@ -7,16 +7,19 @@ import (
 	"os"
 	"path/filepath"
 
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+// TenantMigrationFunc is called after a tenant DB is created.
+// dsn is the SQLite DSN — open your own ORM client inside this function.
+type TenantMigrationFunc func(ctx context.Context, dsn string) error
 
 // TenantProvisioner handles automatic database creation and migration for tenants.
 type TenantProvisioner struct {
 	// DBDir is the directory where tenant databases are stored (e.g. "./tenants")
 	DBDir string
 	// MigrationFunc is called after DB creation to run migrations/seeds
-	MigrationFunc func(ctx context.Context, client *ent.Client) error
+	MigrationFunc TenantMigrationFunc
 }
 
 // NewTenantProvisioner creates a provisioner with default settings.
@@ -27,7 +30,15 @@ func NewTenantProvisioner(dbDir string) *TenantProvisioner {
 }
 
 // WithMigrations sets the migration function to run after DB creation.
-func (p *TenantProvisioner) WithMigrations(fn func(ctx context.Context, client *ent.Client) error) *TenantProvisioner {
+// Example:
+//
+//	provisioner.WithMigrations(func(ctx context.Context, dsn string) error {
+//		client, err := ent.Open("sqlite3", dsn)
+//		if err != nil { return err }
+//		defer client.Close()
+//		return client.Schema.Create(ctx)
+//	})
+func (p *TenantProvisioner) WithMigrations(fn TenantMigrationFunc) *TenantProvisioner {
 	p.MigrationFunc = fn
 	return p
 }
@@ -62,13 +73,7 @@ func (p *TenantProvisioner) ProvisionTenant(ctx context.Context, tenant *Tenant)
 
 	// Run migrations if provided
 	if p.MigrationFunc != nil {
-		client, err := ent.Open("sqlite3", dsn)
-		if err != nil {
-			return "", fmt.Errorf("failed to open ent client for migrations: %w", err)
-		}
-		defer client.Close()
-
-		if err := p.MigrationFunc(ctx, client); err != nil {
+		if err := p.MigrationFunc(ctx, dsn); err != nil {
 			return "", fmt.Errorf("failed to run migrations for tenant %s: %w", tenant.ID, err)
 		}
 	}
@@ -102,17 +107,12 @@ func (p *TenantProvisioner) DeleteTenant(tenant *Tenant) error {
 	return nil
 }
 
-// GetTenantClient returns an ent.Client connected to the tenant's database.
-func (p *TenantProvisioner) GetTenantClient(tenant *Tenant) (*ent.Client, error) {
+// GetTenantDSN returns the DSN for the tenant's database.
+// Use this DSN to open your own ORM client (e.g. ent.Open("sqlite3", dsn)).
+func (p *TenantProvisioner) GetTenantDSN(tenant *Tenant) (string, error) {
 	dsn, ok := tenant.Meta["db_dsn"].(string)
 	if !ok || dsn == "" {
-		return nil, fmt.Errorf("tenant %s has no database DSN", tenant.ID)
+		return "", fmt.Errorf("tenant %s has no database DSN", tenant.ID)
 	}
-
-	client, err := ent.Open("sqlite3", dsn)
-	if err != nil {
-		return nil, fmt.Errorf("failed to open tenant database: %w", err)
-	}
-
-	return client, nil
+	return dsn, nil
 }

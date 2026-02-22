@@ -11,9 +11,7 @@ import (
 	"syscall"
 	"time"
 
-	entsql "entgo.io/ent/dialect/sql"
 	"github.com/alexedwards/scs/v2"
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 	"github.com/bozz33/sublimeadmin/auth"
 	"github.com/bozz33/sublimeadmin/engine"
 	"github.com/spf13/cobra"
@@ -52,40 +50,24 @@ This command:
 		}
 		fmt.Printf("URL: %s\n", dbURL)
 
-		// Ouvrir la connexion SQL directement pour pouvoir exécuter PRAGMA
+		// Ouvrir la connexion SQL
 		db, err := sql.Open(cfg.Database.Driver, dbURL)
 		if err != nil {
 			return fmt.Errorf("failed to open database: %w", err)
 		}
+		defer db.Close()
 
 		// Activer les foreign keys pour SQLite
 		if cfg.Database.Driver == "sqlite3" || cfg.Database.Driver == "sqlite" {
 			if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
-				db.Close()
 				return fmt.Errorf("failed to enable foreign keys: %w", err)
 			}
 		}
 
-		// Créer le driver Ent à partir de la connexion SQL
-		// Utiliser "sqlite3" comme dialecte pour Ent (requis par Ent)
-		dialectName := cfg.Database.Driver
-		if dialectName == "sqlite" {
-			dialectName = "sqlite3"
+		if err := db.Ping(); err != nil {
+			return fmt.Errorf("failed to ping database: %w", err)
 		}
-		drv := entsql.OpenDB(dialectName, db)
-		client := ent.NewClient(ent.Driver(drv))
-		defer client.Close()
 		fmt.Println("✓ Connexion DB réussie")
-
-		// Exécution des migrations si activées
-		if cfg.Database.AutoMigrate {
-			fmt.Println("Exécution des migrations automatiques...")
-			ctx := context.Background()
-			if err := client.Schema.Create(ctx); err != nil {
-				return fmt.Errorf("failed to run migrations: %w", err)
-			}
-			fmt.Println("Migrations terminées")
-		}
 
 		// Initialisation de la session et de l'authentification
 		fmt.Println("Initialisation de l'authentification...")
@@ -93,11 +75,11 @@ This command:
 		authManager := auth.NewManager(sessionManager)
 
 		// Initialisation du panneau d'administration
+		// Note: pass your ORM client via panel.WithUsers(yourUserRepo) in your project
 		fmt.Println("Initialisation du panneau d'administration...")
 		panel := engine.NewPanel("admin").
 			WithPath(cfg.Engine.BasePath).
 			WithBrandName(cfg.Engine.BrandName).
-			WithDatabase(client).
 			WithAuthManager(authManager).
 			WithSession(sessionManager)
 

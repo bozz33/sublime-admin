@@ -1,29 +1,48 @@
 package engine
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/a-h/templ"
 	authpkg "github.com/bozz33/sublimeadmin/auth"
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client/user"
 	authtemplates "github.com/bozz33/sublimeadmin/views/auth"
 	"golang.org/x/crypto/bcrypt"
 )
 
+// UserRepository is the interface the framework needs to authenticate users.
+// Implement it in your project using your own ORM or database layer.
+type UserRepository interface {
+	FindByEmail(ctx context.Context, email string) (FrameworkUser, error)
+	Create(ctx context.Context, name, email, hashedPassword string) (FrameworkUser, error)
+	ExistsByEmail(ctx context.Context, email string) (bool, error)
+	ExistsByEmailExcluding(ctx context.Context, email string, excludeID int) (bool, error)
+	UpdateNameEmail(ctx context.Context, id int, name, email string) error
+	UpdatePassword(ctx context.Context, id int, hashedPassword string) error
+	GetByID(ctx context.Context, id int) (FrameworkUser, error)
+}
+
+// FrameworkUser is the minimal user data the framework needs.
+type FrameworkUser interface {
+	GetID() int
+	GetName() string
+	GetEmail() string
+	GetPassword() string
+}
+
 // AuthHandler handles authentication routes.
 type AuthHandler struct {
 	authManager *authpkg.Manager
-	db          *ent.Client
+	users       UserRepository
 }
 
 // NewAuthHandler creates a new authentication handler.
-func NewAuthHandler(authManager *authpkg.Manager, db *ent.Client) *AuthHandler {
+func NewAuthHandler(authManager *authpkg.Manager, users UserRepository) *AuthHandler {
 	return &AuthHandler{
 		authManager: authManager,
-		db:          db,
+		users:       users,
 	}
 }
 
@@ -75,23 +94,21 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	user, err := h.db.User.Query().
-		Where(user.EmailEQ(email)).
-		Only(r.Context())
+	dbUser, err := h.users.FindByEmail(r.Context(), email)
 	if err != nil {
 		h.showLoginWithError(w, r, "Invalid email or password")
 		return
 	}
 
-	if !h.verifyPassword(password, user.Password) {
+	if !h.verifyPassword(password, dbUser.GetPassword()) {
 		h.showLoginWithError(w, r, "Invalid email or password")
 		return
 	}
 
 	authUser := &authpkg.User{
-		ID:    user.ID,
-		Name:  user.Name,
-		Email: user.Email,
+		ID:    dbUser.GetID(),
+		Name:  dbUser.GetName(),
+		Email: dbUser.GetEmail(),
 	}
 
 	if err := h.authManager.LoginWithRequest(r, authUser); err != nil {
@@ -150,9 +167,7 @@ func (h *AuthHandler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, err := h.db.User.Query().
-		Where(user.EmailEQ(email)).
-		Exist(r.Context())
+	exists, err := h.users.ExistsByEmail(r.Context(), email)
 	if err != nil {
 		http.Error(w, "Database error", http.StatusInternalServerError)
 		return
@@ -163,19 +178,15 @@ func (h *AuthHandler) handleRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	hashedPassword := h.hashPassword(password)
-	newUser, err := h.db.User.Create().
-		SetName(name).
-		SetEmail(email).
-		SetPassword(hashedPassword).
-		Save(r.Context())
+	newUser, err := h.users.Create(r.Context(), name, email, hashedPassword)
 	if err != nil {
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 	authUser := &authpkg.User{
-		ID:    newUser.ID,
-		Name:  newUser.Name,
-		Email: newUser.Email,
+		ID:    newUser.GetID(),
+		Name:  newUser.GetName(),
+		Email: newUser.GetEmail(),
 	}
 
 	if err := h.authManager.LoginWithRequest(r, authUser); err != nil {

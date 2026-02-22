@@ -2,7 +2,6 @@ package commands
 
 import (
 	"bufio"
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -11,7 +10,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 	"github.com/spf13/cobra"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -158,16 +156,9 @@ func runGoGenerate() error {
 }
 
 func runMigration() error {
-	client, err := ent.Open("sqlite3", "file:app.db?cache=shared&_fk=1")
-	if err != nil {
-		return fmt.Errorf("failed opening connection: %w", err)
-	}
-	defer client.Close()
-
-	if err := client.Schema.Create(context.Background()); err != nil {
-		return fmt.Errorf("failed creating schema: %w", err)
-	}
-
+	// Migrations are handled by your project's ORM.
+	// Run: go generate ./internal/ent && your-app db:migrate
+	fmt.Println("Migrations: run 'go generate ./internal/ent' then your ORM migrate command.")
 	return nil
 }
 
@@ -194,25 +185,11 @@ func createSystemAdmin() error {
 		return err
 	}
 
-	client, err := ent.Open("sqlite3", "file:app.db?cache=shared&_fk=1")
-	if err != nil {
-		return fmt.Errorf("failed opening connection: %w", err)
-	}
-	defer client.Close()
-
-	_, err = client.User.Create().
-		SetName("System Admin").
-		SetEmail(email).
-		SetPassword(string(hash)).
-		SetRole("admin").
-		SetIsSystem(true).
-		Save(context.Background())
-
-	if err != nil {
-		fmt.Printf("Attention: L'admin existe deja ou erreur: %v\n", err)
-	} else {
-		fmt.Println("Admin cree avec succes")
-	}
+	// Admin creation is handled by your project's ORM.
+	// Use the generated hash below in your project's seeder.
+	fmt.Printf("Admin email: %s\n", email)
+	fmt.Printf("Admin password hash: %s\n", string(hash))
+	fmt.Println("Create the admin user in your project's seeder using the above credentials.")
 
 	return nil
 }

@@ -1,14 +1,9 @@
 package widget
 
-import (
-	"context"
-
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
-)
-
 // GetDashboardStats generates widgets for the dashboard page.
-// By default, the dashboard is empty. Developers can add their own widgets here.
-func GetDashboardStats(ctx context.Context, client *ent.Client) []Widget {
+// By default, the dashboard is empty.
+// Override this in your project by registering widgets via the Panel configuration.
+func GetDashboardStats() []Widget {
 	// Empty dashboard by default.
 	// To add widgets, uncomment and customize the code below:
 

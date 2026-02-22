@@ -5,20 +5,18 @@ import (
 
 	"github.com/a-h/templ"
 	authpkg "github.com/bozz33/sublimeadmin/auth"
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client/user"
 	authtemplates "github.com/bozz33/sublimeadmin/views/auth"
 )
 
 // ProfileHandler handles GET/POST /profile.
 type ProfileHandler struct {
 	authManager *authpkg.Manager
-	db          *ent.Client
+	users       UserRepository
 }
 
 // NewProfileHandler creates a new profile handler.
-func NewProfileHandler(authManager *authpkg.Manager, db *ent.Client) *ProfileHandler {
-	return &ProfileHandler{authManager: authManager, db: db}
+func NewProfileHandler(authManager *authpkg.Manager, users UserRepository) *ProfileHandler {
+	return &ProfileHandler{authManager: authManager, users: users}
 }
 
 func (h *ProfileHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -60,9 +58,7 @@ func (h *ProfileHandler) handleUpdateProfile(w http.ResponseWriter, r *http.Requ
 
 	// Check email uniqueness (skip if unchanged)
 	if email != u.Email {
-		exists, err := h.db.User.Query().
-			Where(user.EmailEQ(email), user.IDNEQ(u.ID)).
-			Exist(r.Context())
+		exists, err := h.users.ExistsByEmailExcluding(r.Context(), email, u.ID)
 		if err != nil {
 			templ.Handler(authtemplates.ProfilePage(u, "Database error.", "")).ServeHTTP(w, r)
 			return
@@ -73,10 +69,7 @@ func (h *ProfileHandler) handleUpdateProfile(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	_, err := h.db.User.UpdateOneID(u.ID).
-		SetName(name).
-		SetEmail(email).
-		Save(r.Context())
+	err := h.users.UpdateNameEmail(r.Context(), u.ID, name, email)
 	if err != nil {
 		templ.Handler(authtemplates.ProfilePage(u, "Failed to update profile.", "")).ServeHTTP(w, r)
 		return
@@ -111,20 +104,20 @@ func (h *ProfileHandler) handleChangePassword(w http.ResponseWriter, r *http.Req
 	}
 
 	// Load current hash from DB
-	dbUser, err := h.db.User.Get(r.Context(), u.ID)
+	dbUser, err := h.users.GetByID(r.Context(), u.ID)
 	if err != nil {
 		templ.Handler(authtemplates.ProfilePage(u, "User not found.", "")).ServeHTTP(w, r)
 		return
 	}
 
 	ah := &AuthHandler{}
-	if !ah.verifyPassword(current, dbUser.Password) {
+	if !ah.verifyPassword(current, dbUser.GetPassword()) {
 		templ.Handler(authtemplates.ProfilePage(u, "Current password is incorrect.", "")).ServeHTTP(w, r)
 		return
 	}
 
 	newHash := ah.hashPassword(newPwd)
-	_, err = h.db.User.UpdateOneID(u.ID).SetPassword(newHash).Save(r.Context())
+	err = h.users.UpdatePassword(r.Context(), u.ID, newHash)
 	if err != nil {
 		templ.Handler(authtemplates.ProfilePage(u, "Failed to update password.", "")).ServeHTTP(w, r)
 		return

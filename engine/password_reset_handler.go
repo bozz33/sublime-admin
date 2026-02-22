@@ -10,8 +10,6 @@ import (
 
 	"github.com/a-h/templ"
 	authpkg "github.com/bozz33/sublimeadmin/auth"
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client/user"
 	"github.com/bozz33/sublimeadmin/mailer"
 	authtemplates "github.com/bozz33/sublimeadmin/views/auth"
 )
@@ -31,18 +29,18 @@ var resetStore = struct {
 // PasswordResetHandler handles /forgot-password and /reset-password.
 type PasswordResetHandler struct {
 	authManager *authpkg.Manager
-	db          *ent.Client
+	users       UserRepository
 	mailer      mailer.Mailer
 	baseURL     string // e.g. "https://example.com" — used to build reset links
 }
 
 // NewPasswordResetHandler creates a new password reset handler.
 // Pass a mailer.LogMailer{} for development or mailer.NewSMTPMailer(cfg) for production.
-func NewPasswordResetHandler(authManager *authpkg.Manager, db *ent.Client, m mailer.Mailer, baseURL string) *PasswordResetHandler {
+func NewPasswordResetHandler(authManager *authpkg.Manager, users UserRepository, m mailer.Mailer, baseURL string) *PasswordResetHandler {
 	if m == nil {
 		m = &mailer.LogMailer{}
 	}
-	return &PasswordResetHandler{authManager: authManager, db: db, mailer: m, baseURL: baseURL}
+	return &PasswordResetHandler{authManager: authManager, users: users, mailer: m, baseURL: baseURL}
 }
 
 func (h *PasswordResetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -85,7 +83,7 @@ func (h *PasswordResetHandler) handleForgotPassword(w http.ResponseWriter, r *ht
 	}
 
 	// Check user exists — always show success to prevent email enumeration
-	exists, _ := h.db.User.Query().Where(user.EmailEQ(email)).Exist(r.Context())
+	exists, _ := h.users.ExistsByEmail(r.Context(), email)
 	if exists {
 		token := generateToken()
 		resetStore.mu.Lock()
@@ -146,10 +144,12 @@ func (h *PasswordResetHandler) handleResetPassword(w http.ResponseWriter, r *htt
 	ah := &AuthHandler{}
 	newHash := ah.hashPassword(password)
 
-	_, err := h.db.User.Update().
-		Where(user.EmailEQ(email)).
-		SetPassword(newHash).
-		Save(r.Context())
+	dbUser, findErr := h.users.FindByEmail(r.Context(), email)
+	if findErr != nil {
+		showErr("Failed to reset password. Please try again.")
+		return
+	}
+	err := h.users.UpdatePassword(r.Context(), dbUser.GetID(), newHash)
 	if err != nil {
 		showErr("Failed to reset password. Please try again.")
 		return

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 	"github.com/bozz33/sublimeadmin/engine"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
@@ -48,13 +47,6 @@ Utile pour :
 		fmt.Println("Routes SublimeGo")
 		fmt.Println("================")
 		fmt.Println()
-
-		// Création d'un client temporaire pour l'initialisation des resources
-		client, err := ent.Open(cfg.Database.Driver, cfg.Database.URL)
-		if err != nil {
-			return fmt.Errorf("failed to connect to database: %w", err)
-		}
-		defer client.Close()
 
 		// Initialisation du panel pour récupérer les resources
 		panel := engine.NewPanel("admin").

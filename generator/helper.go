@@ -244,28 +244,23 @@ func GenerateSeeder(name, outputDir string) error {
 
 import (
 	"context"
+	"database/sql"
 	"log"
-
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 )
 
-// Seed%s inserts test data for %s
-func Seed%s(ctx context.Context, client *ent.Client) error {
+// Seed%s inserts test data for %s.
+// db is a *sql.DB — replace with your own ORM client if needed.
+func Seed%s(ctx context.Context, db *sql.DB) error {
 	log.Println("Seeding %s...")
-	
-	// TODO: Add seeding logic here
-	// Example:
-	// _, err := client.%s.Create().
-	// 	SetName("Example").
-	// 	Save(ctx)
-	// if err != nil {
-	// 	return err
-	// }
-	
+
+	// TODO: Add seeding logic here using db or your ORM client
+	_ = ctx
+	_ = db
+
 	log.Println("%s seeded successfully")
 	return nil
 }
-`, typeName, name, typeName, name, typeName, typeName)
+`, typeName, name, typeName, name, typeName)
 
 	if err := ensureDir(filepath.Dir(outputPath)); err != nil {
 		return err

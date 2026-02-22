@@ -1,14 +1,13 @@
 package commands
 
 import (
-	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"os/exec"
 	"runtime"
 	"strings"
 
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
 	"github.com/spf13/cobra"
 )
 
@@ -66,15 +65,15 @@ This command verifies:
 		fmt.Printf("Vérification de la connectivité DB... ")
 		cfg := GetConfig()
 		if cfg != nil {
-			client, err := ent.Open(cfg.Database.Driver, cfg.Database.URL)
+			db, err := sql.Open(cfg.Database.Driver, cfg.Database.URL)
 			if err != nil {
 				fmt.Printf("ÉCHEC: %v\n", err)
 				allOK = false
 			} else {
-				defer client.Close()
-				ctx := context.Background()
-				if err := client.Schema.Create(ctx); err != nil {
-					fmt.Printf("Problème de schéma: %v\n", err)
+				defer db.Close()
+				if err := db.Ping(); err != nil {
+					fmt.Printf("Problème de connexion: %v\n", err)
+					allOK = false
 				} else {
 					fmt.Println("OK")
 				}

@@ -5,28 +5,50 @@ import (
 	"fmt"
 	"sync"
 	"time"
-
-	"// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client"
-	entnotif "// github.com/bozz33/sublimeadmin/internal/ent // TODO: Replace with your own Ent client/notification"
 )
 
-// DatabaseStore is a persistent notification store backed by Ent.
+// NotificationRecord is the minimal data the framework needs from a stored notification.
+type NotificationRecord struct {
+	ID          string
+	UserID      string
+	Title       string
+	Body        string
+	Level       string
+	Icon        string
+	ActionURL   string
+	ActionLabel string
+	Read        bool
+	CreatedAt   time.Time
+}
+
+// NotificationRepository is the interface to persist notifications.
+// Implement it in your project using your own ORM or database layer.
+type NotificationRepository interface {
+	Create(ctx context.Context, n NotificationRecord) error
+	GetAll(ctx context.Context, userID string, limit int) ([]NotificationRecord, error)
+	GetUnread(ctx context.Context, userID string, limit int) ([]NotificationRecord, error)
+	MarkRead(ctx context.Context, userID, notifID string) error
+	MarkAllRead(ctx context.Context, userID string) error
+	UnreadCount(ctx context.Context, userID string) (int, error)
+}
+
+// DatabaseStore is a persistent notification store backed by a NotificationRepository.
 // It keeps the in-memory SSE subscriber map for live streaming while
 // persisting every notification to the database.
 type DatabaseStore struct {
-	db          *ent.Client
+	repo        NotificationRepository
 	mu          sync.RWMutex
 	subscribers map[string][]chan *Notification
 	maxPerUser  int
 }
 
-// NewDatabaseStore creates a DatabaseStore using the provided Ent client.
-func NewDatabaseStore(db *ent.Client, maxPerUser int) *DatabaseStore {
+// NewDatabaseStore creates a DatabaseStore using the provided NotificationRepository.
+func NewDatabaseStore(repo NotificationRepository, maxPerUser int) *DatabaseStore {
 	if maxPerUser <= 0 {
 		maxPerUser = 100
 	}
 	return &DatabaseStore{
-		db:          db,
+		repo:        repo,
 		subscribers: make(map[string][]chan *Notification),
 		maxPerUser:  maxPerUser,
 	}
@@ -46,17 +68,18 @@ func (s *DatabaseStore) Send(userID string, n *Notification) {
 	n.UserID = userID
 
 	ctx := context.Background()
-	_, _ = s.db.Notification.Create().
-		SetUserID(userID).
-		SetTitle(n.Title).
-		SetBody(n.Body).
-		SetLevel(string(n.Level)).
-		SetIcon(n.Icon).
-		SetActionURL(n.ActionURL).
-		SetActionLabel(n.ActionLabel).
-		SetRead(false).
-		SetCreatedAt(n.CreatedAt).
-		Save(ctx)
+	_ = s.repo.Create(ctx, NotificationRecord{
+		ID:          n.ID,
+		UserID:      userID,
+		Title:       n.Title,
+		Body:        n.Body,
+		Level:       string(n.Level),
+		Icon:        n.Icon,
+		ActionURL:   n.ActionURL,
+		ActionLabel: n.ActionLabel,
+		Read:        false,
+		CreatedAt:   n.CreatedAt,
+	})
 
 	s.mu.RLock()
 	subs := s.subscribers[userID]
@@ -73,55 +96,39 @@ func (s *DatabaseStore) Send(userID string, n *Notification) {
 // GetAll returns all notifications for a user (newest first).
 func (s *DatabaseStore) GetAll(userID string) []*Notification {
 	ctx := context.Background()
-	rows, err := s.db.Notification.Query().
-		Where(entnotif.UserID(userID)).
-		Order(ent.Desc(entnotif.FieldCreatedAt)).
-		Limit(s.maxPerUser).
-		All(ctx)
+	rows, err := s.repo.GetAll(ctx, userID, s.maxPerUser)
 	if err != nil {
 		return nil
 	}
-	return entRowsToNotifications(rows)
+	return recordsToNotifications(rows)
 }
 
 // GetUnread returns unread notifications for a user (newest first).
 func (s *DatabaseStore) GetUnread(userID string) []*Notification {
 	ctx := context.Background()
-	rows, err := s.db.Notification.Query().
-		Where(entnotif.UserID(userID), entnotif.Read(false)).
-		Order(ent.Desc(entnotif.FieldCreatedAt)).
-		Limit(s.maxPerUser).
-		All(ctx)
+	rows, err := s.repo.GetUnread(ctx, userID, s.maxPerUser)
 	if err != nil {
 		return nil
 	}
-	return entRowsToNotifications(rows)
+	return recordsToNotifications(rows)
 }
 
 // MarkRead marks a single notification as read.
 func (s *DatabaseStore) MarkRead(userID, notifID string) {
 	ctx := context.Background()
-	_ = s.db.Notification.Update().
-		Where(entnotif.UserID(userID), entnotif.ID(mustParseID(notifID))).
-		SetRead(true).
-		Exec(ctx)
+	_ = s.repo.MarkRead(ctx, userID, notifID)
 }
 
 // MarkAllRead marks all notifications as read for a user.
 func (s *DatabaseStore) MarkAllRead(userID string) {
 	ctx := context.Background()
-	_ = s.db.Notification.Update().
-		Where(entnotif.UserID(userID), entnotif.Read(false)).
-		SetRead(true).
-		Exec(ctx)
+	_ = s.repo.MarkAllRead(ctx, userID)
 }
 
 // UnreadCount returns the number of unread notifications for a user.
 func (s *DatabaseStore) UnreadCount(userID string) int {
 	ctx := context.Background()
-	count, err := s.db.Notification.Query().
-		Where(entnotif.UserID(userID), entnotif.Read(false)).
-		Count(ctx)
+	count, err := s.repo.UnreadCount(ctx, userID)
 	if err != nil {
 		return 0
 	}
@@ -153,11 +160,11 @@ func (s *DatabaseStore) Subscribe(ctx context.Context, userID string) <-chan *No
 	return ch
 }
 
-func entRowsToNotifications(rows []*ent.Notification) []*Notification {
+func recordsToNotifications(rows []NotificationRecord) []*Notification {
 	out := make([]*Notification, len(rows))
 	for i, r := range rows {
 		out[i] = &Notification{
-			ID:          fmt.Sprintf("%d", r.ID),
+			ID:          r.ID,
 			UserID:      r.UserID,
 			Title:       r.Title,
 			Body:        r.Body,
@@ -170,10 +177,4 @@ func entRowsToNotifications(rows []*ent.Notification) []*Notification {
 		}
 	}
 	return out
-}
-
-func mustParseID(s string) int {
-	var id int
-	fmt.Sscanf(s, "%d", &id)
-	return id
 }
