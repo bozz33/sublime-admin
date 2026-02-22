@@ -1,4 +1,4 @@
-// Package engine is the core of the SublimeGo framework.
+// Package engine is the core of the SublimeAdmin framework.
 //
 // It provides the main application engine that orchestrates all components
 // including routing, middleware, resource management, and template rendering.
@@ -29,13 +29,13 @@
 // Resources and pages can be generated automatically via CLI:
 //
 //	# Generate a new resource with CRUD
-//	sublimego make:resource Product
+//	sublimeadmin make:resource Product
 //
 //	# Generate a custom page
-//	sublimego make:page Settings --group=System --icon=settings
+//	sublimeadmin make:page Settings --group=System --icon=settings
 //
 //	# Scan and register all resources/pages
-//	sublimego scan
+//	sublimeadmin scan
 //
 // Custom Pages:
 //

@@ -195,7 +195,7 @@ templ FormSelect(f *form.SelectInput) {
 			if f.GetPlaceholder() != "" {
 				<option value="">{ f.GetPlaceholder() }</option>
 			}
-			for _, opt := range f.Options {
+			for _, opt := range f.SelectOptions() {
 				<option value={ opt.Value } selected?={ opt.Value == f.GetValueString() }>
 					{ opt.Label }
 				</option>
@@ -322,13 +322,13 @@ templ FormRepeater(f *form.RepeaterField) {
 // FormGenericField renders any field that doesn't have a specific renderer.
 templ FormGenericField(f form.Field) {
 	<div class="space-y-1">
-		<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-			{ f.GetLabel() }
+		<label for={ f.Name() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+			{ f.Label() }
 		</label>
 		<input
 			type="text"
-			id={ f.GetName() }
-			name={ f.GetName() }
+			id={ f.Name() }
+			name={ f.Name() }
 			if f.IsRequired() { required }
 			if f.IsDisabled() { disabled }
 			class="block w-full px-3 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"

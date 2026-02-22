@@ -56,7 +56,7 @@ func PageGeneric(data ErrorPageData) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://cdn.tailwindcss.com\"></script></head><body class=\"h-full bg-gray-50\"><div class=\"min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8\"><div class=\"sm:mx-auto sm:w-full sm:max-w-md\"><!-- Logo / Brand --><div class=\"flex justify-center\"><div class=\"flex items-center space-x-3\"><div class=\"w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center\"><span class=\"text-white font-bold text-xl\">S</span></div><span class=\"text-2xl font-bold text-gray-900\">SublimeGo</span></div></div><!-- Error code --><div class=\"mt-8 text-center\"><h1 class=\"text-9xl font-extrabold text-gray-600\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script src=\"https://cdn.tailwindcss.com\"></script></head><body class=\"h-full bg-gray-50\"><div class=\"min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8\"><div class=\"sm:mx-auto sm:w-full sm:max-w-md\"><!-- Logo / Brand --><div class=\"flex justify-center\"><div class=\"flex items-center space-x-3\"><div class=\"w-12 h-12 bg-gray-600 rounded-lg flex items-center justify-center\"><span class=\"text-white font-bold text-xl\">S</span></div><span class=\"text-2xl font-bold text-gray-900\">SublimeAdmin</span></div></div><!-- Error code --><div class=\"mt-8 text-center\"><h1 class=\"text-9xl font-extrabold text-gray-600\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

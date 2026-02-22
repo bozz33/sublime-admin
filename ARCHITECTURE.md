@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the structure, patterns, and design decisions of the SublimeGo framework.
+This document describes the structure, patterns, and design decisions of the sublimeadmin framework.
 
 ---
 
@@ -17,12 +17,12 @@ This document describes the structure, patterns, and design decisions of the Sub
 ## Package Layout
 
 ```
-sublimego/
+sublimeadmin/
  actions/          # Row actions (edit, delete, custom, bulk)
  appconfig/        # Configuration loading (Viper + validation)
  auth/             # Authentication, sessions, roles, permissions, MFA/TOTP
  cmd/
-    sublimego/    # Cobra CLI (serve, init, make:*, db, routes, doctor)
+    sublimeadmin/    # Cobra CLI (serve, init, make:*, db, routes, doctor)
  config/           # YAML configuration files
  engine/           # Framework core: Panel, CRUD handlers, multi-tenancy, relations
  errors/           # Structured errors  package apperrors
@@ -284,16 +284,16 @@ server:
 
 database:
   driver: "sqlite"
-  url: "file:sublimego.db?cache=shared&_fk=1"
+  url: "file:sublimeadmin.db?cache=shared&_fk=1"
 
 engine:
   base_path: "/admin"
-  brand_name: "SublimeGo Admin"
+  brand_name: "sublimeadmin Admin"
   items_per_page: 25
 
 auth:
   session_lifetime: 24h
-  cookie_name: "sublimego_session"
+  cookie_name: "sublimeadmin_session"
   bcrypt_cost: 12
 ```
 

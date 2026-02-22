@@ -34,8 +34,8 @@ func NewLoader(opts ...Option) *Loader {
 		ConfigPaths: []string{
 			".",
 			"./config",
-			"$HOME/.sublimego",
-			"/etc/sublimego",
+			"$HOME/.sublimeadmin",
+			"/etc/sublimeadmin",
 		},
 		ConfigName:        "config",
 		ConfigType:        "yaml",
@@ -120,7 +120,7 @@ func (l *Loader) setDefaults() {
 	l.v.SetDefault("database.log_level", "warn")
 
 	l.v.SetDefault("engine.base_path", "/admin")
-	l.v.SetDefault("engine.brand_name", "SublimeGo Admin")
+	l.v.SetDefault("engine.brand_name", "SublimeAdmin")
 	l.v.SetDefault("engine.assets_path", "/assets")
 	l.v.SetDefault("engine.default_page_size", 15)
 	l.v.SetDefault("engine.max_page_size", 100)

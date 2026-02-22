@@ -28,8 +28,16 @@ func (b *BaseField) IsRequired() bool              { return b.Required }
 func (b *BaseField) IsDisabled() bool              { return b.Disabled }
 func (b *BaseField) IsVisible() bool               { return !b.Hidden }
 func (b *BaseField) ComponentType() string         { return "field" }
+func (b *BaseField) GetComponentType() string      { return b.ComponentType() }
 func (b *BaseField) Attributes() template.HTMLAttr { return "" }
 func (b *BaseField) Rules() []string               { return b.fieldRules }
+
+// Get* aliases for template compatibility.
+func (b *BaseField) GetName() string        { return b.fieldName }
+func (b *BaseField) GetLabel() string       { return b.LabelStr }
+func (b *BaseField) GetPlaceholder() string { return b.fieldPlaceholder }
+func (b *BaseField) GetHelp() string        { return b.HelpText }
+func (b *BaseField) GetValueString() string { return b.ValueString() }
 
 // RulesString returns the rules as a pipe-separated string for validation.
 func (b *BaseField) RulesString() string {
@@ -491,7 +499,8 @@ func (r *RichEditorInput) Default(val string) *RichEditorInput {
 }
 
 // ComponentType returns the component type identifier.
-func (r *RichEditorInput) ComponentType() string { return "rich_editor" }
+func (r *RichEditorInput) ComponentType() string    { return "rich_editor" }
+func (r *RichEditorInput) GetComponentType() string { return "rich_editor" }
 
 // ---------------------------------------------------------------------------
 // MarkdownEditor — renders a Markdown editor with preview.
@@ -537,7 +546,8 @@ func (m *MarkdownEditorInput) Default(val string) *MarkdownEditorInput {
 }
 
 // ComponentType returns the component type identifier.
-func (m *MarkdownEditorInput) ComponentType() string { return "markdown_editor" }
+func (m *MarkdownEditorInput) ComponentType() string    { return "markdown_editor" }
+func (m *MarkdownEditorInput) GetComponentType() string { return "markdown_editor" }
 
 // ---------------------------------------------------------------------------
 // TagsInput — multi-value tag/chip input.
@@ -597,7 +607,8 @@ func (t *TagsField) Default(tags []string) *TagsField {
 }
 
 // ComponentType returns the component type identifier.
-func (t *TagsField) ComponentType() string { return "tags_input" }
+func (t *TagsField) ComponentType() string    { return "tags_input" }
+func (t *TagsField) GetComponentType() string { return "tags_input" }
 
 // Tags returns the current value as a string slice.
 func (t *TagsField) TagValues() []string {
@@ -668,7 +679,8 @@ func (kv *KeyValueInput) Default(pairs []KeyValuePair) *KeyValueInput {
 }
 
 // ComponentType returns the component type identifier.
-func (kv *KeyValueInput) ComponentType() string { return "key_value" }
+func (kv *KeyValueInput) ComponentType() string    { return "key_value" }
+func (kv *KeyValueInput) GetComponentType() string { return "key_value" }
 
 // ---------------------------------------------------------------------------
 // ColorPicker — color selection input.
@@ -713,7 +725,8 @@ func (c *ColorPickerInput) Default(hex string) *ColorPickerInput {
 }
 
 // ComponentType returns the component type identifier.
-func (c *ColorPickerInput) ComponentType() string { return "color_picker" }
+func (c *ColorPickerInput) ComponentType() string    { return "color_picker" }
+func (c *ColorPickerInput) GetComponentType() string { return "color_picker" }
 
 // ---------------------------------------------------------------------------
 // Slider — range slider input.
@@ -770,4 +783,5 @@ func (s *SliderInput) Default(val float64) *SliderInput {
 }
 
 // ComponentType returns the component type identifier.
-func (s *SliderInput) ComponentType() string { return "slider" }
+func (s *SliderInput) ComponentType() string    { return "slider" }
+func (s *SliderInput) GetComponentType() string { return "slider" }

@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// Plugin is the interface that all SublimeGo plugins must implement.
+// Plugin is the interface that all SublimeAdmin plugins must implement.
 type Plugin interface {
 	// Name returns the unique identifier of the plugin.
 	Name() string

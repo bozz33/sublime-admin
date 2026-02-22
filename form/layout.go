@@ -39,10 +39,12 @@ func (s *Section) Collapsible() *Section {
 func (s *Section) IsVisible() bool { return true }
 
 // GetComponentType returns the component type.
-func (s *Section) ComponentType() string { return "layout_section" }
+func (s *Section) ComponentType() string    { return "layout_section" }
+func (s *Section) GetComponentType() string { return s.ComponentType() }
 
 // Schema returns the section components.
-func (s *Section) Schema() []Component { return s.Components }
+func (s *Section) Schema() []Component    { return s.Components }
+func (s *Section) GetSchema() []Component { return s.Components }
 
 // Grid represents a column grid.
 type Grid struct {
@@ -68,10 +70,12 @@ func (g *Grid) SetSchema(components ...Component) *Grid {
 func (g *Grid) IsVisible() bool { return true }
 
 // GetComponentType returns the component type.
-func (g *Grid) ComponentType() string { return "layout_grid" }
+func (g *Grid) ComponentType() string    { return "layout_grid" }
+func (g *Grid) GetComponentType() string { return g.ComponentType() }
 
 // Schema returns the grid components.
-func (g *Grid) Schema() []Component { return g.Components }
+func (g *Grid) Schema() []Component    { return g.Components }
+func (g *Grid) GetSchema() []Component { return g.Components }
 
 // Tabs represents a tab system.
 type Tabs struct {
@@ -105,7 +109,8 @@ func (t *Tabs) AddTab(label string, components ...Component) *Tabs {
 func (t *Tabs) IsVisible() bool { return true }
 
 // GetComponentType returns the component type.
-func (t *Tabs) ComponentType() string { return "layout_tabs" }
+func (t *Tabs) ComponentType() string    { return "layout_tabs" }
+func (t *Tabs) GetComponentType() string { return t.ComponentType() }
 
 // Schema returns all components from all tabs.
 func (t *Tabs) Schema() []Component {
@@ -163,7 +168,8 @@ func (w *Wizard) WithIcon(icon string) *Wizard {
 func (w *Wizard) IsVisible() bool { return true }
 
 // ComponentType returns the component type.
-func (w *Wizard) ComponentType() string { return "layout_wizard" }
+func (w *Wizard) ComponentType() string    { return "layout_wizard" }
+func (w *Wizard) GetComponentType() string { return w.ComponentType() }
 
 // Schema returns all components from all steps.
 func (w *Wizard) Schema() []Component {
@@ -224,7 +230,9 @@ func (c *Callout) WithColor(color CalloutColor) *Callout {
 func (c *Callout) IsVisible() bool { return true }
 
 // ComponentType returns the component type.
-func (c *Callout) ComponentType() string { return "layout_callout" }
+func (c *Callout) ComponentType() string    { return "layout_callout" }
+func (c *Callout) GetComponentType() string { return c.ComponentType() }
 
 // Schema returns the callout's nested components.
-func (c *Callout) Schema() []Component { return c.Components }
+func (c *Callout) Schema() []Component    { return c.Components }
+func (c *Callout) GetSchema() []Component { return c.Components }

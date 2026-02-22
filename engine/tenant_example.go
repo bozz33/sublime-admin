@@ -54,25 +54,18 @@ func ExampleTenantSetup() {
 	resolver := NewTenantDatabaseResolver(manager, "example.com")
 
 	// 5. Set up multi-panel router
-	router := NewMultiPanelRouter(resolver).WithPanelFactory(func(ctx context.Context, t *Tenant) (*Panel, error) {
-		// Create panel with tenant-specific database
-		// db, err := sql.Open("sqlite3", t.Meta["database_dsn"].(string))
-		// if err != nil {
-		// 	return nil, err
-		// }
+	router := NewMultiPanelRouter(resolver)
 
-		panel := NewPanel(fmt.Sprintf("%s Admin", t.Name))
-		// Note: Panel will need database and session setters based on your implementation
-		panel.SetSession(NewIsolatedSession(t.ID, nil))
+	// 5b. For each tenant, create a panel with tenant-specific config
+	// In practice, panels are created per-request by the router's resolve logic.
+	_ = router
+	_ = ctx
 
-		// Add resources (they will automatically get tenant context)
-		// panel.AddResource(&UserResource{}) // Use your actual resource registration method
+	// Example: create a panel for a specific tenant
+	panel := NewPanel(fmt.Sprintf("%s Admin", cfg.Name)).
+		WithPath("/admin")
 
-		return panel, nil
-	})
-
-	// 6. Validate session isolation (prevents cross-tenant session leaks)
-	router.validateSessionIsolation()
+	_ = panel
 
 	// Now you can use router as your HTTP handler
 	// http.ListenAndServe(":8080", router)

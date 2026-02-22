@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/bozz33/sublimeadmin/export"
-	importer "github.com/bozz33/sublimeadmin/import"
+	"github.com/bozz33/sublimeadmin/importer"
 )
 
 // ExportHandler serves CSV/Excel exports for a resource.

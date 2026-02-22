@@ -8,6 +8,7 @@ import (
 type Component interface {
 	IsVisible() bool
 	ComponentType() string
+	GetComponentType() string // Alias for templates
 }
 
 // Field defines the contract for an input field.
@@ -28,4 +29,5 @@ type Field interface {
 type Layout interface {
 	Component
 	Schema() []Component
+	GetSchema() []Component // Alias for templates
 }

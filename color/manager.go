@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// Manager manages color palettes for a SublimeGo panel.
+// Manager manages color palettes for a SublimeAdmin panel.
 // It supports registering custom palettes and generating CSS variable blocks.
 type Manager struct {
 	mu       sync.RWMutex

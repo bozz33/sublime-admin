@@ -85,7 +85,7 @@ func WithDevelopmentDefaults() Option {
 func WithProductionDefaults() Option {
 	return func(opts *LoadOptions) {
 		opts.ConfigPaths = []string{
-			"/etc/sublimego",
+			"/etc/sublimeadmin",
 			"./config",
 		}
 		opts.ConfigName = "config"

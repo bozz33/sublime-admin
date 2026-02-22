@@ -227,7 +227,7 @@ func GeneratePageWithOptions(g *Generator, name, outputDir, group, icon string, 
 		fmt.Printf("   1. Edit %s/page.go to customize the page\n", pageDir)
 		fmt.Printf("   2. Edit %s/content.templ for the page template\n", pageDir)
 		fmt.Printf("   3. Run 'templ generate' to compile templates\n")
-		fmt.Printf("   4. Run 'sublimego scan' to register the page\n")
+		fmt.Printf("   4. Run 'sublimeadmin scan' to register the page\n")
 	}
 
 	return nil

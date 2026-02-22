@@ -1,6 +1,6 @@
 # Panel Configuration
 
-Complete reference for configuring a SublimeGo admin panel.
+Complete reference for configuring a sublimeadmin admin panel.
 
 ---
 
@@ -10,7 +10,7 @@ Configuration is managed via `config/config.yaml` and loaded by `appconfig/loade
 
 Priority order (highest to lowest):
 
-1. Environment variables (prefixed with `SUBLIMEGO_`)
+1. Environment variables (prefixed with `sublimeadmin_`)
 2. `config/config.yaml`
 3. Built-in defaults
 
@@ -30,7 +30,7 @@ server:
 #  Database 
 database:
   driver: "sqlite"         # sqlite | postgres | mysql
-  url: "file:sublimego.db?cache=shared&_fk=1"
+  url: "file:sublimeadmin.db?cache=shared&_fk=1"
   max_open_conns: 25
   max_idle_conns: 5
   conn_max_lifetime: 5m
@@ -47,7 +47,7 @@ engine:
 #  Authentication 
 auth:
   session_lifetime: 24h
-  cookie_name: "sublimego_session"
+  cookie_name: "sublimeadmin_session"
   cookie_secure: true      # Set false for local HTTP development
   cookie_same_site: "lax"  # strict | lax | none
   bcrypt_cost: 12          # 1014 recommended
@@ -74,9 +74,9 @@ mailer:
   host: "smtp.example.com"
   port: 587
   username: ""
-  password: ""             # Use SUBLIMEGO_MAILER_PASSWORD env var
+  password: ""             # Use sublimeadmin_MAILER_PASSWORD env var
   from: "admin@example.com"
-  from_name: "SublimeGo Admin"
+  from_name: "sublimeadmin Admin"
   tls: true
 ```
 
@@ -84,14 +84,14 @@ mailer:
 
 ## Environment Variables
 
-Every config key maps to an environment variable using the `SUBLIMEGO_` prefix and `_` as separator:
+Every config key maps to an environment variable using the `sublimeadmin_` prefix and `_` as separator:
 
 | Config key | Environment variable |
 |------------|---------------------|
-| `server.port` | `SUBLIMEGO_SERVER_PORT` |
-| `database.url` | `SUBLIMEGO_DATABASE_URL` |
-| `auth.bcrypt_cost` | `SUBLIMEGO_AUTH_BCRYPT_COST` |
-| `mailer.password` | `SUBLIMEGO_MAILER_PASSWORD` |
+| `server.port` | `sublimeadmin_SERVER_PORT` |
+| `database.url` | `sublimeadmin_DATABASE_URL` |
+| `auth.bcrypt_cost` | `sublimeadmin_AUTH_BCRYPT_COST` |
+| `mailer.password` | `sublimeadmin_MAILER_PASSWORD` |
 
 ---
 

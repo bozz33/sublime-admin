@@ -55,7 +55,7 @@ go generate ./your-project/internal/ent
 ### 3. Generate the Resource Scaffold
 
 ```bash
-sublimego make:resource Product
+sublimeadmin make:resource Product
 ```
 
 This creates `views/resources/product_resource.go` with all required methods stubbed out.
@@ -349,7 +349,7 @@ func (r *OrderResource) Relations() []engine.RelationManager {
 ## Custom Pages
 
 ```go
-sublimego make:page Dashboard
+sublimeadmin make:page Dashboard
 ```
 
 ```go

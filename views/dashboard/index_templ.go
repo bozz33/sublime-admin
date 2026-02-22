@@ -51,7 +51,7 @@ func Index(dashboardWidgets []widget.Widget) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if len(dashboardWidgets) == 0 {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"flex flex-col items-center justify-center py-16 px-4\"><div class=\"w-24 h-24 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-8\"><span class=\"material-icons-outlined text-primary-500 text-5xl\">dashboard</span></div><h2 class=\"text-xl font-semibold text-gray-900 dark:text-white mb-2\">Welcome to SublimeGo</h2><p class=\"text-gray-600 dark:text-gray-400 text-center max-w-md\">Your dashboard is ready. Add widgets to customize this page.</p></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"flex flex-col items-center justify-center py-16 px-4\"><div class=\"w-24 h-24 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-8\"><span class=\"material-icons-outlined text-primary-500 text-5xl\">dashboard</span></div><h2 class=\"text-xl font-semibold text-gray-900 dark:text-white mb-2\">Welcome to SublimeAdmin</h2><p class=\"text-gray-600 dark:text-gray-400 text-center max-w-md\">Your dashboard is ready. Add widgets to customize this page.</p></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

@@ -1,4 +1,4 @@
-// Package generator provides code generation for SublimeGo resources and pages.
+// Package generator provides code generation for SublimeAdmin resources and pages.
 //
 // It generates boilerplate code for resources, pages, forms, tables, and Ent schemas
 // using Go templates. The generator is used by the CLI to scaffold new

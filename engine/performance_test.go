@@ -11,7 +11,7 @@ import (
 // BenchmarkGzipMiddlewarePool measures the gzip pool vs naive allocation.
 func BenchmarkGzipMiddlewarePool(b *testing.B) {
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(strings.Repeat("Hello SublimeGo! ", 200)))
+		w.Write([]byte(strings.Repeat("Hello SublimeAdmin! ", 200)))
 	})
 	handler := gzipMiddleware(inner)
 
@@ -28,7 +28,7 @@ func BenchmarkGzipMiddlewarePool(b *testing.B) {
 // BenchmarkGzipMiddlewareNoGzip measures the no-gzip fast path.
 func BenchmarkGzipMiddlewareNoGzip(b *testing.B) {
 	inner := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(strings.Repeat("Hello SublimeGo! ", 200)))
+		w.Write([]byte(strings.Repeat("Hello SublimeAdmin! ", 200)))
 	})
 	handler := gzipMiddleware(inner)
 

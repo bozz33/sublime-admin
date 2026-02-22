@@ -1,4 +1,4 @@
-// Package search provides global search functionality for SublimeGo.
+// Package search provides global search functionality for SublimeAdmin.
 //
 // Global search allows searching across all registered resources from a single
 // search input. Resources implement the Searchable interface to participate

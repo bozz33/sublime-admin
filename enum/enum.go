@@ -1,5 +1,5 @@
 // Package enum provides interfaces and generic helpers for typed enumerations
-// in SublimeGo. Enums implement one or more of the Has* interfaces to expose
+// in SublimeAdmin. Enums implement one or more of the Has* interfaces to expose
 // their metadata to form fields, table columns, badges, and navigation items.
 package enum
 

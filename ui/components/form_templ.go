@@ -903,7 +903,7 @@ func FormSelect(f *form.SelectInput) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		for _, opt := range f.Options {
+		for _, opt := range f.SelectOptions() {
 			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 70, "<option value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
@@ -1484,9 +1484,9 @@ func FormGenericField(f form.Field) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var67 string
-		templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(f.GetName())
+		templ_7745c5c3_Var67, templ_7745c5c3_Err = templ.JoinStringErrs(f.Name())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/form.templ`, Line: 325, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/form.templ`, Line: 325, Col: 23}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var67))
 		if templ_7745c5c3_Err != nil {
@@ -1497,9 +1497,9 @@ func FormGenericField(f form.Field) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var68 string
-		templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(f.GetLabel())
+		templ_7745c5c3_Var68, templ_7745c5c3_Err = templ.JoinStringErrs(f.Label())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/form.templ`, Line: 326, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/form.templ`, Line: 326, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var68))
 		if templ_7745c5c3_Err != nil {
@@ -1510,9 +1510,9 @@ func FormGenericField(f form.Field) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var69 string
-		templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(f.GetName())
+		templ_7745c5c3_Var69, templ_7745c5c3_Err = templ.JoinStringErrs(f.Name())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/form.templ`, Line: 330, Col: 19}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/form.templ`, Line: 330, Col: 16}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var69))
 		if templ_7745c5c3_Err != nil {
@@ -1523,9 +1523,9 @@ func FormGenericField(f form.Field) templ.Component {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var70 string
-		templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(f.GetName())
+		templ_7745c5c3_Var70, templ_7745c5c3_Err = templ.JoinStringErrs(f.Name())
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/form.templ`, Line: 331, Col: 21}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/components/form.templ`, Line: 331, Col: 18}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var70))
 		if templ_7745c5c3_Err != nil {

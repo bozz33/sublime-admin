@@ -1,4 +1,4 @@
-# Contributing to SublimeGo
+# Contributing to sublimeadmin
 
 Thank you for your interest in contributing! This document covers everything you need to get started.
 
@@ -25,7 +25,7 @@ make install-tools
 ```bash
 # 1. Fork and clone
 git clone https://github.com/bozz33/sublimeadmin.git
-cd sublimego
+cd sublimeadmin
 
 # 2. Download dependencies
 go mod download
@@ -46,17 +46,17 @@ make dev
 
 | Branch | Purpose |
 |--------|---------|
-| `main` | Stable release  only merge from `SublimeGo-Dev` via PR |
-| `SublimeGo-Dev` | Active development  integration branch |
+| `main` | Stable release  only merge from `sublimeadmin-Dev` via PR |
+| `sublimeadmin-Dev` | Active development  integration branch |
 | `refactor/go-standards` | Ongoing Go standards refactoring |
-| `feature/*` | New features  branch from `SublimeGo-Dev` |
-| `fix/*` | Bug fixes  branch from `SublimeGo-Dev` |
+| `feature/*` | New features  branch from `sublimeadmin-Dev` |
+| `fix/*` | Bug fixes  branch from `sublimeadmin-Dev` |
 | `docs/*` | Documentation only |
 
 ```bash
 # Start a new feature
-git checkout SublimeGo-Dev
-git pull origin SublimeGo-Dev
+git checkout sublimeadmin-Dev
+git pull origin sublimeadmin-Dev
 git checkout -b feature/my-feature
 
 # Start a bug fix
@@ -67,7 +67,7 @@ git checkout -b fix/issue-description
 
 ## Workflow
 
-1. Create a branch from `SublimeGo-Dev`
+1. Create a branch from `sublimeadmin-Dev`
 2. Make your changes
 3. Write or update tests
 4. Run the full check suite:
@@ -81,7 +81,7 @@ templ generate          # Regenerate templates if .templ files changed
 ```
 
 5. Commit using [Conventional Commits](#commit-message-format)
-6. Open a Pull Request against `SublimeGo-Dev`
+6. Open a Pull Request against `sublimeadmin-Dev`
 
 ---
 

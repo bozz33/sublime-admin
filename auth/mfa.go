@@ -14,7 +14,7 @@ import (
 
 // MFAConfig configures Multi-Factor Authentication behaviour.
 type MFAConfig struct {
-	// Issuer is the service name shown in authenticator apps (e.g. "SublimeGo Admin").
+	// Issuer is the service name shown in authenticator apps (e.g. "SublimeAdmin Admin").
 	Issuer string
 	// Digits is the OTP length (default 6).
 	Digits int

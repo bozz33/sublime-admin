@@ -1,4 +1,4 @@
-// Package color provides dynamic color palette management for SublimeGo panels.
+// Package color provides dynamic color palette management for SublimeAdmin panels.
 // Colors are defined as Tailwind CSS shade maps and can be injected as CSS variables.
 package color
 

@@ -60,7 +60,7 @@ type DatabaseConfig struct {
 	LogLevel        string        `mapstructure:"log_level" validate:"required,oneof=debug info warn error silent"`
 }
 
-// EngineConfig holds SublimeGo admin panel settings.
+// EngineConfig holds SublimeAdmin panel settings.
 type EngineConfig struct {
 	BasePath            string `mapstructure:"base_path" validate:"required"`
 	BrandName           string `mapstructure:"brand_name" validate:"required"`
