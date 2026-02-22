@@ -49,7 +49,9 @@ type Panel struct {
 	Profile           bool
 	Notifications     bool
 
-	DB          *ent.Client
+	// Users is the repository for user authentication operations.
+	// Implement UserRepository in your project to connect your ORM.
+	Users       UserRepository
 	Resources   []Resource
 	Pages       []Page
 	AuthManager *auth.Manager
@@ -96,8 +98,10 @@ func (p *Panel) WithPath(path string) *Panel {
 	return p
 }
 
-func (p *Panel) WithDatabase(db *ent.Client) *Panel {
-	p.DB = db
+// WithUsers sets the user repository for authentication.
+// Your project must implement the UserRepository interface.
+func (p *Panel) WithUsers(users UserRepository) *Panel {
+	p.Users = users
 	return p
 }
 
@@ -339,7 +343,10 @@ func (p *Panel) registerAuthRoutes(mux *http.ServeMux) {
 	if p.AuthManager == nil {
 		return
 	}
-	authHandler := NewAuthHandler(p.AuthManager, p.DB)
+	if p.Users == nil {
+		panic("sublimeadmin: Panel.Users is nil - call WithUsers() with your UserRepository implementation")
+	}
+	authHandler := NewAuthHandler(p.AuthManager, p.Users)
 	loginLimiter := middleware.NewRateLimiter(&middleware.RateLimitConfig{
 		RequestsPerMinute: 5, Burst: 3, KeyFunc: middleware.KeyByIP,
 	})
@@ -349,10 +356,10 @@ func (p *Panel) registerAuthRoutes(mux *http.ServeMux) {
 		mux.Handle("/register", middleware.RequireGuest(p.AuthManager, "/")(authHandler))
 	}
 	if p.Profile {
-		mux.Handle("/profile", gzipMiddleware(p.protect(NewProfileHandler(p.AuthManager, p.DB))))
+		mux.Handle("/profile", gzipMiddleware(p.protect(NewProfileHandler(p.AuthManager, p.Users))))
 	}
 	if p.PasswordReset {
-		rh := NewPasswordResetHandler(p.AuthManager, p.DB, p.Mailer, p.BaseURL)
+		rh := NewPasswordResetHandler(p.AuthManager, p.Users, p.Mailer, p.BaseURL)
 		mux.Handle("/forgot-password", rh)
 		mux.Handle("/reset-password", rh)
 	}
