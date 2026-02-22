@@ -120,6 +120,7 @@ func (t *Tabs) Schema() []Component {
 	}
 	return all
 }
+func (t *Tabs) GetSchema() []Component { return t.Schema() }
 
 // WizardStep represents a single step in a Wizard.
 type WizardStep struct {
@@ -179,6 +180,7 @@ func (w *Wizard) Schema() []Component {
 	}
 	return all
 }
+func (w *Wizard) GetSchema() []Component { return w.Schema() }
 
 // CalloutColor defines the color/intent of a Callout.
 type CalloutColor string

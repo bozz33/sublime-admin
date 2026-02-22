@@ -782,6 +782,7 @@ func PageFromContext(ctx context.Context) (*PageResult, bool) {
 
 // renderPage renders a templ component inside the base layout.
 func renderPage(w http.ResponseWriter, r *http.Request, title string, content templ.Component) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fullPage := layouts.Page(title, content)
 	fullPage.Render(r.Context(), w)
 }

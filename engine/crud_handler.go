@@ -257,6 +257,7 @@ func (h *CRUDHandler) routePOST(w http.ResponseWriter, r *http.Request, path str
 
 // render is a helper to display a component in the layout.
 func render(w http.ResponseWriter, r *http.Request, title string, content templ.Component) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	fullPage := layouts.Page(title, content)
 	_ = fullPage.Render(r.Context(), w)
 }

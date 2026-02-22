@@ -30,5 +30,6 @@ func (h *PageHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	content := h.page.Render(ctx, r)
 
 	// Wrap in the base layout
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	layouts.Page(h.page.Label(), content).Render(ctx, w)
 }

@@ -37,10 +37,10 @@ func Topbar(ctx context.Context) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		userEmail := "admin@nourriture-solidaire.fr"
-		userName := "Admin User"
-		userRole := "Super Administrateur"
-		avatarURL := "https://ui-avatars.com/api/?name=Admin+User&background=22c55e&color=fff"
+		userEmail := "admin@example.com"
+		userName := "Admin"
+		userRole := "Administrator"
+		avatarURL := "https://ui-avatars.com/api/?name=Admin&background=22c55e&color=fff"
 
 		// Get user from context
 		user := auth.UserFromContext(ctx)

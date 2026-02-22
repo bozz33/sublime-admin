@@ -368,6 +368,7 @@ func (p *Panel) registerAuthRoutes(mux *http.ServeMux) {
 func (p *Panel) registerCoreRoutes(mux *http.ServeMux) {
 	// Dashboard
 	mux.Handle("/", gzipMiddleware(p.protect(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		_ = dashboard.Index(widget.GetAllWidgets(r.Context())).Render(r.Context(), w)
 	}))))
 	// Global search
@@ -435,7 +436,9 @@ func (p *Panel) EnableDebug(mux *http.ServeMux) {
 
 // protect wraps a handler with auth + any custom middlewares.
 func (p *Panel) protect(h http.Handler) http.Handler {
-	h = middleware.RequireAuth(p.AuthManager)(h)
+	if p.AuthManager != nil {
+		h = middleware.RequireAuth(p.AuthManager)(h)
+	}
 	for i := len(p.Middlewares) - 1; i >= 0; i-- {
 		h = p.Middlewares[i](h)
 	}
@@ -492,6 +495,19 @@ type gzipResponseWriter struct {
 
 func (g *gzipResponseWriter) Write(b []byte) (int, error) {
 	return g.Writer.Write(b)
+}
+
+func (g *gzipResponseWriter) WriteHeader(code int) {
+	g.ResponseWriter.WriteHeader(code)
+}
+
+func (g *gzipResponseWriter) Flush() {
+	if f, ok := g.Writer.(interface{ Flush() error }); ok {
+		_ = f.Flush()
+	}
+	if f, ok := g.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
 }
 
 // cacheControlMiddleware sets Cache-Control headers for static assets.
