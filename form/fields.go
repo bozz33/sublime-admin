@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"html/template"
 	"strings"
+
+	"github.com/a-h/templ"
 )
 
 // BaseField contains common logic.
@@ -31,6 +33,7 @@ func (b *BaseField) ComponentType() string         { return "field" }
 func (b *BaseField) GetComponentType() string      { return b.ComponentType() }
 func (b *BaseField) Attributes() template.HTMLAttr { return "" }
 func (b *BaseField) Rules() []string               { return b.fieldRules }
+func (b *BaseField) Render() templ.Component       { return FieldRender(b) }
 
 // Get* aliases for template compatibility.
 func (b *BaseField) GetName() string        { return b.fieldName }
@@ -71,6 +74,8 @@ type TextInput struct {
 	BaseField
 	Type string
 }
+
+func (f *TextInput) Render() templ.Component { return TextInputRender(f) }
 
 // Text creates a standard text field.
 func Text(name string) *TextInput {
@@ -145,6 +150,8 @@ type TextareaInput struct {
 	RowCount int
 }
 
+func (f *TextareaInput) Render() templ.Component { return TextareaRender(f) }
+
 // Textarea creates a textarea field.
 func Textarea(name string) *TextareaInput {
 	return &TextareaInput{
@@ -183,6 +190,8 @@ type SelectInput struct {
 	BaseField
 	selectOptions []SelectOption
 }
+
+func (f *SelectInput) Render() templ.Component { return SelectRender(f) }
 
 // Select creates a select field.
 func Select(name string) *SelectInput {
@@ -227,6 +236,8 @@ type CheckboxInput struct {
 	BaseField
 }
 
+func (f *CheckboxInput) Render() templ.Component { return CheckboxRender(f) }
+
 // Checkbox creates a checkbox field.
 func Checkbox(name string) *CheckboxInput {
 	return &CheckboxInput{
@@ -253,6 +264,8 @@ type FileUploadInput struct {
 	MaxFileSize   int64
 	AllowMultiple bool
 }
+
+func (f *FileUploadInput) Render() templ.Component { return FileUploadRender(f) }
 
 // FileUpload creates a file upload field.
 func FileUpload(name string) *FileUploadInput {
@@ -300,6 +313,8 @@ type DatePicker struct {
 	MaxDate string
 	Format  string
 }
+
+func (f *DatePicker) Render() templ.Component { return DatePickerRender(f) }
 
 // Date creates a date picker field (YYYY-MM-DD).
 func Date(name string) *DatePicker {
@@ -361,6 +376,8 @@ type HiddenField struct {
 	BaseField
 }
 
+func (f *HiddenField) Render() templ.Component { return HiddenFieldRender(f) }
+
 // Hidden creates a hidden field with a fixed value.
 func Hidden(name string, value any) *HiddenField {
 	return &HiddenField{
@@ -374,6 +391,8 @@ type ToggleInput struct {
 	OnLabel  string
 	OffLabel string
 }
+
+func (f *ToggleInput) Render() templ.Component { return ToggleRender(f) }
 
 // Toggle creates a toggle switch field.
 func Toggle(name string) *ToggleInput {
@@ -412,6 +431,8 @@ type RepeaterField struct {
 	MaxItems  int
 	AddLabel  string
 }
+
+func (f *RepeaterField) Render() templ.Component { return RepeaterRender(f) }
 
 // Repeater creates a repeater field with the given sub-fields.
 func Repeater(name string, subFields ...Field) *RepeaterField {
@@ -458,6 +479,8 @@ type RichEditorInput struct {
 	Toolbar   []string // e.g. ["bold","italic","link","heading","list","image"]
 	MaxLength int
 }
+
+func (f *RichEditorInput) Render() templ.Component { return RichEditorRender(f) }
 
 // RichEditor creates a rich editor field.
 func RichEditor(name string) *RichEditorInput {
@@ -512,6 +535,10 @@ type MarkdownEditorInput struct {
 	RowCount int
 }
 
+func (f *MarkdownEditorInput) Render() templ.Component {
+	return RichEditorRender(&RichEditorInput{BaseField: f.BaseField})
+}
+
 // MarkdownEditor creates a Markdown editor field.
 func MarkdownEditor(name string) *MarkdownEditorInput {
 	return &MarkdownEditorInput{
@@ -560,6 +587,8 @@ type TagsField struct {
 	MaxTags     int
 	Separator   string // delimiter for form submission, default ","
 }
+
+func (f *TagsField) Render() templ.Component { return TagsRender(f) }
 
 // Tags creates a tags input field.
 func Tags(name string) *TagsField {
@@ -637,6 +666,8 @@ type KeyValueInput struct {
 	AddLabel   string
 }
 
+func (f *KeyValueInput) Render() templ.Component { return KeyValueRender(f) }
+
 // KeyValue creates a key-value input field.
 func KeyValue(name string) *KeyValueInput {
 	return &KeyValueInput{
@@ -692,6 +723,8 @@ type ColorPickerInput struct {
 	Swatches []string // predefined color swatches (hex)
 }
 
+func (f *ColorPickerInput) Render() templ.Component { return ColorPickerRender(f) }
+
 // ColorPicker creates a color picker field.
 func ColorPicker(name string) *ColorPickerInput {
 	return &ColorPickerInput{
@@ -740,6 +773,8 @@ type SliderInput struct {
 	Step float64
 	Unit string // optional display unit (e.g. "%", "px", "kg")
 }
+
+func (f *SliderInput) Render() templ.Component { return SliderRender(f) }
 
 // Slider creates a slider field.
 func Slider(name string) *SliderInput {

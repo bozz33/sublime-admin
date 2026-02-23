@@ -1,0 +1,202 @@
+package table
+
+import "strings"
+
+// TextCellView renders a plain text cell with optional prefix/suffix.
+templ TextCellView(value, prefix, suffix string) {
+	if prefix != "" || suffix != "" {
+		<span>{ prefix }{ value }{ suffix }</span>
+	} else {
+		{ value }
+	}
+}
+
+// TextCellBadgeView renders a text value as a colored badge pill.
+templ TextCellBadgeView(value, color string) {
+	<span class={ badgeCellClass(color) }>{ value }</span>
+}
+
+// TextCellWithDescView renders a text cell with a secondary description below.
+templ TextCellWithDescView(value, description, prefix, suffix string) {
+	<div class="flex flex-col">
+		<span class="font-medium text-gray-900 dark:text-white">{ prefix }{ value }{ suffix }</span>
+		if description != "" {
+			<span class="text-xs text-gray-500 dark:text-gray-400">{ description }</span>
+		}
+	</div>
+}
+
+// TextCellWithIconView renders a text cell with a leading Material icon.
+templ TextCellWithIconView(value, icon, iconColor, prefix, suffix string) {
+	<div class="inline-flex items-center gap-1.5">
+		if icon != "" {
+			<span class={ "material-icons-outlined text-base " + iconColorClass(iconColor) }>{ icon }</span>
+		}
+		<span>{ prefix }{ value }{ suffix }</span>
+	</div>
+}
+
+// BadgeCellView renders a badge pill with a color derived from a color map.
+templ BadgeCellView(value, color string) {
+	<span class={ badgeCellClass(color) }>{ value }</span>
+}
+
+// BooleanCellView renders a boolean value as a check/cancel icon badge.
+templ BooleanCellView(value, trueIcon, falseIcon, trueColor, falseColor string) {
+	if isTruthy(value) {
+		<span class={ "inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full " + boolColorClass(trueColor, true) }>
+			<span class="material-icons-outlined text-xs">{ trueIcon }</span>
+		</span>
+	} else {
+		<span class={ "inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full " + boolColorClass(falseColor, false) }>
+			<span class="material-icons-outlined text-xs">{ falseIcon }</span>
+		</span>
+	}
+}
+
+// DateCellView renders a date value with muted styling.
+templ DateCellView(value string) {
+	<span class="text-gray-500 dark:text-gray-400 text-sm">{ value }</span>
+}
+
+// ImageCellView renders an image with optional circular styling and fallback icon.
+templ ImageCellView(value string, circular bool) {
+	if value != "" {
+		if circular {
+			<img src={ value } alt="" class="w-8 h-8 rounded-full object-cover"/>
+		} else {
+			<img src={ value } alt="" class="w-8 h-8 rounded object-cover"/>
+		}
+	} else {
+		<div class={ "w-8 h-8 flex items-center justify-center bg-gray-200 dark:bg-gray-600 " + imgFallbackClass(circular) }>
+			<span class="material-icons-outlined text-gray-400 text-sm">image</span>
+		</div>
+	}
+}
+
+// AvatarCellView renders a colored circle with initials and the full name beside it.
+templ AvatarCellView(name, initials, bgColor string) {
+	<div class="flex items-center gap-3">
+		<div class={ "w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-shrink-0 " + bgColor }>
+			{ initials }
+		</div>
+		<span class="font-medium text-gray-900 dark:text-white">{ name }</span>
+	</div>
+}
+
+// IconCellView renders a standalone Material icon with an optional color.
+templ IconCellView(icon, color string) {
+	<span class={ "material-icons-outlined text-xl " + iconColorClass(color) }>{ icon }</span>
+}
+
+// ColorCellView renders a color swatch (small circle) for a hex/named color.
+templ ColorCellView(value string) {
+	<div class="flex items-center gap-2">
+		<span
+			class="inline-block w-4 h-4 rounded-full border border-gray-300 dark:border-gray-600"
+			style={ "background-color:" + value }
+		></span>
+		<span class="text-sm text-gray-700 dark:text-gray-300">{ value }</span>
+	</div>
+}
+
+// ---------------------------------------------------------------------------
+// Pure Go helpers (no templ)
+// ---------------------------------------------------------------------------
+
+func badgeCellClass(color string) string {
+	switch color {
+	case "green", "success":
+		return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+	case "red", "danger":
+		return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+	case "yellow", "warning":
+		return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+	case "blue", "info":
+		return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+	case "purple":
+		return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+	case "primary":
+		return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400"
+	default:
+		return "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+	}
+}
+
+func boolColorClass(color string, isTrue bool) string {
+	if color != "" {
+		return badgeCellClass(color)
+	}
+	if isTrue {
+		return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+	}
+	return "bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+}
+
+func iconColorClass(color string) string {
+	switch color {
+	case "green", "success":
+		return "text-green-500"
+	case "red", "danger":
+		return "text-red-500"
+	case "yellow", "warning":
+		return "text-yellow-500"
+	case "blue", "info":
+		return "text-blue-500"
+	case "purple":
+		return "text-purple-500"
+	case "gray":
+		return "text-gray-400"
+	default:
+		return "text-gray-500 dark:text-gray-400"
+	}
+}
+
+func imgFallbackClass(circular bool) string {
+	if circular {
+		return "rounded-full"
+	}
+	return "rounded"
+}
+
+func isTruthy(value string) bool {
+	v := strings.ToLower(strings.TrimSpace(value))
+	return v == "true" || v == "yes" || v == "1" || v == "on"
+}
+
+// avatarCellInitials returns up to 2 uppercase initials from a name.
+func avatarCellInitials(name string) string {
+	parts := strings.Fields(name)
+	if len(parts) == 0 {
+		return "?"
+	}
+	if len(parts) == 1 {
+		r := []rune(parts[0])
+		if len(r) == 0 {
+			return "?"
+		}
+		return strings.ToUpper(string(r[0]))
+	}
+	r0 := []rune(parts[0])
+	r1 := []rune(parts[len(parts)-1])
+	if len(r0) == 0 || len(r1) == 0 {
+		return "?"
+	}
+	return strings.ToUpper(string(r0[0])) + strings.ToUpper(string(r1[0]))
+}
+
+// avatarCellBgColor returns a deterministic Tailwind bg color class for a name.
+func avatarCellBgColor(name string) string {
+	colors := []string{
+		"bg-green-500", "bg-blue-500", "bg-purple-500", "bg-yellow-500",
+		"bg-red-500", "bg-indigo-500", "bg-pink-500", "bg-teal-500",
+	}
+	if name == "" {
+		return colors[0]
+	}
+	sum := 0
+	for _, r := range name {
+		sum += int(r)
+	}
+	return colors[sum%len(colors)]
+}

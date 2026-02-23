@@ -1,22 +1,35 @@
 package infolist
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/a-h/templ"
+	"github.com/bozz33/sublimeadmin/table"
+)
 
 // EntryType defines the display type of an infolist entry.
 type EntryType string
 
 const (
-	EntryTypeText     EntryType = "text"
-	EntryTypeBadge    EntryType = "badge"
-	EntryTypeBoolean  EntryType = "boolean"
-	EntryTypeDate     EntryType = "date"
-	EntryTypeImage    EntryType = "image"
-	EntryTypeColor    EntryType = "color"
-	EntryTypeKeyValue EntryType = "keyvalue"
-	EntryTypeIcon     EntryType = "icon"
-	EntryTypeList     EntryType = "list"
-	EntryTypeLink     EntryType = "link"
+	EntryTypeText       EntryType = "text"
+	EntryTypeBadge      EntryType = "badge"
+	EntryTypeBoolean    EntryType = "boolean"
+	EntryTypeDate       EntryType = "date"
+	EntryTypeImage      EntryType = "image"
+	EntryTypeColor      EntryType = "color"
+	EntryTypeKeyValue   EntryType = "keyvalue"
+	EntryTypeIcon       EntryType = "icon"
+	EntryTypeList       EntryType = "list"
+	EntryTypeLink       EntryType = "link"
+	EntryTypeCode       EntryType = "code"       // syntax-highlighted code block
+	EntryTypeRepeatable EntryType = "repeatable" // list of sub-entries (nested)
 )
+
+// KeyValuePair is a single key→value pair for EntryTypeKeyValue.
+type KeyValuePair struct {
+	Key   string
+	Value string
+}
 
 // Entry is a single read-only field in an Infolist.
 type Entry struct {
@@ -33,6 +46,26 @@ type Entry struct {
 	IsCopyable bool
 	Hidden     bool
 	HelpText   string
+	// Filament-inspired enrichments (TextEntry)
+	IsBadge      bool               // render value as a badge pill
+	ColorEval    table.Eval[string] // Eval[string]: Static("green") or Dynamic(fn)
+	IconName     string             // Material icon shown before value
+	IconPosition string             // "before" (default) or "after"
+	WeightStr    string             // "bold", "semibold", "medium"
+	LimitChars   int                // truncate to N chars
+	// CodeEntry
+	Language string // for EntryTypeCode: "go", "json", "sql", etc.
+	// KeyValueEntry
+	KeyValues []KeyValuePair // for EntryTypeKeyValue
+	// RepeatableEntry
+	RepeatItems  [][]KeyValuePair // for EntryTypeRepeatable: list of key-value sets
+	RepeatLabels []string         // column labels for repeatable
+	// HasTooltip
+	Tooltip string
+	// HasAlignment
+	Alignment string // "left", "center", "right"
+	// HasPlaceholder
+	Placeholder string // shown when value is empty
 }
 
 // Label returns the display label.
@@ -48,6 +81,53 @@ func (e *Entry) ValueStr() string {
 
 // IsVisible returns true if the entry should be displayed.
 func (e *Entry) IsVisible() bool { return !e.Hidden }
+
+// Badge renders the entry value as a colored badge pill.
+func (e *Entry) Badge() *Entry {
+	e.IsBadge = true
+	return e
+}
+
+// Color sets a static Tailwind color name for the value.
+func (e *Entry) Color(color string) *Entry {
+	e.ColorEval = table.Static[string](color)
+	return e
+}
+
+// DynamicColor sets a function that returns a Tailwind color based on the value.
+func (e *Entry) DynamicColor(fn func(value string, record any) string) *Entry {
+	e.ColorEval = table.Dynamic[string](fn)
+	return e
+}
+
+// Icon sets a Material Icons Outlined icon shown next to the value.
+func (e *Entry) Icon(icon string) *Entry {
+	e.IconName = icon
+	return e
+}
+
+// IconAfter positions the icon after the value instead of before.
+func (e *Entry) IconAfter() *Entry {
+	e.IconPosition = "after"
+	return e
+}
+
+// Weight sets the font weight: "bold", "semibold", or "medium".
+func (e *Entry) Weight(w string) *Entry {
+	e.WeightStr = w
+	return e
+}
+
+// Limit truncates the displayed value to n characters.
+func (e *Entry) Limit(n int) *Entry {
+	e.LimitChars = n
+	return e
+}
+
+// Render returns the polymorphic templ component for this entry's value.
+func (e *Entry) Render() templ.Component {
+	return EntryRender(e)
+}
 
 // Section groups entries under a heading.
 type Section struct {
@@ -171,4 +251,47 @@ func (e *Entry) Help(text string) *Entry {
 func (e *Entry) Hide(hidden bool) *Entry {
 	e.Hidden = hidden
 	return e
+}
+
+// WithTooltip sets a tooltip shown on hover (HasTooltip).
+func (e *Entry) WithTooltip(tip string) *Entry {
+	e.Tooltip = tip
+	return e
+}
+
+// Align sets the text alignment: "left", "center", "right" (HasAlignment).
+func (e *Entry) Align(alignment string) *Entry {
+	e.Alignment = alignment
+	return e
+}
+
+// WithPlaceholder sets the text shown when the value is empty (HasPlaceholder).
+func (e *Entry) WithPlaceholder(placeholder string) *Entry {
+	e.Placeholder = placeholder
+	return e
+}
+
+// CodeEntry creates a code block entry with optional language for syntax highlighting.
+func CodeEntry(name, label string, code string, language string) *Entry {
+	if language == "" {
+		language = "text"
+	}
+	return &Entry{Name: name, LabelStr: label, Value: code, Type: EntryTypeCode, Language: language}
+}
+
+// KeyValueEntry creates a key→value table entry.
+func KeyValueEntry(name, label string, pairs ...KeyValuePair) *Entry {
+	return &Entry{Name: name, LabelStr: label, Type: EntryTypeKeyValue, KeyValues: pairs}
+}
+
+// RepeatableEntry creates a repeatable entry (list of key-value rows).
+// labels: column headers; rows: each row is a slice of KeyValuePair.
+func RepeatableEntry(name, label string, labels []string, rows ...[]KeyValuePair) *Entry {
+	return &Entry{
+		Name:         name,
+		LabelStr:     label,
+		Type:         EntryTypeRepeatable,
+		RepeatLabels: labels,
+		RepeatItems:  rows,
+	}
 }

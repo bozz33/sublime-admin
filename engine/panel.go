@@ -34,6 +34,29 @@ import (
 //		SetPrimaryColor("blue").
 //		EnableRegistration(false).
 //		EnableNotifications(true)
+//
+// NavigationItem represents a manual sidebar link (not tied to a Resource).
+type NavigationItem struct {
+	Label       string
+	URL         string
+	Icon        string
+	Badge       string // optional badge text
+	BadgeColor  string // optional badge color ("green", "red", etc.)
+	Group       string // optional group name to attach to a NavigationGroup
+	Sort        int
+	ActiveRegex string // regex to match the current URL for active state
+}
+
+// NavigationGroup represents a collapsible sidebar group of NavigationItems.
+type NavigationGroup struct {
+	Label       string
+	Icon        string
+	Collapsible bool
+	DefaultOpen bool
+	Items       []NavigationItem
+	Sort        int
+}
+
 type Panel struct {
 	ID           string
 	Path         string
@@ -70,6 +93,10 @@ type Panel struct {
 
 	// Color scheme for semantic colors (primary, danger, success, warning, info, secondary)
 	colorScheme *ColorScheme
+
+	// Manual navigation items and groups (supplement auto-generated Resource nav)
+	NavItems  []NavigationItem
+	NavGroups []NavigationGroup
 }
 
 // NewPanel initializes a Panel with sensible defaults.
@@ -89,6 +116,18 @@ func NewPanel(id string) *Panel {
 		Resources: make([]Resource, 0),
 		Pages:     make([]Page, 0),
 	}
+}
+
+// WithNavItems adds manual navigation items to the sidebar.
+func (p *Panel) WithNavItems(items ...NavigationItem) *Panel {
+	p.NavItems = append(p.NavItems, items...)
+	return p
+}
+
+// WithNavGroups adds manual navigation groups to the sidebar.
+func (p *Panel) WithNavGroups(groups ...NavigationGroup) *Panel {
+	p.NavGroups = append(p.NavGroups, groups...)
+	return p
 }
 
 // Builder methods — Filament-style fluent API.
@@ -243,17 +282,20 @@ type navItem struct {
 }
 
 // registerNavItems injects navigation items into the sidebar.
+// Merges auto-generated groups (from Resources+Pages+NavItems) with manual NavGroups.
 func (p *Panel) registerNavItems() {
 	allItems := p.collectNavItems()
 	sort.Slice(allItems, func(i, j int) bool {
 		return allItems[i].sort < allItems[j].sort
 	})
-	layouts.SetNavGroups(groupNavItems(allItems))
+	autoGroups := groupNavItems(allItems)
+	manualGroups := p.buildManualNavGroups()
+	layouts.SetNavGroups(append(autoGroups, manualGroups...))
 }
 
-// collectNavItems builds the flat list of nav items from resources and pages.
+// collectNavItems builds the flat list of nav items from resources, pages, and manual NavItems.
 func (p *Panel) collectNavItems() []navItem {
-	items := make([]navItem, 0, len(p.Resources)+len(p.Pages))
+	items := make([]navItem, 0, len(p.Resources)+len(p.Pages)+len(p.NavItems))
 	for _, r := range p.Resources {
 		items = append(items, navItem{
 			slug: r.Slug(), label: r.PluralLabel(),
@@ -266,7 +308,31 @@ func (p *Panel) collectNavItems() []navItem {
 			icon: pg.Icon(), group: pg.Group(), sort: pg.Sort(),
 		})
 	}
+	for _, ni := range p.NavItems {
+		items = append(items, navItem{
+			slug: ni.URL, label: ni.Label,
+			icon: ni.Icon, group: ni.Group, sort: ni.Sort,
+		})
+	}
 	return items
+}
+
+// registerNavItems injects navigation items + manual NavGroups into the sidebar.
+func (p *Panel) buildManualNavGroups() []layouts.NavGroup {
+	result := make([]layouts.NavGroup, 0, len(p.NavGroups))
+	for _, g := range p.NavGroups {
+		children := make([]layouts.NavItem, 0, len(g.Items))
+		for _, ni := range g.Items {
+			children = append(children, layouts.NavItem{
+				Slug:  ni.URL,
+				Label: ni.Label,
+				Icon:  ni.Icon,
+				Badge: ni.Badge,
+			})
+		}
+		result = append(result, layouts.NavGroup{Label: g.Label, Items: children})
+	}
+	return result
 }
 
 // groupNavItems groups sorted nav items into NavGroups (root first, then named groups).

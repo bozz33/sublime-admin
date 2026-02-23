@@ -3,6 +3,7 @@ package table
 import (
 	"context"
 
+	"github.com/a-h/templ"
 	"github.com/bozz33/sublimeadmin/actions"
 )
 
@@ -105,6 +106,7 @@ type Column interface {
 	IsSearchable() bool
 	IsCopyable() bool
 	Value(item any) string
+	Render(value string, record any) templ.Component
 }
 
 // Action represents an action on a row.

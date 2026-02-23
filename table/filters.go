@@ -64,3 +64,102 @@ func (f *BooleanFilter) FilterOptions() []FilterOption {
 		{Value: "false", Label: "No"},
 	}
 }
+
+// DateFilter represents a date range filter with from/until inputs.
+type DateFilter struct {
+	filterKey string
+	LabelStr  string
+}
+
+// DateRange creates a new date range filter.
+func DateRange(key string) *DateFilter {
+	return &DateFilter{
+		filterKey: key,
+		LabelStr:  key,
+	}
+}
+
+// WithLabel sets the filter label.
+func (f *DateFilter) WithLabel(label string) *DateFilter {
+	f.LabelStr = label
+	return f
+}
+
+func (f *DateFilter) Key() string                   { return f.filterKey }
+func (f *DateFilter) Label() string                 { return f.LabelStr }
+func (f *DateFilter) Type() string                  { return "date" }
+func (f *DateFilter) FilterOptions() []FilterOption { return nil }
+
+// TextFilter represents a free-text search filter on a specific field.
+type TextFilter struct {
+	filterKey string
+	LabelStr  string
+}
+
+// TextSearch creates a new text search filter.
+func TextSearch(key string) *TextFilter {
+	return &TextFilter{
+		filterKey: key,
+		LabelStr:  key,
+	}
+}
+
+// WithLabel sets the filter label.
+func (f *TextFilter) WithLabel(label string) *TextFilter {
+	f.LabelStr = label
+	return f
+}
+
+func (f *TextFilter) Key() string                   { return f.filterKey }
+func (f *TextFilter) Label() string                 { return f.LabelStr }
+func (f *TextFilter) Type() string                  { return "text" }
+func (f *TextFilter) FilterOptions() []FilterOption { return nil }
+
+// CustomFilterField describes a single field inside a custom filter form.
+type CustomFilterField struct {
+	Name        string
+	Label       string
+	Type        string // "text", "select", "date", "number"
+	Placeholder string
+	Options     []FilterOption // for Type="select"
+}
+
+// CustomFilter represents a filter with a fully custom form (multiple fields).
+type CustomFilter struct {
+	filterKey string
+	LabelStr  string
+	Fields    []CustomFilterField
+	ApplyFunc func(params map[string]string) string // returns a query condition string (optional)
+}
+
+// Custom creates a new custom filter.
+func Custom(key string) *CustomFilter {
+	return &CustomFilter{
+		filterKey: key,
+		LabelStr:  key,
+		Fields:    make([]CustomFilterField, 0),
+	}
+}
+
+// WithLabel sets the filter label.
+func (f *CustomFilter) WithLabel(label string) *CustomFilter {
+	f.LabelStr = label
+	return f
+}
+
+// WithFields sets the custom form fields.
+func (f *CustomFilter) WithFields(fields ...CustomFilterField) *CustomFilter {
+	f.Fields = append(f.Fields, fields...)
+	return f
+}
+
+// WithApply sets a function that converts filter params to a query condition.
+func (f *CustomFilter) WithApply(fn func(map[string]string) string) *CustomFilter {
+	f.ApplyFunc = fn
+	return f
+}
+
+func (f *CustomFilter) Key() string                   { return f.filterKey }
+func (f *CustomFilter) Label() string                 { return f.LabelStr }
+func (f *CustomFilter) Type() string                  { return "custom" }
+func (f *CustomFilter) FilterOptions() []FilterOption { return nil }

@@ -15,6 +15,15 @@ const (
 	Button ActionType = "button"
 )
 
+// ActionSize defines the visual size of an action button.
+type ActionSize string
+
+const (
+	SizeSM ActionSize = "sm"
+	SizeMD ActionSize = "md"
+	SizeLG ActionSize = "lg"
+)
+
 // Action defines a possible interaction on a resource.
 type Action struct {
 	Name        string
@@ -23,7 +32,28 @@ type Action struct {
 	Type        ActionType
 	Method      string
 	Color       string
+	Size        ActionSize
 	UrlResolver func(item any) string
+
+	// Visibility / state (CanBeDisabled, CanBeHidden)
+	Disabled       bool
+	DisabledReason string
+	Hidden         bool
+	HiddenFunc     func(ctx context.Context, item any) bool // dynamic hide
+	DisabledFunc   func(ctx context.Context, item any) bool // dynamic disable
+
+	// HasTooltip
+	Tooltip string
+
+	// CanOpenUrl
+	OpenInNewTab bool
+
+	// HasBadge
+	Badge     string                                     // badge text shown on the button (e.g. count)
+	BadgeFunc func(ctx context.Context, item any) string // dynamic badge
+
+	// HasExtraAttributes (arbitrary HTML attrs for the button/link)
+	ExtraAttributes map[string]string
 
 	// Confirmation modal
 	RequiresConfirmation bool
@@ -80,6 +110,96 @@ func (a *Action) SetIcon(icon string) *Action {
 // SetColor sets the color.
 func (a *Action) SetColor(color string) *Action {
 	a.Color = color
+	return a
+}
+
+// WithSize sets the visual size (sm, md, lg).
+func (a *Action) WithSize(size ActionSize) *Action {
+	a.Size = size
+	return a
+}
+
+// WithTooltip sets a tooltip shown on hover.
+func (a *Action) WithTooltip(tip string) *Action {
+	a.Tooltip = tip
+	return a
+}
+
+// Disable statically disables the action (renders as disabled button).
+func (a *Action) Disable(reason ...string) *Action {
+	a.Disabled = true
+	if len(reason) > 0 {
+		a.DisabledReason = reason[0]
+	}
+	return a
+}
+
+// DisableWhen sets a dynamic disable function.
+func (a *Action) DisableWhen(fn func(ctx context.Context, item any) bool) *Action {
+	a.DisabledFunc = fn
+	return a
+}
+
+// Hide statically hides the action.
+func (a *Action) Hide() *Action {
+	a.Hidden = true
+	return a
+}
+
+// HideWhen sets a dynamic hide function.
+func (a *Action) HideWhen(fn func(ctx context.Context, item any) bool) *Action {
+	a.HiddenFunc = fn
+	return a
+}
+
+// IsHidden returns true if the action should be hidden for the given context and item.
+func (a *Action) IsHidden(ctx context.Context, item any) bool {
+	if a.HiddenFunc != nil {
+		return a.HiddenFunc(ctx, item)
+	}
+	return a.Hidden
+}
+
+// IsDisabled returns true if the action should be disabled for the given context and item.
+func (a *Action) IsDisabled(ctx context.Context, item any) bool {
+	if a.DisabledFunc != nil {
+		return a.DisabledFunc(ctx, item)
+	}
+	return a.Disabled
+}
+
+// WithBadge sets a static badge text shown on the button.
+func (a *Action) WithBadge(badge string) *Action {
+	a.Badge = badge
+	return a
+}
+
+// WithBadgeFunc sets a dynamic badge text resolver.
+func (a *Action) WithBadgeFunc(fn func(ctx context.Context, item any) string) *Action {
+	a.BadgeFunc = fn
+	return a
+}
+
+// ResolveBadge returns the badge text for a given context and item.
+func (a *Action) ResolveBadge(ctx context.Context, item any) string {
+	if a.BadgeFunc != nil {
+		return a.BadgeFunc(ctx, item)
+	}
+	return a.Badge
+}
+
+// InNewTab makes URL actions open in a new browser tab.
+func (a *Action) InNewTab() *Action {
+	a.OpenInNewTab = true
+	return a
+}
+
+// WithExtraAttribute adds an arbitrary HTML attribute to the action element.
+func (a *Action) WithExtraAttribute(key, value string) *Action {
+	if a.ExtraAttributes == nil {
+		a.ExtraAttributes = make(map[string]string)
+	}
+	a.ExtraAttributes[key] = value
 	return a
 }
 

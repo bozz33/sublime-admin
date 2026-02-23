@@ -809,15 +809,65 @@ const HTMXIntegration = {
             });
         });
 
-        // Handle flash messages from HTMX responses
+        // Handle flash messages from HTMX responses (legacy X-Flash-Message)
         document.body.addEventListener('htmx:afterRequest', (e) => {
             const flashHeader = e.detail.xhr?.getResponseHeader('X-Flash-Message');
             const flashType = e.detail.xhr?.getResponseHeader('X-Flash-Type') || 'info';
-            
             if (flashHeader) {
                 Toast.show(flashHeader, flashType);
             }
+
+            // Unified X-Toast JSON header: {"message":"...","type":"success","duration":4000}
+            const xToast = e.detail.xhr?.getResponseHeader('X-Toast');
+            if (xToast) {
+                try {
+                    const d = JSON.parse(xToast);
+                    Toast.show(d.message || '', d.type || 'info', { duration: d.duration || 5000 });
+                } catch (_) {}
+            }
         });
+    }
+};
+
+// ============================================
+// SSE TOAST — Connect SSE notification stream to Toast system
+// ============================================
+const SSEToast = {
+    source: null,
+
+    init(url) {
+        if (!url || this.source) return;
+        this.source = new EventSource(url);
+
+        // Listen for "toast" events sent by the Go SSE handler
+        this.source.addEventListener('toast', (e) => {
+            try {
+                const d = JSON.parse(e.data);
+                Toast.show(d.message || '', d.type || 'info', { duration: d.duration || 5000 });
+            } catch (_) {}
+        });
+
+        // Listen for generic "notification" events
+        this.source.addEventListener('notification', (e) => {
+            try {
+                const d = JSON.parse(e.data);
+                Toast.show(d.title || d.message || '', d.type || 'info');
+            } catch (_) {}
+        });
+
+        this.source.onerror = () => {
+            this.source.close();
+            this.source = null;
+            // Reconnect after 5s
+            setTimeout(() => this.init(url), 5000);
+        };
+    },
+
+    close() {
+        if (this.source) {
+            this.source.close();
+            this.source = null;
+        }
     }
 };
 
@@ -917,6 +967,7 @@ window.SublimeGo = {
     DataTable,
     Modal,
     Toast,
+    SSEToast,
     FormValidator,
     Dropdown,
     Theme,

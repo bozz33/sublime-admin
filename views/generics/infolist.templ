@@ -1,7 +1,6 @@
 package generics
 
 import (
-	"fmt"
 	"github.com/bozz33/sublimeadmin/infolist"
 )
 
@@ -35,95 +34,14 @@ templ InfoSection(s *infolist.Section) {
 	</div>
 }
 
-// InfoEntry renders a single read-only field.
+// InfoEntry renders a single read-only field using the entry's polymorphic Render().
 templ InfoEntry(e *infolist.Entry) {
 	<div class="px-6 py-4">
 		<dt class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
 			{ e.Label() }
 		</dt>
 		<dd class="mt-1">
-			switch e.Type {
-				case infolist.EntryTypeBadge:
-					<span class={ infoBadgeClass(e.BadgeColor) }>
-						{ e.ValueStr() }
-					</span>
-				case infolist.EntryTypeBoolean:
-					if e.ValueStr() == "true" || e.ValueStr() == "1" {
-						<span class="inline-flex items-center gap-1 text-green-600 dark:text-green-400 font-medium text-sm">
-							<span class="material-icons-outlined text-base">check_circle</span>
-							Yes
-						</span>
-					} else {
-						<span class="inline-flex items-center gap-1 text-red-500 dark:text-red-400 font-medium text-sm">
-							<span class="material-icons-outlined text-base">cancel</span>
-							No
-						</span>
-					}
-				case infolist.EntryTypeImage:
-					if e.ValueStr() != "" {
-						<img src={ e.ValueStr() } alt={ e.Label() } class="h-16 w-16 rounded-lg object-cover"/>
-					} else {
-						<span class="text-gray-400 dark:text-gray-500 text-sm italic">—</span>
-					}
-				case infolist.EntryTypeColor:
-					<div class="flex items-center gap-2">
-						<span
-							class="inline-block w-5 h-5 rounded border border-gray-300 dark:border-gray-600"
-							style={ fmt.Sprintf("background-color: %s", e.ValueStr()) }
-						></span>
-						<span class="text-sm text-gray-900 dark:text-white font-mono">{ e.ValueStr() }</span>
-					</div>
-				case infolist.EntryTypeIcon:
-					<span class={ fmt.Sprintf("material-icons-outlined text-2xl %s", infoIconColor(e.IconColor)) }>{ e.ValueStr() }</span>
-				case infolist.EntryTypeList:
-					if len(e.ListItems) > 0 {
-						<ul class="space-y-1">
-							for _, item := range e.ListItems {
-								<li class="flex items-center gap-2 text-sm text-gray-900 dark:text-white">
-									<span class="material-icons-outlined text-xs text-gray-400">fiber_manual_record</span>
-									{ item }
-								</li>
-							}
-						</ul>
-					} else {
-						<span class="text-sm text-gray-400 dark:text-gray-500 italic">—</span>
-					}
-				case infolist.EntryTypeLink:
-					if e.LinkURL != "" {
-						<a
-							href={ templ.SafeURL(e.LinkURL) }
-							if e.LinkTarget != "" {
-								target={ e.LinkTarget }
-								rel="noopener noreferrer"
-							}
-							class="text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 underline"
-						>{ e.ValueStr() }</a>
-					} else {
-						<span class="text-sm text-gray-400 italic">—</span>
-					}
-				default:
-					<div class="flex items-center gap-2">
-						if e.ValueStr() != "" {
-							<span class="text-sm text-gray-900 dark:text-white">{ e.ValueStr() }</span>
-						} else {
-							<span class="text-sm text-gray-400 dark:text-gray-500 italic">—</span>
-						}
-						if e.IsCopyable && e.ValueStr() != "" {
-							<button
-								type="button"
-								x-data
-								@click={ fmt.Sprintf("navigator.clipboard.writeText('%s')", e.ValueStr()) }
-								class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-								title="Copy"
-							>
-								<span class="material-icons-outlined text-sm">content_copy</span>
-							</button>
-						}
-					</div>
-			}
-			if e.HelpText != "" {
-				<p class="mt-1 text-xs text-gray-400 dark:text-gray-500">{ e.HelpText }</p>
-			}
+			@e.Render()
 		</dd>
 	</div>
 }

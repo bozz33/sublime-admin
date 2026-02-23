@@ -1,0 +1,452 @@
+package form
+
+import "fmt"
+
+// TextInputRender renders a text/email/password/number/date input.
+templ TextInputRender(f *TextInput) {
+	<div class="space-y-1">
+		if f.GetLabel() != "" {
+			<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+				if f.IsRequired() {
+					<span class="text-red-500 ml-1">*</span>
+				}
+			</label>
+		}
+		<input
+			type={ f.Type }
+			id={ f.GetName() }
+			name={ f.GetName() }
+			value={ f.GetValueString() }
+			placeholder={ f.GetPlaceholder() }
+			if f.IsRequired() { required }
+			if f.IsDisabled() { disabled }
+			class={ typedFieldInputClass(f.IsDisabled()) }
+		/>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// TextareaRender renders a textarea field.
+templ TextareaRender(f *TextareaInput) {
+	<div class="space-y-1">
+		if f.GetLabel() != "" {
+			<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+				if f.IsRequired() {
+					<span class="text-red-500 ml-1">*</span>
+				}
+			</label>
+		}
+		<textarea
+			id={ f.GetName() }
+			name={ f.GetName() }
+			placeholder={ f.GetPlaceholder() }
+			rows={ fmt.Sprintf("%d", f.RowCount) }
+			if f.IsRequired() { required }
+			if f.IsDisabled() { disabled }
+			class={ typedFieldInputClass(f.IsDisabled()) + " resize-y" }
+		>{ f.GetValueString() }</textarea>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// SelectRender renders a select dropdown field.
+templ SelectRender(f *SelectInput) {
+	<div class="space-y-1">
+		if f.GetLabel() != "" {
+			<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+				if f.IsRequired() {
+					<span class="text-red-500 ml-1">*</span>
+				}
+			</label>
+		}
+		<div class="relative">
+			<select
+				id={ f.GetName() }
+				name={ f.GetName() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				class={ typedFieldInputClass(f.IsDisabled()) + " appearance-none pr-8" }
+			>
+				if f.GetPlaceholder() != "" {
+					<option value="">{ f.GetPlaceholder() }</option>
+				}
+				for _, opt := range f.SelectOptions() {
+					<option value={ opt.Value } selected?={ opt.Value == f.GetValueString() }>
+						{ opt.Label }
+					</option>
+				}
+			</select>
+			<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+				<span class="material-icons-outlined text-gray-400 text-sm">expand_more</span>
+			</div>
+		</div>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// CheckboxRender renders a checkbox field.
+templ CheckboxRender(f *CheckboxInput) {
+	<div class="flex items-start gap-3">
+		<div class="flex items-center h-5 mt-0.5">
+			<input
+				type="checkbox"
+				id={ f.GetName() }
+				name={ f.GetName() }
+				value="1"
+				checked?={ f.IsChecked() }
+				if f.IsDisabled() { disabled }
+				class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:bg-gray-700"
+			/>
+		</div>
+		<div>
+			<label for={ f.GetName() } class="text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+			</label>
+			if f.GetHelp() != "" {
+				<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+			}
+		</div>
+	</div>
+}
+
+// ToggleRender renders a toggle switch field.
+templ ToggleRender(f *ToggleInput) {
+	<div class="flex items-center justify-between">
+		<div>
+			<label for={ f.GetName() } class="text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+			</label>
+			if f.GetHelp() != "" {
+				<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+			}
+		</div>
+		<label class="relative inline-flex items-center cursor-pointer">
+			<input
+				type="checkbox"
+				id={ f.GetName() }
+				name={ f.GetName() }
+				value="1"
+				checked?={ f.IsChecked() }
+				if f.IsDisabled() { disabled }
+				class="sr-only peer"
+			/>
+			<div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+		</label>
+	</div>
+}
+
+// FileUploadRender renders a file upload field.
+templ FileUploadRender(f *FileUploadInput) {
+	<div class="space-y-1">
+		if f.GetLabel() != "" {
+			<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+				if f.IsRequired() {
+					<span class="text-red-500 ml-1">*</span>
+				}
+			</label>
+		}
+		<input
+			type="file"
+			id={ f.GetName() }
+			name={ f.GetName() }
+			accept={ f.AcceptTypes }
+			if f.AllowMultiple { multiple }
+			if f.IsRequired() { required }
+			if f.IsDisabled() { disabled }
+			class="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900/30 dark:file:text-primary-400"
+		/>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// DatePickerRender renders a date/datetime picker field.
+templ DatePickerRender(f *DatePicker) {
+	<div class="space-y-1">
+		if f.GetLabel() != "" {
+			<label for={ f.GetName() } class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+				if f.IsRequired() {
+					<span class="text-red-500 ml-1">*</span>
+				}
+			</label>
+		}
+		<input
+			type={ f.Type }
+			id={ f.GetName() }
+			name={ f.GetName() }
+			value={ f.GetValueString() }
+			if f.MinDate != "" { min={ f.MinDate } }
+			if f.MaxDate != "" { max={ f.MaxDate } }
+			if f.IsRequired() { required }
+			if f.IsDisabled() { disabled }
+			class={ typedFieldInputClass(f.IsDisabled()) }
+		/>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// HiddenFieldRender renders a hidden input.
+templ HiddenFieldRender(f *HiddenField) {
+	<input type="hidden" name={ f.GetName() } value={ f.GetValueString() }/>
+}
+
+// RepeaterRender renders a repeater field (dynamic list of sub-fields).
+templ RepeaterRender(f *RepeaterField) {
+	<div class="space-y-2" x-data="{ items: [0] }">
+		if f.GetLabel() != "" {
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{ f.GetLabel() }</label>
+		}
+		<template x-for="(item, index) in items" :key="index">
+			<div class="flex items-start gap-2 p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-700/50">
+				<div class="flex-1 space-y-3">
+					for _, sub := range f.SubFields {
+						@sub.Render()
+					}
+				</div>
+				<button
+					type="button"
+					@click="items.splice(index, 1)"
+					class="p-1.5 text-gray-400 hover:text-red-500 transition-colors mt-1"
+					title="Remove"
+				>
+					<span class="material-icons-outlined text-base">delete_outline</span>
+				</button>
+			</div>
+		</template>
+		<button
+			type="button"
+			@click="items.push(items.length)"
+			class="flex items-center gap-2 px-3 py-2 text-sm text-primary-600 dark:text-primary-400 border border-dashed border-primary-300 dark:border-primary-700 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+		>
+			<span class="material-icons-outlined text-base">add</span>
+			{ f.AddLabel }
+		</button>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// RichEditorRender renders a rich text editor field.
+templ RichEditorRender(f *RichEditorInput) {
+	<div class="space-y-1">
+		if f.GetLabel() != "" {
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{ f.GetLabel() }</label>
+		}
+		<div class="border border-gray-300 dark:border-gray-600 rounded-xl overflow-hidden">
+			<div class="flex items-center gap-1 px-3 py-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+				<button type="button" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400" title="Bold">
+					<span class="material-icons-outlined text-sm">format_bold</span>
+				</button>
+				<button type="button" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400" title="Italic">
+					<span class="material-icons-outlined text-sm">format_italic</span>
+				</button>
+				<button type="button" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400" title="Link">
+					<span class="material-icons-outlined text-sm">link</span>
+				</button>
+				<button type="button" class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400" title="List">
+					<span class="material-icons-outlined text-sm">format_list_bulleted</span>
+				</button>
+			</div>
+			<textarea
+				name={ f.GetName() }
+				class="block w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none min-h-[120px] resize-y"
+			>{ f.GetValueString() }</textarea>
+		</div>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// TagsRender renders a tags/chips input field.
+templ TagsRender(f *TagsField) {
+	<div class="space-y-1">
+		if f.GetLabel() != "" {
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{ f.GetLabel() }</label>
+		}
+		<div
+			x-data={ fmt.Sprintf("{ tags: %s, input: '' }", tagsJSON(f.TagValues())) }
+			class="flex flex-wrap gap-2 p-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 focus-within:ring-2 focus-within:ring-primary-500"
+		>
+			<template x-for="(tag, i) in tags" :key="i">
+				<span class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400">
+					<span x-text="tag"></span>
+					<button type="button" @click="tags.splice(i,1)" class="hover:text-primary-600">
+						<span class="material-icons-outlined text-xs">close</span>
+					</button>
+					<input type="hidden" :name={ fmt.Sprintf("%s[]", f.GetName()) } :value="tag"/>
+				</span>
+			</template>
+			<input
+				type="text"
+				x-model="input"
+				@keydown.enter.prevent="if(input.trim()){tags.push(input.trim());input=''}"
+				@keydown.backspace="if(!input && tags.length){tags.pop()}"
+				placeholder="Add tag..."
+				class="flex-1 min-w-24 text-sm bg-transparent text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
+			/>
+		</div>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// ColorPickerRender renders a color picker field.
+templ ColorPickerRender(f *ColorPickerInput) {
+	<div class="space-y-1">
+		if f.GetLabel() != "" {
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{ f.GetLabel() }</label>
+		}
+		<div class="flex items-center gap-3" x-data={ fmt.Sprintf("{ color: %q }", f.GetValueString()) }>
+			<input
+				type="color"
+				x-model="color"
+				class="w-10 h-10 rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer p-0.5"
+			/>
+			<input
+				type="text"
+				name={ f.GetName() }
+				x-model="color"
+				placeholder="#000000"
+				class={ typedFieldInputClass(f.IsDisabled()) + " font-mono" }
+			/>
+			if len(f.Swatches) > 0 {
+				<div class="flex items-center gap-1">
+					for _, swatch := range f.Swatches {
+						<button
+							type="button"
+							@click={ fmt.Sprintf("color = '%s'", swatch) }
+							class="w-6 h-6 rounded-full border-2 border-white dark:border-gray-700 shadow-sm hover:scale-110 transition-transform"
+							style={ fmt.Sprintf("background-color: %s", swatch) }
+							title={ swatch }
+						></button>
+					}
+				</div>
+			}
+		</div>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// SliderRender renders a range slider field.
+templ SliderRender(f *SliderInput) {
+	<div class="space-y-1">
+		if f.GetLabel() != "" {
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{ f.GetLabel() }</label>
+		}
+		<div x-data={ fmt.Sprintf("{ val: %s }", sliderDefault(f)) } class="space-y-2">
+			<div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+				<span>{ fmt.Sprintf("%.0f", f.Min) }</span>
+				<span class="font-medium text-gray-900 dark:text-white" x-text="val"></span>
+				<span>{ fmt.Sprintf("%.0f", f.Max) }</span>
+			</div>
+			<input
+				type="range"
+				name={ f.GetName() }
+				x-model="val"
+				min={ fmt.Sprintf("%.0f", f.Min) }
+				max={ fmt.Sprintf("%.0f", f.Max) }
+				step={ fmt.Sprintf("%.2f", f.Step) }
+				if f.IsDisabled() { disabled }
+				class="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary-600"
+			/>
+		</div>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// KeyValueRender renders a dynamic key-value pair input field.
+templ KeyValueRender(f *KeyValueInput) {
+	<div class="space-y-2" x-data="{ pairs: [{ key: '', value: '' }] }">
+		if f.GetLabel() != "" {
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">{ f.GetLabel() }</label>
+		}
+		<template x-for="(pair, index) in pairs" :key="index">
+			<div class="flex items-center gap-2">
+				<input
+					type="text"
+					:name={ fmt.Sprintf("%s[key][]", f.GetName()) }
+					x-model="pair.key"
+					placeholder={ f.KeyLabel }
+					class={ typedFieldInputClass(f.IsDisabled()) }
+				/>
+				<span class="text-gray-400 dark:text-gray-500">→</span>
+				<input
+					type="text"
+					:name={ fmt.Sprintf("%s[value][]", f.GetName()) }
+					x-model="pair.value"
+					placeholder={ f.ValueLabel }
+					class={ typedFieldInputClass(f.IsDisabled()) }
+				/>
+				<button
+					type="button"
+					@click="pairs.splice(index, 1)"
+					class="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+					title="Remove"
+				>
+					<span class="material-icons-outlined text-base">delete_outline</span>
+				</button>
+			</div>
+		</template>
+		<button
+			type="button"
+			@click="pairs.push({ key: '', value: '' })"
+			class="flex items-center gap-2 px-3 py-2 text-sm text-primary-600 dark:text-primary-400 border border-dashed border-primary-300 dark:border-primary-700 rounded-xl hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+		>
+			<span class="material-icons-outlined text-base">add</span>
+			{ f.AddLabel }
+		</button>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+func typedFieldInputClass(disabled bool) string {
+	base := "block w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+	if disabled {
+		return base + " opacity-60 cursor-not-allowed"
+	}
+	return base
+}
+
+func tagsJSON(tags []string) string {
+	if len(tags) == 0 {
+		return "[]"
+	}
+	result := "["
+	for i, t := range tags {
+		if i > 0 {
+			result += ","
+		}
+		result += fmt.Sprintf("%q", t)
+	}
+	return result + "]"
+}
+
+func sliderDefault(f *SliderInput) string {
+	if v := f.GetValueString(); v != "" {
+		return v
+	}
+	return fmt.Sprintf("%.0f", f.Min)
+}

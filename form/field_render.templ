@@ -1,0 +1,157 @@
+package form
+
+import "fmt"
+
+// FieldRender renders a form field based on its ComponentType().
+// This is the polymorphic render entry point — each field renders itself.
+templ FieldRender(f Field) {
+	<div class="space-y-1">
+		if f.Label() != "" {
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.Label() }
+				if f.IsRequired() {
+					<span class="text-red-500 ml-0.5">*</span>
+				}
+			</label>
+		}
+		switch f.ComponentType() {
+		case "textarea":
+			<textarea
+				name={ f.Name() }
+				placeholder={ f.Placeholder() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				class={ fieldInputClass(f.IsDisabled()) + " min-h-[80px] resize-y" }
+			>{ f.ValueString() }</textarea>
+		case "select":
+			<div class="relative">
+				<select
+					name={ f.Name() }
+					if f.IsRequired() { required }
+					if f.IsDisabled() { disabled }
+					class={ fieldInputClass(f.IsDisabled()) + " appearance-none pr-8" }
+				>
+					<option value="">{ f.Placeholder() }</option>
+				</select>
+				<div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+					<span class="material-icons-outlined text-gray-400 text-sm">expand_more</span>
+				</div>
+			</div>
+		case "checkbox":
+			<div class="flex items-center gap-2">
+				<input
+					type="checkbox"
+					name={ f.Name() }
+					id={ f.Name() }
+					if f.ValueString() == "true" || f.ValueString() == "1" { checked }
+					if f.IsDisabled() { disabled }
+					class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
+				/>
+				if f.Placeholder() != "" {
+					<span class="text-sm text-gray-700 dark:text-gray-300">{ f.Placeholder() }</span>
+				}
+			</div>
+		case "toggle":
+			<button
+				type="button"
+				role="switch"
+				x-data={ fmt.Sprintf("{ on: %s }", boolStr(f.ValueString())) }
+				:aria-checked="on"
+				@click="on = !on"
+				:class="on ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
+				class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+			>
+				<span
+					:class="on ? 'translate-x-6' : 'translate-x-1'"
+					class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform"
+				></span>
+				<input type="hidden" name={ f.Name() } :value="on ? '1' : '0'"/>
+			</button>
+		case "file":
+			<input
+				type="file"
+				name={ f.Name() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				class="block w-full text-sm text-gray-700 dark:text-gray-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 dark:file:bg-primary-900/30 dark:file:text-primary-400"
+			/>
+		case "hidden":
+			<input type="hidden" name={ f.Name() } value={ f.ValueString() }/>
+		case "date":
+			<input
+				type="date"
+				name={ f.Name() }
+				value={ f.ValueString() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				class={ fieldInputClass(f.IsDisabled()) }
+			/>
+		case "datetime":
+			<input
+				type="datetime-local"
+				name={ f.Name() }
+				value={ f.ValueString() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				class={ fieldInputClass(f.IsDisabled()) }
+			/>
+		case "number":
+			<input
+				type="number"
+				name={ f.Name() }
+				value={ f.ValueString() }
+				placeholder={ f.Placeholder() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				class={ fieldInputClass(f.IsDisabled()) }
+			/>
+		case "password":
+			<input
+				type="password"
+				name={ f.Name() }
+				placeholder={ f.Placeholder() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				class={ fieldInputClass(f.IsDisabled()) }
+			/>
+		case "email":
+			<input
+				type="email"
+				name={ f.Name() }
+				value={ f.ValueString() }
+				placeholder={ f.Placeholder() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				class={ fieldInputClass(f.IsDisabled()) }
+			/>
+		default:
+			<input
+				type="text"
+				name={ f.Name() }
+				value={ f.ValueString() }
+				placeholder={ f.Placeholder() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				class={ fieldInputClass(f.IsDisabled()) }
+			/>
+		}
+		if f.Help() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.Help() }</p>
+		}
+	</div>
+}
+
+func fieldInputClass(disabled bool) string {
+	base := "block w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+	if disabled {
+		return base + " opacity-60 cursor-not-allowed"
+	}
+	return base
+}
+
+func boolStr(v string) string {
+	if v == "true" || v == "1" {
+		return "true"
+	}
+	return "false"
+}

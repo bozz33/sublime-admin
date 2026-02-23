@@ -12,4 +12,10 @@ func init() {
 	widget.SetChartRenderer(func(w *widget.ChartWidget) templ.Component {
 		return Chart(w)
 	})
+	widget.SetTimelineRenderer(func(w *widget.TimelineWidget) templ.Component {
+		return Timeline(w)
+	})
+	widget.SetProgressRenderer(func(w *widget.ProgressWidget) templ.Component {
+		return Progress(w)
+	})
 }

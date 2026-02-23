@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/a-h/templ"
+	"github.com/bozz33/sublimeadmin/table"
 )
 
 // ResourceMeta defines resource metadata.
@@ -64,17 +65,77 @@ type ResourceViewable interface {
 
 // Column defines a table column.
 type Column struct {
-	Key        string
-	Label      string
-	Type       string // "text", "boolean", "date", "badge", "image"
-	Sortable   bool
-	Searchable bool
+	Key         string
+	Label       string
+	Type        string // "text", "boolean", "date", "badge", "image", "avatar"
+	Sortable    bool
+	Searchable  bool
+	BadgeColors map[string]string // value -> color class ("green","red","yellow","blue","gray")
+	AvatarField string            // for "avatar" type: field name for initials fallback
+	Description string            // optional sub-text field name (shown below main value)
+	Prefix      string            // optional prefix (e.g. currency symbol)
+	Suffix      string            // optional suffix (e.g. unit)
+}
+
+// WithBadgeColors sets the color map for a badge column.
+// Example: engine.Col("Status","Statut","badge").WithBadgeColors(map[string]string{"active":"green","inactive":"red"})
+func (c Column) WithBadgeColors(colors map[string]string) Column {
+	c.BadgeColors = colors
+	return c
+}
+
+// WithDescription sets the sub-text field name for a column.
+func (c Column) WithDescription(field string) Column {
+	c.Description = field
+	return c
+}
+
+// WithPrefix sets a prefix string for a column value.
+func (c Column) WithPrefix(prefix string) Column {
+	c.Prefix = prefix
+	return c
+}
+
+// WithSuffix sets a suffix string for a column value.
+func (c Column) WithSuffix(suffix string) Column {
+	c.Suffix = suffix
+	return c
+}
+
+// AsSortable marks the column as sortable.
+func (c Column) AsSortable() Column {
+	c.Sortable = true
+	return c
+}
+
+// Col is a compatibility wrapper that creates a table.Column from legacy parameters.
+// Prefer using table.Text(), table.Badge(), table.Avatar(), etc. directly.
+func Col(key, label, colType string) table.Column {
+	switch colType {
+	case "badge":
+		return table.Badge(key).WithLabel(label)
+	case "boolean":
+		return table.BoolCol(key).WithLabel(label)
+	case "image":
+		return table.Image(key).WithLabel(label)
+	case "avatar":
+		return table.Avatar(key).WithLabel(label)
+	case "date":
+		return table.DateCol(key).WithLabel(label)
+	case "icon":
+		return table.Icon(key, "").WithLabel(label)
+	case "color":
+		return table.Color(key).WithLabel(label)
+	default:
+		return table.Text(key).WithLabel(label)
+	}
 }
 
 // Row represents a table row.
 type Row struct {
 	ID        string
 	Cells     []string
+	Record    any    // original record — passed to col.Render() for rich column rendering
 	RecordURL string // optional: custom URL when clicking the row/first cell
 }
 
@@ -87,11 +148,19 @@ type EmptyState struct {
 	ActionURL   string // optional CTA button URL
 }
 
+// BreadcrumbItem represents a single breadcrumb entry.
+type BreadcrumbItem struct {
+	Label string
+	URL   string // empty = current page (no link)
+}
+
 // TableState contains the complete state of a table.
 type TableState struct {
 	Title          string
+	Description    string           // optional subtitle shown below the title
+	Breadcrumbs    []BreadcrumbItem // optional breadcrumb trail
 	Slug           string
-	Columns        []Column
+	Columns        []table.Column
 	Rows           []Row
 	CanCreate      bool
 	CanDelete      bool
@@ -99,7 +168,8 @@ type TableState struct {
 	NewURL         string
 	BaseURL        string
 	Pagination     *Pagination
-	Filters        []FilterDef       // available filter definitions
+	Filters        []FilterDef       // available filter definitions (legacy)
+	TypedFilters   []table.Filter    // typed filters: SelectFilter, DateFilter, TextFilter, CustomFilter
 	ActiveFilters  map[string]string // currently active filter values (key -> value)
 	BulkActions    []BulkActionDef   // available bulk actions
 	ExportURL      string            // non-empty = show export button

@@ -1,0 +1,55 @@
+package widgets
+
+import (
+	"fmt"
+	"github.com/bozz33/sublimeadmin/widget"
+)
+
+// Progress renders a widget with one or more labeled progress bars.
+templ Progress(w *widget.ProgressWidget) {
+	<div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6">
+		if w.Title != "" {
+			<h3 class="text-base font-semibold text-gray-900 dark:text-white mb-5">{ w.Title }</h3>
+		}
+		<div class="space-y-4">
+			for _, item := range w.Items {
+				{{ maxVal := item.Max; if maxVal <= 0 { maxVal = 100 } }}
+				{{ pct := (item.Value * 100) / maxVal }}
+				{{ pctStr := fmt.Sprintf("%d%%", pct) }}
+				<div>
+					<div class="flex items-center justify-between mb-1.5">
+						<span class="text-sm font-medium text-gray-700 dark:text-gray-300">{ item.Label }</span>
+						<span class="text-sm font-semibold text-gray-900 dark:text-white">
+							{ pctStr }{ item.Suffix }
+						</span>
+					</div>
+					<div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+						<div
+							class={ "h-2 rounded-full transition-all duration-500 " + progressBarColor(item.Color) }
+							style={ fmt.Sprintf("width: %s", pctStr) }
+						></div>
+					</div>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+func progressBarColor(color string) string {
+	switch color {
+	case "primary":
+		return "bg-primary-500"
+	case "success", "green":
+		return "bg-green-500"
+	case "danger", "red":
+		return "bg-red-500"
+	case "warning", "yellow":
+		return "bg-yellow-500"
+	case "info", "blue":
+		return "bg-blue-500"
+	case "purple":
+		return "bg-purple-500"
+	default:
+		return "bg-gray-500"
+	}
+}

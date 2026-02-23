@@ -1,5 +1,17 @@
 package form
 
+import (
+	"context"
+	"io"
+
+	"github.com/a-h/templ"
+)
+
+// layoutEmptyComponent returns an empty templ component (layouts render via parent template).
+func layoutEmptyComponent() templ.Component {
+	return templ.ComponentFunc(func(_ context.Context, _ io.Writer) error { return nil })
+}
+
 // Section represents a form section.
 type Section struct {
 	Heading     string
@@ -41,6 +53,7 @@ func (s *Section) IsVisible() bool { return true }
 // GetComponentType returns the component type.
 func (s *Section) ComponentType() string    { return "layout_section" }
 func (s *Section) GetComponentType() string { return s.ComponentType() }
+func (s *Section) Render() templ.Component  { return SectionRender(s) }
 
 // Schema returns the section components.
 func (s *Section) Schema() []Component    { return s.Components }
@@ -72,6 +85,7 @@ func (g *Grid) IsVisible() bool { return true }
 // GetComponentType returns the component type.
 func (g *Grid) ComponentType() string    { return "layout_grid" }
 func (g *Grid) GetComponentType() string { return g.ComponentType() }
+func (g *Grid) Render() templ.Component  { return GridRender(g) }
 
 // Schema returns the grid components.
 func (g *Grid) Schema() []Component    { return g.Components }
@@ -111,6 +125,7 @@ func (t *Tabs) IsVisible() bool { return true }
 // GetComponentType returns the component type.
 func (t *Tabs) ComponentType() string    { return "layout_tabs" }
 func (t *Tabs) GetComponentType() string { return t.ComponentType() }
+func (t *Tabs) Render() templ.Component  { return TabsRender(t) }
 
 // Schema returns all components from all tabs.
 func (t *Tabs) Schema() []Component {
@@ -171,6 +186,7 @@ func (w *Wizard) IsVisible() bool { return true }
 // ComponentType returns the component type.
 func (w *Wizard) ComponentType() string    { return "layout_wizard" }
 func (w *Wizard) GetComponentType() string { return w.ComponentType() }
+func (w *Wizard) Render() templ.Component  { return WizardRender(w) }
 
 // Schema returns all components from all steps.
 func (w *Wizard) Schema() []Component {
@@ -234,6 +250,7 @@ func (c *Callout) IsVisible() bool { return true }
 // ComponentType returns the component type.
 func (c *Callout) ComponentType() string    { return "layout_callout" }
 func (c *Callout) GetComponentType() string { return c.ComponentType() }
+func (c *Callout) Render() templ.Component  { return CalloutRender(c) }
 
 // Schema returns the callout's nested components.
 func (c *Callout) Schema() []Component    { return c.Components }

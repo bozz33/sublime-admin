@@ -1,0 +1,240 @@
+package form
+
+import "fmt"
+
+// SectionRender renders a collapsible section layout.
+templ SectionRender(s *Section) {
+	<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+		if s.Heading != "" {
+			if s.CanCollapse {
+				<div x-data="{ open: !false }" class="border-b border-gray-200 dark:border-gray-700">
+					<button
+						type="button"
+						@click="open = !open"
+						class="w-full flex items-center justify-between px-6 py-4 text-left"
+					>
+						<div>
+							<h3 class="text-base font-semibold text-gray-900 dark:text-white">{ s.Heading }</h3>
+							if s.Description != "" {
+								<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{ s.Description }</p>
+							}
+						</div>
+						<span
+							class="material-icons-outlined text-gray-400 transition-transform duration-200"
+							:class="open ? 'rotate-180' : ''"
+						>expand_more</span>
+					</button>
+					<div x-show="open" x-cloak x-transition class="p-6 space-y-4">
+						for _, child := range s.GetSchema() {
+							@child.Render()
+						}
+					</div>
+				</div>
+			} else {
+				<div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+					<h3 class="text-base font-semibold text-gray-900 dark:text-white">{ s.Heading }</h3>
+					if s.Description != "" {
+						<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{ s.Description }</p>
+					}
+				</div>
+				<div class="p-6 space-y-4">
+					for _, child := range s.GetSchema() {
+						@child.Render()
+					}
+				</div>
+			}
+		} else {
+			<div class="p-6 space-y-4">
+				for _, child := range s.GetSchema() {
+					@child.Render()
+				}
+			</div>
+		}
+	</div>
+}
+
+// GridRender renders a column grid layout.
+templ GridRender(g *Grid) {
+	<div class={ fmt.Sprintf("grid grid-cols-%d gap-4", g.Columns) }>
+		for _, child := range g.GetSchema() {
+			@child.Render()
+		}
+	</div>
+}
+
+// TabsRender renders a tabbed layout.
+templ TabsRender(t *Tabs) {
+	<div x-data="{ activeTab: 0 }" class="space-y-4">
+		<div class="border-b border-gray-200 dark:border-gray-700">
+			<nav class="flex gap-4 -mb-px">
+				for i, tab := range t.TabItems {
+					<button
+						type="button"
+						@click={ fmt.Sprintf("activeTab = %d", i) }
+						:class={ fmt.Sprintf("activeTab === %d ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'", i) }
+						class="py-2 px-1 border-b-2 font-medium text-sm transition-colors"
+					>
+						if tab.Icon != "" {
+							<span class="material-icons-outlined text-sm mr-1 align-middle">{ tab.Icon }</span>
+						}
+						{ tab.Label }
+					</button>
+				}
+			</nav>
+		</div>
+		for i, tab := range t.TabItems {
+			<div x-show={ fmt.Sprintf("activeTab === %d", i) } x-cloak class="space-y-4">
+				for _, child := range tab.Components {
+					@child.Render()
+				}
+			</div>
+		}
+	</div>
+}
+
+// WizardRender renders a multi-step wizard layout.
+templ WizardRender(w *Wizard) {
+	<div x-data={ fmt.Sprintf("{ step: 0, total: %d }", len(w.Steps)) } class="space-y-6">
+		<!-- Step indicators -->
+		<div class="flex items-center gap-2">
+			for i, s := range w.Steps {
+				<div class="flex items-center gap-2">
+					<div
+						class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-colors"
+						:class={ fmt.Sprintf("step >= %d ? 'bg-primary-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'", i) }
+					>
+						{ fmt.Sprintf("%d", i+1) }
+					</div>
+					<div x-show="sidebarOpen !== undefined || true" class="hidden sm:block">
+						<p
+							class="text-xs font-medium"
+							:class={ fmt.Sprintf("step >= %d ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'", i) }
+						>{ s.Label }</p>
+						if s.Description != "" {
+							<p class="text-xs text-gray-400">{ s.Description }</p>
+						}
+					</div>
+					if i < len(w.Steps)-1 {
+						<div class="flex-1 h-px bg-gray-200 dark:bg-gray-700 mx-2 min-w-8"></div>
+					}
+				</div>
+			}
+		</div>
+		<!-- Step content -->
+		for i, s := range w.Steps {
+			<div x-show={ fmt.Sprintf("step === %d", i) } x-cloak class="space-y-4">
+				for _, child := range s.Components {
+					@child.Render()
+				}
+			</div>
+		}
+		<!-- Navigation buttons -->
+		<div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
+			<button
+				type="button"
+				x-show="step > 0"
+				@click="step--"
+				class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-xl border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+			>
+				<span class="material-icons-outlined text-base">chevron_left</span>
+				Previous
+			</button>
+			<button
+				type="button"
+				x-show={ fmt.Sprintf("step < %d", len(w.Steps)-1) }
+				@click="step++"
+				class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+			>
+				Next
+				<span class="material-icons-outlined text-base">chevron_right</span>
+			</button>
+			<button
+				type="submit"
+				x-show={ fmt.Sprintf("step === %d", len(w.Steps)-1) }
+				class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl text-white bg-primary-600 hover:bg-primary-700 transition-colors"
+			>
+				<span class="material-icons-outlined text-base">check</span>
+				Submit
+			</button>
+		</div>
+	</div>
+}
+
+// CalloutRender renders an informational callout banner.
+templ CalloutRender(c *Callout) {
+	<div class={ calloutClass(string(c.Color)) }>
+		<div class="flex items-start gap-3">
+			if c.Icon != "" {
+				<span class={ fmt.Sprintf("material-icons-outlined text-xl %s", calloutIconColor(string(c.Color))) }>{ c.Icon }</span>
+			}
+			<div class="flex-1">
+				if c.Heading != "" {
+					<p class={ fmt.Sprintf("text-sm font-semibold %s", calloutTextColor(string(c.Color))) }>{ c.Heading }</p>
+				}
+				if c.Body != "" {
+					<p class={ fmt.Sprintf("text-sm mt-0.5 %s", calloutBodyColor(string(c.Color))) }>{ c.Body }</p>
+				}
+				if len(c.Components) > 0 {
+					<div class="mt-3 space-y-3">
+						for _, child := range c.Components {
+							@child.Render()
+						}
+					</div>
+				}
+			</div>
+		</div>
+	</div>
+}
+
+func calloutClass(color string) string {
+	base := "rounded-xl p-4 border "
+	switch color {
+	case "success":
+		return base + "bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800"
+	case "warning":
+		return base + "bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800"
+	case "danger":
+		return base + "bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800"
+	default:
+		return base + "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800"
+	}
+}
+
+func calloutIconColor(color string) string {
+	switch color {
+	case "success":
+		return "text-green-600 dark:text-green-400"
+	case "warning":
+		return "text-yellow-600 dark:text-yellow-400"
+	case "danger":
+		return "text-red-600 dark:text-red-400"
+	default:
+		return "text-blue-600 dark:text-blue-400"
+	}
+}
+
+func calloutTextColor(color string) string {
+	switch color {
+	case "success":
+		return "text-green-800 dark:text-green-300"
+	case "warning":
+		return "text-yellow-800 dark:text-yellow-300"
+	case "danger":
+		return "text-red-800 dark:text-red-300"
+	default:
+		return "text-blue-800 dark:text-blue-300"
+	}
+}
+
+func calloutBodyColor(color string) string {
+	switch color {
+	case "success":
+		return "text-green-700 dark:text-green-400"
+	case "warning":
+		return "text-yellow-700 dark:text-yellow-400"
+	case "danger":
+		return "text-red-700 dark:text-red-400"
+	default:
+		return "text-blue-700 dark:text-blue-400"
+	}
+}

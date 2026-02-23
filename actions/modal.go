@@ -9,10 +9,10 @@ import (
 type ModalSize string
 
 const (
-	ModalSizeSM  ModalSize = "sm"
-	ModalSizeMD  ModalSize = "md"
-	ModalSizeLG  ModalSize = "lg"
-	ModalSizeXL  ModalSize = "xl"
+	ModalSizeSM   ModalSize = "sm"
+	ModalSizeMD   ModalSize = "md"
+	ModalSizeLG   ModalSize = "lg"
+	ModalSizeXL   ModalSize = "xl"
 	ModalSizeFull ModalSize = "full"
 )
 
@@ -22,14 +22,16 @@ type ModalAction struct {
 	*Action
 
 	// Modal display
-	Size        ModalSize
-	CloseOnEsc  bool
-	CloseOnBack bool
+	Size                ModalSize
+	CloseOnEsc          bool
+	CloseOnBack         bool
+	IsSlideOver         bool // renders as a slide-over panel instead of centered modal
+	DatabaseTransaction bool // wraps the action handler in a DB transaction
 
 	// Form inside modal (optional)
-	FormFields  []ModalField
-	FormAction  string // POST URL for the form
-	FormMethod  string // default "POST"
+	FormFields []ModalField
+	FormAction string // POST URL for the form
+	FormMethod string // default "POST"
 
 	// HTMX: load modal content from a URL
 	HTMXLoadURL string // if set, modal content is fetched via HTMX
@@ -66,6 +68,18 @@ func NewModal(name string) *ModalAction {
 // WithSize sets the modal size.
 func (m *ModalAction) WithSize(size ModalSize) *ModalAction {
 	m.Size = size
+	return m
+}
+
+// SlideOver makes the modal render as a slide-over panel from the right.
+func (m *ModalAction) SlideOver() *ModalAction {
+	m.IsSlideOver = true
+	return m
+}
+
+// WithDatabaseTransaction wraps the action handler in a database transaction.
+func (m *ModalAction) WithDatabaseTransaction() *ModalAction {
+	m.DatabaseTransaction = true
 	return m
 }
 

@@ -8,6 +8,7 @@ import (
 	"reflect"
 
 	"github.com/a-h/templ"
+	"github.com/bozz33/sublimeadmin/table"
 )
 
 // BaseResource provides default implementations for the Resource interface.
@@ -21,7 +22,7 @@ type BaseResource struct {
 	sort        int
 
 	// Table configuration
-	tableColumns       []Column
+	tableColumns       []table.Column
 	tableFilters       []FilterDef
 	tableBulkActions   []BulkActionDef
 	tableHeaderActions []HeaderAction
@@ -82,7 +83,7 @@ func (b *BaseResource) SetSort(sort int) *BaseResource {
 }
 
 // SetTableColumns sets the columns for BuildTableState.
-func (b *BaseResource) SetTableColumns(cols ...Column) *BaseResource {
+func (b *BaseResource) SetTableColumns(cols ...table.Column) *BaseResource {
 	b.tableColumns = cols
 	return b
 }
@@ -180,13 +181,14 @@ func (b *BaseResource) fetchItems(ctx context.Context, lq *ListQuery, activeFilt
 	return items, len(items), err
 }
 
-// buildRows converts items to table rows using reflection.
+// buildRows converts items to table rows using each column's Value() method.
+// The original record is stored in Row.Record so columns can access it in Render().
 func (b *BaseResource) buildRows(items []any) []Row {
 	rows := make([]Row, 0, len(items))
 	for _, item := range items {
-		row := Row{ID: getItemID(item)}
+		row := Row{ID: getItemID(item), Record: item}
 		for _, col := range b.tableColumns {
-			row.Cells = append(row.Cells, getColumnValue(col, item))
+			row.Cells = append(row.Cells, col.Value(item))
 		}
 		rows = append(rows, row)
 	}
@@ -302,25 +304,6 @@ func getItemID(item any) string {
 		}
 	}
 	return ""
-}
-
-// getColumnValue returns the string value of a column field from an item.
-func getColumnValue(col Column, item any) string {
-	if item == nil {
-		return ""
-	}
-	v := reflect.ValueOf(item)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	if v.Kind() != reflect.Struct {
-		return fmt.Sprintf("%v", item)
-	}
-	f := v.FieldByName(col.Key)
-	if !f.IsValid() {
-		return ""
-	}
-	return fmt.Sprintf("%v", f.Interface())
 }
 
 // SimpleResource is a minimal resource that only requires metadata.
