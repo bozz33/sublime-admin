@@ -37,6 +37,9 @@ type ModalAction struct {
 
 	// HTMX: load modal content from a URL
 	HTMXLoadURL string // if set, modal content is fetched via HTMX
+
+	// Wizard: multi-step form (if non-empty, renders step-by-step UI)
+	Steps []WizardStep
 }
 
 // ModalField describes a simple field rendered inside a modal form.
@@ -54,6 +57,14 @@ type ModalField struct {
 type ModalFieldOption struct {
 	Value string
 	Label string
+}
+
+// WizardStep represents one step in a multi-step wizard modal action.
+type WizardStep struct {
+	Label       string
+	Description string
+	Icon        string
+	Fields      []ModalField
 }
 
 // NewModal creates a new ModalAction wrapping a base Action.
@@ -95,6 +106,29 @@ func (m *ModalAction) WithHTMXLoad(url string) *ModalAction {
 func (m *ModalAction) WithForm(action string, fields ...ModalField) *ModalAction {
 	m.FormAction = action
 	m.FormFields = fields
+	return m
+}
+
+// AddStep appends a wizard step with the given label and fields.
+// Calling AddStep multiple times creates a multi-step wizard.
+func (m *ModalAction) AddStep(label string, fields ...ModalField) *ModalAction {
+	m.Steps = append(m.Steps, WizardStep{Label: label, Fields: fields})
+	return m
+}
+
+// WithStepDescription sets a description on the most recently added wizard step.
+func (m *ModalAction) WithStepDescription(desc string) *ModalAction {
+	if len(m.Steps) > 0 {
+		m.Steps[len(m.Steps)-1].Description = desc
+	}
+	return m
+}
+
+// WithStepIcon sets a Material icon on the most recently added wizard step.
+func (m *ModalAction) WithStepIcon(icon string) *ModalAction {
+	if len(m.Steps) > 0 {
+		m.Steps[len(m.Steps)-1].Icon = icon
+	}
 	return m
 }
 
@@ -175,6 +209,9 @@ func (m *ModalAction) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // renderModalFragment writes the modal HTML fragment to w.
 func (m *ModalAction) renderModalFragment(w http.ResponseWriter, r *http.Request) error {
+	if len(m.Steps) > 0 {
+		return m.renderWizardFragment(w, r)
+	}
 	action := m.FormAction
 	if action == "" {
 		action = r.URL.Path
@@ -262,6 +299,126 @@ func (m *ModalAction) renderModalFragment(w http.ResponseWriter, r *http.Request
 	}
 
 	fmt.Fprintf(w, `</div></div></div>`)
+	return nil
+}
+
+// renderWizardFragment writes an Alpine.js multi-step wizard modal HTML fragment.
+func (m *ModalAction) renderWizardFragment(w http.ResponseWriter, r *http.Request) error {
+	action := m.FormAction
+	if action == "" {
+		action = r.URL.Path
+	}
+	method := m.FormMethod
+	if method == "" {
+		method = "POST"
+	}
+	sizeClass := modalSizeClass(m.Size)
+	wrapperClass := "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+	panelClass := sizeClass + " w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden"
+	if m.IsSlideOver {
+		wrapperClass = "fixed inset-0 z-50 flex items-end justify-end bg-black/50"
+		panelClass = "h-full " + sizeClass + " bg-white dark:bg-gray-800 shadow-xl overflow-y-auto"
+	}
+
+	N := len(m.Steps)
+	title := m.Action.ModalTitle
+	if title == "" {
+		title = m.Action.Label
+	}
+	cancelLabel := m.Action.CancelLabel
+	if cancelLabel == "" {
+		cancelLabel = "Cancel"
+	}
+	confirmLabel := m.Action.ConfirmLabel
+	if confirmLabel == "" {
+		confirmLabel = "Submit"
+	}
+
+	// Outer wrapper + panel
+	fmt.Fprintf(w, `<div id="modal-fragment" class="%s">`, wrapperClass)
+	fmt.Fprintf(w, `<div class="%s">`, panelClass)
+
+	// Header
+	fmt.Fprintf(w, `<div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">`)
+	fmt.Fprintf(w, `<h2 class="text-lg font-semibold text-gray-900 dark:text-white">%s</h2>`, htmlEscape(title))
+	fmt.Fprintf(w, `<button type="button" onclick="document.getElementById('modal-fragment').remove()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 transition-colors"><span class="material-icons-outlined">close</span></button>`)
+	fmt.Fprintf(w, `</div>`)
+
+	// Alpine.js step controller
+	fmt.Fprintf(w, `<div x-data="{ step: 0 }">`)
+
+	// Step progress dots
+	fmt.Fprintf(w, `<div class="flex items-center justify-center px-6 py-4 border-b border-gray-200 dark:border-gray-700">`)
+	for i, step := range m.Steps {
+		label := step.Label
+		if label == "" {
+			label = fmt.Sprintf("Step %d", i+1)
+		}
+		fmt.Fprintf(w,
+			`<div class="flex items-center" title="%s">`,
+			htmlEscape(label),
+		)
+		fmt.Fprintf(w,
+			`<div :class="step >= %d ? 'bg-primary-600 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-400'"
+			      class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold transition-colors">%d</div>`,
+			i, i+1,
+		)
+		if i < N-1 {
+			fmt.Fprintf(w,
+				`<div :class="step > %d ? 'bg-primary-600' : 'bg-gray-200 dark:bg-gray-600'"
+				      class="w-10 h-0.5 mx-1 transition-colors"></div>`,
+				i,
+			)
+		}
+		fmt.Fprintf(w, `</div>`)
+	}
+	fmt.Fprintf(w, `</div>`)
+
+	// Step label/description (shown above fields)
+	for i, step := range m.Steps {
+		if step.Label != "" || step.Description != "" {
+			fmt.Fprintf(w, `<div x-show="step === %d" class="px-6 pt-4">`, i)
+			if step.Label != "" {
+				fmt.Fprintf(w, `<p class="text-sm font-semibold text-gray-900 dark:text-white">%s</p>`, htmlEscape(step.Label))
+			}
+			if step.Description != "" {
+				fmt.Fprintf(w, `<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">%s</p>`, htmlEscape(step.Description))
+			}
+			fmt.Fprintf(w, `</div>`)
+		}
+	}
+
+	// Single form wrapping all steps
+	fmt.Fprintf(w, `<form method="POST" action="%s">`, htmlEscape(action))
+	if method != "POST" {
+		fmt.Fprintf(w, `<input type="hidden" name="_method" value="%s"/>`, htmlEscape(method))
+	}
+
+	// Step field panels
+	for i, step := range m.Steps {
+		fmt.Fprintf(w, `<div x-show="step === %d" class="px-6 py-4 space-y-4">`, i)
+		for _, field := range step.Fields {
+			renderModalFieldHTML(w, field)
+		}
+		fmt.Fprintf(w, `</div>`)
+	}
+
+	// Navigation footer
+	fmt.Fprintf(w, `<div class="flex items-center justify-between px-6 py-4 border-t border-gray-200 dark:border-gray-700">`)
+	// Previous (left)
+	fmt.Fprintf(w, `<button type="button" x-show="step > 0" @click="step--" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">Previous</button>`)
+	fmt.Fprintf(w, `<div x-show="step === 0"></div>`) // spacer
+	// Right side: Cancel + Next/Submit
+	fmt.Fprintf(w, `<div class="flex items-center gap-3">`)
+	fmt.Fprintf(w, `<button type="button" onclick="document.getElementById('modal-fragment').remove()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">%s</button>`, htmlEscape(cancelLabel))
+	fmt.Fprintf(w, `<button type="button" x-show="step < %d" @click="step++" class="px-4 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors">Next</button>`, N-1)
+	fmt.Fprintf(w, `<button type="submit" x-show="step === %d" class="px-4 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors">%s</button>`, N-1, htmlEscape(confirmLabel))
+	fmt.Fprintf(w, `</div>`)
+	fmt.Fprintf(w, `</div>`) // end footer
+
+	fmt.Fprintf(w, `</form>`)
+	fmt.Fprintf(w, `</div>`) // end x-data
+	fmt.Fprintf(w, `</div></div>`) // end panel + wrapper
 	return nil
 }
 

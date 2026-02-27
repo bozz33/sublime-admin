@@ -36,46 +36,46 @@ go get github.com/bozz33/sublimeadmin@latest
 
 ## Features
 
-### 📝 Forms (22 field types)
+### Forms (22 field types)
 - **Basic**: Text, Email, Password, Number, Textarea, Select, Checkbox, Toggle, DatePicker, FileUpload, Hidden
 - **Advanced**: RichEditor, MarkdownEditor, Tags, KeyValue, ColorPicker, Slider, Radio, CheckboxList, Repeater
 - **Layouts**: Section, Grid, Tabs, Wizard, Callout, Fieldset, Flex, Split
 - **Validation**: Live validation with Datastar SSE, custom rules, error handling
 
-### 📊 Tables (13 column types + 4 inline edit)
+### Tables (13 column types + 4 inline edit)
 - **Display columns**: Text, Badge, Image, Boolean, Date, Avatar, Icon, Color, Tags
 - **Inline edit**: TextInput, Select, Toggle, Checkbox (with Datastar PATCH)
 - **Features**: Sorting, search, pagination, filters (6 types), bulk actions
 - **Advanced**: Summaries (Sum, Average, Min, Max, Count), Grouping, Column manager, Export/Import
 
-### 🎯 Actions
+### Actions
 - **Basic actions**: Edit, Delete, View, Create, Export, Import, Restore, ForceDelete
 - **Modal actions**: Confirmation dialogs, form modals, slide-over panels
 - **Features**: Lifecycle hooks (Before/After/OnSuccess/OnFailure), rate limiting, authorization
 - **Advanced**: Action groups, bulk actions, custom handlers
 
-### 📋 Infolist (12 entry types)
+### Infolist (12 entry types)
 - **Entries**: Text, Badge, Boolean, Date, Image, Color, Icon, List, Link, Code, KeyValue, Repeatable
 - **Layout**: Sections with columns (1-3), descriptions, icons
 - **Features**: Rich formatting, syntax highlighting, responsive design
 
-### 🔧 Enum Package
+### Enum Package
 - **Interfaces**: HasLabel, HasColor, HasIcon, HasDescription, HasGroup
 - **Helpers**: Options, Labels, Colors, Icons, BadgeColor, RadioOptions, CheckboxOptions
 - **Features**: Generic helpers, grouped options, type-safe conversions
 
-### 🔐 Authentication & Security
+### Authentication & Security
 - **Auth**: Session-based, bcrypt passwords, role/permission management
 - **MFA/TOTP**: RFC 6238 compliant, recovery codes, QR provisioning
 - **Middleware**: Auth, CORS, CSRF, Rate limiting, Recovery, Security headers
 - **Features**: Login throttling, secure sessions, multi-factor support
 
-### 🔔 Notifications
+### Notifications
 - **Stores**: In-memory (dev), DatabaseStore (production)
 - **Delivery**: SSE streaming, Datastar badge updates, real-time
 - **Features**: Per-user channels, unread counts, mark as read
 
-### 🏗️ Advanced Architecture
+### Advanced Architecture
 - **Multi-tenancy**: Subdomain/Path resolvers, tenant-aware routing
 - **Relations**: BelongsTo, HasOne, HasMany, ManyToMany with UI
 - **Plugins**: Boot interface, registry system
@@ -83,7 +83,7 @@ go get github.com/bozz33/sublimeadmin@latest
 - **Logger**: Structured logging (slog), rotation, request tracking
 - **Mailer**: SMTP, LogMailer, HTML templates
 
-### 🎨 UI & Theming
+### UI & Theming
 - **Components**: 32+ atomic components, 6 layouts
 - **Features**: Dark mode, responsive, Material Icons, Tailwind CSS
 - **Reactivity**: Datastar SSE (11KB), replaces HTMX+Alpine.js
@@ -287,12 +287,12 @@ http.ListenAndServe(":8080", engine.TenantMiddleware(resolver, true)(router))
 
 ## Documentation
 
-### 📚 Framework Documentation
+### Framework Documentation
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Complete architecture overview
 - **[AUDIT_FEVRIER_2026.md](AUDIT_FEVRIER_2026.md)** - Full audit report (95% Filament parity)
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 
-### 🚀 Getting Started
+### Getting Started
 ```bash
 # Install CLI
 go install github.com/bozz33/sublimeadmin/cmd/sublimego@latest
@@ -307,13 +307,13 @@ sublimego make:enum Status
 sublimego make:action BulkExport
 ```
 
-### 📖 Examples & Guides
+### Examples & Guides
 - **Resource Examples** - Complete CRUD resources with relations
 - **Widget Examples** - Dashboard widgets and charts
 - **Multi-tenancy** - Tenant-aware applications
 - **Plugin Development** - Extending the framework
 
-### 🎯 Key Features Showcase
+### Key Features Showcase
 - **Live Validation** - Real-time form validation with Datastar SSE
 - **Inline Editing** - Edit table cells without page reload
 - **Relation Management** - BelongsTo, HasMany, ManyToMany with UI
@@ -327,7 +327,7 @@ sublimego make:action BulkExport
 
 Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### 🤝 How to Contribute
+### How to Contribute
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Commit your changes (`git commit -m 'Add amazing feature'`)
@@ -342,9 +342,10 @@ MIT - see [LICENSE](LICENSE).
 
 ---
 
-## 🎉 Status
+## Status
 
-**SublimeGo is production-ready** with 95% Filament parity. The framework is actively maintained and used in production environments.
+**SublimeGo is production-ready**.
+The framework is actively maintained and used in production environments.
 
 - ✅ **22 form fields** with live validation
 - ✅ **13 table columns** with inline editing
@@ -355,6 +356,4 @@ MIT - see [LICENSE](LICENSE).
 - ✅ **Complete CLI** for code generation
 - ✅ **34 test files** with good coverage
 
----
 
-*Inspired by [Laravel Filament](https://filamentphp.com/) - Built with [Ent](https://entgo.io/) and [Templ](https://templ.guide/) - Powered by [Datastar](https://datastar.dev/) for reactivity*
