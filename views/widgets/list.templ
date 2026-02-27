@@ -1,0 +1,122 @@
+package widgets
+
+import (
+	"github.com/bozz33/sublimeadmin/widget"
+)
+
+// List renders a vertical list widget inside a card.
+// Suitable for activity feeds, recent records, or ranked item lists.
+templ List(w *widget.ListWidget) {
+	{{ emptyMsg := w.EmptyMessage; if emptyMsg == "" { emptyMsg = "No items" } }}
+	{{ viewAllLabel := w.ViewAllLabel; if viewAllLabel == "" { viewAllLabel = "View all" } }}
+	<div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+		<!-- Card header -->
+		if w.Title != "" {
+			<div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+				<h3 class="text-base font-semibold text-gray-900 dark:text-white">{ w.Title }</h3>
+			</div>
+		}
+		<!-- Empty state -->
+		if len(w.Items) == 0 {
+			<div class="flex flex-col items-center justify-center py-10 text-center">
+				<span class="material-icons-outlined text-3xl text-gray-300 dark:text-gray-600 mb-2">list</span>
+				<p class="text-sm text-gray-500 dark:text-gray-400">{ emptyMsg }</p>
+			</div>
+		} else {
+			<ul>
+				for i, item := range w.Items {
+					{{ divided := w.Divided && i < len(w.Items)-1 }}
+					@listItemRow(item, divided)
+				}
+			</ul>
+		}
+		<!-- Footer "View all" link -->
+		if w.ViewAllURL != "" {
+			<div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+				<a
+					href={ templ.SafeURL(w.ViewAllURL) }
+					class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+				>
+					{ viewAllLabel }
+					<span class="material-icons-outlined text-base">arrow_forward</span>
+				</a>
+			</div>
+		}
+	</div>
+}
+
+// listItemRow renders a single <li>, optionally wrapped in an anchor, with a bottom divider.
+templ listItemRow(item widget.ListItem, divided bool) {
+	<li class={ listItemClass(divided) }>
+		if item.URL != "" {
+			<a
+				href={ templ.SafeURL(item.URL) }
+				class="flex items-center gap-3 group"
+			>
+				@listItemContent(item, true)
+			</a>
+		} else {
+			<div class="flex items-center gap-3">
+				@listItemContent(item, false)
+			</div>
+		}
+	</li>
+}
+
+// listItemContent renders the avatar/icon, text block, and right-side metadata/badge.
+templ listItemContent(item widget.ListItem, hasURL bool) {
+	<!-- Avatar or icon -->
+	if item.Avatar != "" {
+		<img src={ item.Avatar } alt="" class="w-9 h-9 rounded-full object-cover flex-shrink-0"/>
+	} else if item.Icon != "" {
+		<div class={ "w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 " + getIconBgColor(item.Color) }>
+			<span class={ "material-icons-outlined text-base " + getIconTextColor(item.Color) }>{ item.Icon }</span>
+		</div>
+	}
+	<!-- Text content -->
+	<div class="flex-1 min-w-0">
+		<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{ item.Title }</p>
+		if item.Description != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400 truncate">{ item.Description }</p>
+		}
+	</div>
+	<!-- Right side: meta + badge + chevron -->
+	<div class="flex items-center gap-2 flex-shrink-0">
+		if item.Meta != "" {
+			<span class="text-xs text-gray-400 dark:text-gray-500 whitespace-nowrap">{ item.Meta }</span>
+		}
+		if item.Badge != "" {
+			<span class={ listBadgeClass(item.BadgeColor) }>{ item.Badge }</span>
+		}
+		if hasURL {
+			<span class="material-icons-outlined text-sm text-gray-300 group-hover:text-gray-500 dark:group-hover:text-gray-300 transition-colors">chevron_right</span>
+		}
+	</div>
+}
+
+func listItemClass(divided bool) string {
+	if divided {
+		return "px-6 py-3 border-b border-gray-100 dark:border-gray-700"
+	}
+	return "px-6 py-3"
+}
+
+func listBadgeClass(color string) string {
+	base := "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium "
+	switch color {
+	case "primary":
+		return base + "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
+	case "success", "green":
+		return base + "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+	case "danger", "red":
+		return base + "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+	case "warning", "yellow":
+		return base + "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+	case "info", "blue":
+		return base + "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+	case "purple":
+		return base + "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+	default:
+		return base + "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+	}
+}

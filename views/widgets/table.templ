@@ -1,0 +1,94 @@
+package widgets
+
+import (
+	"github.com/bozz33/sublimeadmin/widget"
+)
+
+// Table renders a compact data table widget inside a card.
+// Suitable for dashboards showing recent or summary records.
+templ Table(w *widget.TableWidget) {
+	{{ rows := w.Rows() }}
+	{{ emptyMsg := w.EmptyMessage; if emptyMsg == "" { emptyMsg = "No data available" } }}
+	{{ viewAllLabel := w.ViewAllLabel; if viewAllLabel == "" { viewAllLabel = "View all" } }}
+	<div class="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+		<!-- Card header -->
+		if w.Title != "" || w.Description != "" {
+			<div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+				if w.Title != "" {
+					<h3 class="text-base font-semibold text-gray-900 dark:text-white">{ w.Title }</h3>
+				}
+				if w.Description != "" {
+					<p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{ w.Description }</p>
+				}
+			</div>
+		}
+		<!-- Empty state -->
+		if len(rows) == 0 {
+			<div class="flex flex-col items-center justify-center py-10 text-center">
+				<span class="material-icons-outlined text-3xl text-gray-300 dark:text-gray-600 mb-2">table_rows</span>
+				<p class="text-sm text-gray-500 dark:text-gray-400">{ emptyMsg }</p>
+			</div>
+		} else {
+			<!-- Table -->
+			<div class="overflow-x-auto">
+				<table class="min-w-full text-sm">
+					if len(w.Columns) > 0 {
+						<thead>
+							<tr class="border-b border-gray-200 dark:border-gray-700">
+								for _, col := range w.Columns {
+									<th
+										class={ "px-6 py-3 text-xs font-semibold tracking-wider text-gray-500 dark:text-gray-400 uppercase " + tableColAlignClass(col.Align) }
+									>
+										{ col.Label }
+									</th>
+								}
+							</tr>
+						</thead>
+					}
+					<tbody>
+						for i, row := range rows {
+							<tr class={ tableRowClass(w.Striped, i) }>
+								for j, cell := range row {
+									{{ align := ""; if j < len(w.Columns) { align = w.Columns[j].Align } }}
+									<td class={ "px-6 py-3 text-gray-700 dark:text-gray-300 " + tableColAlignClass(align) }>
+										{ cell }
+									</td>
+								}
+							</tr>
+						}
+					</tbody>
+				</table>
+			</div>
+		}
+		<!-- Footer "View all" link -->
+		if w.ViewAllURL != "" {
+			<div class="px-6 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+				<a
+					href={ templ.SafeURL(w.ViewAllURL) }
+					class="inline-flex items-center gap-1 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+				>
+					{ viewAllLabel }
+					<span class="material-icons-outlined text-base">arrow_forward</span>
+				</a>
+			</div>
+		}
+	</div>
+}
+
+func tableColAlignClass(align string) string {
+	switch align {
+	case "center":
+		return "text-center"
+	case "right":
+		return "text-right"
+	default:
+		return "text-left"
+	}
+}
+
+func tableRowClass(striped bool, index int) string {
+	if striped && index%2 == 1 {
+		return "bg-gray-50 dark:bg-gray-700/30"
+	}
+	return ""
+}

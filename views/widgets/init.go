@@ -21,4 +21,10 @@ func init() {
 	widget.SetGridRenderer(func(g *widget.GridWidget) templ.Component {
 		return Grid(g)
 	})
+	widget.SetTableRenderer(func(w *widget.TableWidget) templ.Component {
+		return Table(w)
+	})
+	widget.SetListRenderer(func(w *widget.ListWidget) templ.Component {
+		return List(w)
+	})
 }
