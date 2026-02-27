@@ -1,61 +1,64 @@
 # Architecture
 
-This document describes the structure, patterns, and design decisions of the sublimeadmin framework.
+This document describes the structure, patterns, and design decisions of SublimeGo.
 
 ---
 
 ## Guiding Principles
 
-1. **Idiomatic Go**  stdlib first; every dependency must be justified.
-2. **Small interfaces**  each contract exposes the minimum required (Interface Segregation Principle).
-3. **No magic**  everything is explicit, traceable, and testable.
-4. **Single binary**  `//go:embed` for all assets; no external files required at runtime.
-5. **Flat structure**  packages at the root level, no unnecessary `pkg/` wrapper.
+1. **Idiomatic Go** - stdlib first; every dependency must be justified
+2. **Small interfaces** - Interface Segregation Principle (5 base + 8 optional = 13 total)
+3. **No magic** - Everything is explicit, traceable, and testable
+4. **Single binary** - `//go:embed` for all assets; no external files required
+5. **Flat structure** - Packages at root level; no unnecessary `pkg/` wrapper
+6. **Go-first, Filament-informed** - Inspired by Filament but adapted for Go idioms
 
 ---
 
 ## Package Layout
 
 ```
-sublimeadmin/
- actions/          # Row actions (edit, delete, custom, bulk)
- appconfig/        # Configuration loading (Viper + validation)
+sublimego-core/
+ actions/          # Row actions (8 built-in) + modal actions + lifecycle hooks
+ apperrors/        # Structured errors with HTTP handlers
  auth/             # Authentication, sessions, roles, permissions, MFA/TOTP
  cmd/
-    sublimeadmin/    # Cobra CLI (serve, init, make:*, db, routes, doctor)
- config/           # YAML configuration files
- engine/           # Framework core: Panel, CRUD handlers, multi-tenancy, relations
- errors/           # Structured errors  package apperrors
- export/           # CSV / Excel export
- flash/            # Session-based flash messages
- form/             # Form builder: fields, layouts, validation
- generator/        # Code generation (embedded .tmpl stubs via //go:embed)
- hooks/            # Render Hooks  named UI injection points
- import/           # CSV / Excel / JSON import
- infolist/         # Read-only detail view (Infolist)
- internal/
-    ent/          # Ent ORM schemas + generated code (do not edit manually)
-    registry/     # Auto-generated resource registry (provider_gen.go)
-    scanner/      # Source scanner for automatic resource discovery
- jobs/             # Background job queue with SQLite persistence
- logger/           # Structured logger (log/slog + lumberjack rotation)
- mailer/           # Email sending
- middleware/       # HTTP middlewares (auth, CORS, CSRF, recovery, throttle)
- notifications/    # Notifications: memory store, DatabaseStore, SSE Broadcaster
- plugin/           # Plugin system (Plugin interface + thread-safe global registry)
- search/           # Global fuzzy search (sahilm/fuzzy)
- table/            # Table builder: columns, filters, summaries, grouping, bulk actions
+    sublimego/     # CLI (make:resource, make:page, make:widget, make:enum, make:action)
+ color/           # Dynamic color palettes, CSS variables, Tailwind integration
+ config/          # Configuration loading (Viper + validation)
+ datastar/        # SSE SDK for Go (11KB, replaces HTMX+Alpine.js)
+ engine/          # Framework core: Panel, CRUD handlers, multi-tenancy, relations
+ enum/            # Generic enum helpers (10 helpers, type-safe)
+ export/          # CSV / Excel export with struct tags
+ flash/           # Session-based flash messages
+ form/            # Form builder (22 fields) + layouts + live validation
+ generator/       # Code generation (embedded .templ stubs)
+ hooks/           # Render Hooks - named UI injection points
+ importer/        # CSV import with validation
+ infolist/        # Read-only detail views (12 entry types)
+ jobs/            # Background job queue with SQLite persistence
+ logger/          # Structured logger (slog + rotation)
+ mailer/          # SMTP + LogMailer with HTML templates
+ middleware/      # HTTP middlewares (auth, CORS, CSRF, recovery, rate limit)
+ notifications/   # Notifications (memory + database stores) + SSE streaming
+ plugin/          # Plugin system with Boot interface
+ registry/        # Panel registry + lifecycle hooks
+ search/          # Global search with scoring + QuickSearch interface
+ table/           # Table builder (13 columns + 4 inline) + filters + summaries
+ validation/      # Input validation (go-playground/validator + custom)
+ views/           # Generic views (forms, tables, modals, widgets)
+ widget/          # Dashboard widgets (Stats, Charts, Grid, Timeline, Progress, Table, List)
  ui/
     assets/       # Static assets embedded via //go:embed (CSS, JS)
-    atoms/        # Atomic Templ components (badge, button, modal, steps, tabs)
+    atoms/        # 32+ atomic Templ components
     components/   # Composite Templ components (table, action buttons)
-    layouts/      # Layout templates (base, sidebar, topbar, flash, navigation)
- validation/       # Validation (go-playground/validator + gorilla/schema)
- views/            # Application Templ templates (auth, dashboard, generics, widgets)
- widget/           # Dashboard widgets (stats cards, ApexCharts)
- generate.go       # //go:generate directive for the scanner
- go.mod
- Makefile
+    layouts/      # 6 layouts (auth, base, sidebar, topbar, flash, config)
+ views/          # Application Templ templates (auth, dashboard, generics, widgets)
+generate.go      # //go:generate directive for the scanner
+go.mod
+go.sum
+LICENSE
+README.md
 ```
 
 ---
