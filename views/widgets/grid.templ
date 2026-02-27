@@ -1,0 +1,26 @@
+package widgets
+
+import (
+	"github.com/bozz33/sublimeadmin/widget"
+)
+
+// Grid renders a responsive multi-column grid of dashboard widgets.
+// Supports up to 12 columns with per-item col-span configuration.
+// Multiple widgets in a single column are stacked vertically.
+templ Grid(g *widget.GridWidget) {
+	<div class={ "grid gap-4 lg:gap-6", widget.GridColsClass(g.Columns) }>
+		for _, item := range g.Items {
+			<div class={ widget.GridSpanClass(item.Span) }>
+				if len(item.Widgets) == 1 {
+					@item.Widgets[0].Render()
+				} else {
+					<div class="space-y-4 lg:space-y-6">
+						for _, w := range item.Widgets {
+							@w.Render()
+						}
+					</div>
+				}
+			</div>
+		}
+	</div>
+}

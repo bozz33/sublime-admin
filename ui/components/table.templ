@@ -7,15 +7,45 @@ import (
 	"fmt"
 )
 
-// Table displays a table with the provided configuration
+// Table displays a table with the provided configuration.
+// Bulk selection is managed by app.js BulkActions module (data-bulk-container etc.).
+// Delete confirmation uses Datastar global signals ($deleteModalOpen, $deleteModalUrl, ...).
 templ Table(ctx context.Context, t *table.Table, data []any) {
+	<!-- Table Tabs (filter presets) -->
+	if len(t.Tabs) > 0 {
+		<div
+			class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4"
+			x-data={ "{ activeTab: new URLSearchParams(location.search).get('tab') || '" + firstTabKey(t.Tabs) + "' }" }
+		>
+			<nav class="flex gap-1 -mb-px overflow-x-auto">
+				for _, tab := range t.Tabs {
+					<a
+						href={ templ.SafeURL("?tab=" + tab.Key) }
+						:class={ fmt.Sprintf("activeTab === '%s' ? 'border-primary-500 text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/10' : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'", tab.Key) }
+						class="inline-flex items-center gap-1.5 whitespace-nowrap py-3 px-4 border-b-2 font-medium text-sm transition-colors"
+					>
+						if tab.Icon != "" {
+							<span class="material-icons-outlined text-sm">{ tab.Icon }</span>
+						}
+						{ tab.Label }
+						if tab.BadgeCount != "" {
+							<span class={ tabBadgeClass(tab.Color) }>{ tab.BadgeCount }</span>
+						}
+					</a>
+				}
+			</nav>
+		</div>
+	}
+
 	<div
+		id="table-container"
+		data-bulk-container
 		class="relative overflow-x-auto shadow-md sm:rounded-lg bg-white dark:bg-gray-800"
-		x-data="{ selectedIds: [], selectAll: false }"
 	>
-		<!-- Header with search, filters and bulk actions -->
+		<!-- Header: search, filters, bulk actions -->
 		<div class="p-4 bg-white dark:bg-gray-900 flex flex-wrap justify-between items-center gap-3 border-b border-gray-200 dark:border-gray-700">
-			<div class="flex items-center gap-3">
+			<!-- Search + Filters wrapped in GET form -->
+			<form method="GET" class="flex items-center gap-3 flex-wrap">
 				if t.Searchable {
 					<div class="relative">
 						<div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -36,10 +66,19 @@ templ Table(ctx context.Context, t *table.Table, data []any) {
 						}
 					</div>
 				}
-			</div>
+				if t.Searchable || len(t.Filters) > 0 {
+					<button type="submit" class="px-3 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors">
+						<span class="material-icons-outlined text-base align-middle">search</span>
+					</button>
+				}
+			</form>
+
+			<!-- Bulk Actions bar (hidden until items are selected) -->
 			if len(t.BulkActions) > 0 {
-				<div x-show="selectedIds.length > 0" x-cloak class="flex items-center gap-2">
-					<span class="text-sm text-gray-500 dark:text-gray-400" x-text="`${selectedIds.length} selected`"></span>
+				<div data-bulk-actions class="hidden flex items-center gap-2">
+					<span class="text-sm text-gray-500 dark:text-gray-400">
+						<span data-selected-count>0</span> sélectionné(s)
+					</span>
 					for _, ba := range t.BulkActions {
 						@RenderBulkAction(ba)
 					}
@@ -47,7 +86,7 @@ templ Table(ctx context.Context, t *table.Table, data []any) {
 			}
 		</div>
 
-		<!-- Tableau -->
+		<!-- Table -->
 		<table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
 			<thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
 				<tr>
@@ -55,8 +94,7 @@ templ Table(ctx context.Context, t *table.Table, data []any) {
 						<th scope="col" class="px-4 py-3 w-4">
 							<input
 								type="checkbox"
-								x-model="selectAll"
-								@change="selectAll ? selectedIds = [...$el.closest('table').querySelectorAll('tbody [data-row-id]')].map(el => el.dataset.rowId) : selectedIds = []"
+								data-select-all
 								class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
 							/>
 						</th>
@@ -66,35 +104,72 @@ templ Table(ctx context.Context, t *table.Table, data []any) {
 							<div class="flex items-center">
 								{ col.Label() }
 								if col.IsSortable() {
-									<a href="#" class="ml-1">
+									<a href={ templ.SafeURL("?sort=" + col.Key() + "&dir=asc") } class="ml-1">
 										<span class="material-icons-outlined text-xs">unfold_more</span>
 									</a>
 								}
 							</div>
 						</th>
 					}
-					if len(t.Actions) > 0 {
+					if len(t.Actions) > 0 || len(t.ActionGroups) > 0 {
 						<th scope="col" class="px-6 py-3 text-right">Actions</th>
 					}
 				</tr>
 			</thead>
 			<tbody>
-				if len(data) == 0 {
+				if t.Deferred && len(data) == 0 {
+					<!-- Deferred skeleton: shown while data is loading (uses Datastar @get to load rows) -->
+					for i := range [5]struct{}{} {
+						<tr class={ tableRowClass(t.Striped, i) }>
+							if len(t.BulkActions) > 0 {
+								<td class="px-4 py-4 w-4">
+									<div class="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+								</td>
+							}
+							for range t.Columns {
+								<td class="px-6 py-4">
+									<div class="h-4 rounded bg-gray-200 dark:bg-gray-700 animate-pulse w-3/4"></div>
+								</td>
+							}
+							if len(t.Actions) > 0 || len(t.ActionGroups) > 0 {
+								<td class="px-6 py-4 text-right">
+									<div class="flex justify-end gap-2">
+										<div class="h-6 w-14 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+										<div class="h-6 w-14 rounded bg-gray-200 dark:bg-gray-700 animate-pulse"></div>
+									</div>
+								</td>
+							}
+						</tr>
+					}
+				} else if len(data) == 0 {
+					<!-- Empty state: custom or default -->
 					<tr>
-						<td colspan={ fmt.Sprintf("%d", len(t.Columns)+1) } class="px-6 py-8 text-center text-gray-500">
-							Aucun resultat trouve
+						<td
+							colspan={ fmt.Sprintf("%d", len(t.Columns)+2) }
+							class="px-6 py-16 text-center"
+						>
+							<div class="flex flex-col items-center gap-4">
+								<div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+									<span class="material-icons-outlined text-3xl text-gray-400 dark:text-gray-500">{ tableEmptyIcon(t.EmptyIcon) }</span>
+								</div>
+								<div class="space-y-1">
+									<p class="text-base font-semibold text-gray-900 dark:text-white">{ tableEmptyHeading(t.EmptyHeading) }</p>
+									if t.EmptyDesc != "" {
+										<p class="text-sm text-gray-500 dark:text-gray-400">{ t.EmptyDesc }</p>
+									}
+								</div>
+							</div>
 						</td>
 					</tr>
 				} else {
-					for _, item := range data {
-						<tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700">
+					for i, item := range data {
+						<tr class={ tableRowClass(t.Striped, i) }>
 							if len(t.BulkActions) > 0 {
 								<td class="px-4 py-4 w-4">
 									<input
 										type="checkbox"
-										data-row-id={ extractRowID(item) }
-										:value={ extractRowID(item) }
-										x-model="selectedIds"
+										data-select-item
+										value={ extractRowID(item) }
 										class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:bg-gray-700 dark:border-gray-600"
 									/>
 								</td>
@@ -104,11 +179,14 @@ templ Table(ctx context.Context, t *table.Table, data []any) {
 									@RenderCell(ctx, col, item)
 								</td>
 							}
-							if len(t.Actions) > 0 {
+							if len(t.Actions) > 0 || len(t.ActionGroups) > 0 {
 								<td class="px-6 py-4 text-right">
-									<div class="flex justify-end gap-2">
+									<div class="flex justify-end items-center gap-1">
 										for _, action := range t.Actions {
 											@RenderActionButton(action, item)
+										}
+										for _, group := range t.ActionGroups {
+											@ActionGroupButton(group, item)
 										}
 									</div>
 								</td>
@@ -128,14 +206,64 @@ templ Table(ctx context.Context, t *table.Table, data []any) {
 	</div>
 }
 
-// RenderCell renders a cell according to its type
+// tableRowClass returns the CSS classes for a table row, supporting striped rows.
+func tableRowClass(striped bool, index int) string {
+	base := "border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+	if striped && index%2 == 0 {
+		return base + " bg-white dark:bg-gray-800"
+	}
+	if striped && index%2 != 0 {
+		return base + " bg-gray-50/50 dark:bg-gray-800/50"
+	}
+	return base + " bg-white dark:bg-gray-800"
+}
+
+// tableEmptyIcon returns the icon for the empty state (default: inbox).
+func tableEmptyIcon(icon string) string {
+	if icon != "" {
+		return icon
+	}
+	return "inbox"
+}
+
+// tableEmptyHeading returns the heading for the empty state (default: French).
+func tableEmptyHeading(heading string) string {
+	if heading != "" {
+		return heading
+	}
+	return "Aucun résultat trouvé"
+}
+
+// firstTabKey returns the key of the first tab, used as the default active tab.
+func firstTabKey(tabs []table.TableTab) string {
+	if len(tabs) > 0 {
+		return tabs[0].Key
+	}
+	return ""
+}
+
+// tabBadgeClass returns Tailwind classes for a tab badge based on color.
+func tabBadgeClass(color string) string {
+	switch color {
+	case "green", "success":
+		return "ml-1 px-1.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+	case "red", "danger":
+		return "ml-1 px-1.5 py-0.5 text-xs font-medium rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+	case "yellow", "warning":
+		return "ml-1 px-1.5 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+	default:
+		return "ml-1 px-1.5 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
+	}
+}
+
+// RenderCell renders a cell according to its column type.
 templ RenderCell(ctx context.Context, col table.Column, item any) {
 	switch col.Type() {
 		case "text":
 			<div class="text-gray-900 dark:text-white">
 				{ col.Value(item) }
 				if col.IsCopyable() {
-					<button class="ml-2 text-gray-400 hover:text-gray-600" title="Copy">
+					<button class="ml-2 text-gray-400 hover:text-gray-600" title="Copier">
 						<span class="material-icons-outlined text-sm">content_copy</span>
 					</button>
 				}
@@ -146,8 +274,8 @@ templ RenderCell(ctx context.Context, col table.Column, item any) {
 			}
 		case "image":
 			if imageCol, ok := col.(*table.ImageColumn); ok {
-				<img 
-					src={ col.Value(item) } 
+				<img
+					src={ col.Value(item) }
 					alt={ col.Label() }
 					class={ "w-10 h-10 object-cover", templ.KV("rounded-full", imageCol.Rounded), templ.KV("rounded", !imageCol.Rounded) }
 				/>
@@ -173,12 +301,16 @@ templ RenderCell(ctx context.Context, col table.Column, item any) {
 	}
 }
 
-// RenderBulkAction renders a bulk action button in the toolbar.
+// RenderBulkAction renders a bulk action button.
+// Uses Datastar signals for confirmation modal; dispatches a CustomEvent for non-confirm actions.
 templ RenderBulkAction(ba *table.BulkAction) {
 	if ba.RequireConf {
 		<button
 			type="button"
-			@click={ fmt.Sprintf("$dispatch('open-bulk-modal', { title: '%s', desc: '%s', ids: selectedIds })", ba.ConfTitle, ba.ConfDesc) }
+			data-conf-title={ ba.ConfTitle }
+			data-conf-desc={ ba.ConfDesc }
+			data-action-name={ ba.GetLabel() }
+			data-on-click="const b=evt.target.closest('[data-conf-title]'); $bulkModalTitle=b.dataset.confTitle; $bulkModalDesc=b.dataset.confDesc; $bulkModalAction=b.dataset.actionName; $bulkModalOpen=true"
 			class={ getBulkActionClasses(ba.GetColor()) }
 		>
 			@ActionIcon(ba.GetIcon())
@@ -187,7 +319,8 @@ templ RenderBulkAction(ba *table.BulkAction) {
 	} else {
 		<button
 			type="button"
-			@click={ fmt.Sprintf("$dispatch('bulk-action', { action: '%s', ids: selectedIds })", ba.GetLabel()) }
+			data-action-name={ ba.GetLabel() }
+			data-on-click="const ids=SublimeGo.BulkActions.getSelected('table-container'); document.dispatchEvent(new CustomEvent('sublimego:bulk-action', { detail: { action: evt.target.closest('[data-action-name]').dataset.actionName, ids } }))"
 			class={ getBulkActionClasses(ba.GetColor()) }
 		>
 			@ActionIcon(ba.GetIcon())
@@ -196,16 +329,16 @@ templ RenderBulkAction(ba *table.BulkAction) {
 	}
 }
 
-// RenderBadge renders a colored badge
+// RenderBadge renders a colored badge.
 templ RenderBadge(value, color string) {
 	<span class={ getBadgeClasses(color) }>
 		{ value }
 	</span>
 }
 
-// RenderAction renders an action button (table.Action interface)
+// RenderAction renders a simple action link.
 templ RenderAction(action table.Action, item any) {
-	<a 
+	<a
 		href={ templ.SafeURL(action.URL(item)) }
 		class={ getActionClasses(action.Color()) }
 		title={ action.Label() }
@@ -214,19 +347,23 @@ templ RenderAction(action table.Action, item any) {
 	</a>
 }
 
-// RenderActionButton renders an action button (pkg/actions)
+// RenderActionButton renders an action button (pkg/actions).
+// Delete confirmation uses Datastar global signals instead of Alpine $dispatch.
 templ RenderActionButton(action *actions.Action, item any) {
 	if action.RequiresConfirmation {
-		<button 
+		<button
 			type="button"
-			@click={ fmt.Sprintf("$dispatch('open-delete-modal', { url: '%s', title: '%s', desc: '%s' })", action.UrlResolver(item), action.ModalTitle, action.ModalDescription) }
+			data-delete-url={ action.UrlResolver(item) }
+			data-delete-title={ action.ModalTitle }
+			data-delete-desc={ action.ModalDescription }
+			data-on-click="const b=evt.target.closest('[data-delete-url]'); $deleteModalUrl=b.dataset.deleteUrl; $deleteModalTitle=b.dataset.deleteTitle; $deleteModalDesc=b.dataset.deleteDesc; $deleteModalOpen=true"
 			class={ getActionClasses(action.Color) }
 			title={ action.Label }
 		>
 			@ActionIcon(action.Icon)
 		</button>
 	} else {
-		<a 
+		<a
 			href={ templ.SafeURL(action.UrlResolver(item)) }
 			class={ getActionClasses(action.Color) }
 			title={ action.Label }
@@ -236,18 +373,24 @@ templ RenderActionButton(action *actions.Action, item any) {
 	}
 }
 
-// RenderFilter renders a filter
+// RenderFilter renders a filter input.
 templ RenderFilter(filter table.Filter) {
 	switch filter.Type() {
 		case "select":
-			<select class="block p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+			<select
+				name={ filter.Key() }
+				class="block p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+			>
 				<option value="">{ filter.Label() }</option>
 				for _, opt := range filter.FilterOptions() {
 					<option value={ opt.Value }>{ opt.Label }</option>
 				}
 			</select>
 		case "boolean":
-			<select class="block p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+			<select
+				name={ filter.Key() }
+				class="block p-2 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+			>
 				<option value="">{ filter.Label() }</option>
 				for _, opt := range filter.FilterOptions() {
 					<option value={ opt.Value }>{ opt.Label }</option>
@@ -256,7 +399,7 @@ templ RenderFilter(filter table.Filter) {
 	}
 }
 
-// ActionIcon renders the icon of an action
+// ActionIcon renders the icon of an action.
 templ ActionIcon(icon string) {
 	switch icon {
 		case "edit":
@@ -270,20 +413,85 @@ templ ActionIcon(icon string) {
 	}
 }
 
-// Pagination displays the pagination
+// Pagination displays pagination controls.
 templ Pagination(currentPage, totalPages, total int) {
 	<div class="flex items-center justify-between">
 		<div class="text-sm text-gray-700 dark:text-gray-400">
-			Showing results
+			{ fmt.Sprintf("%d résultats", total) }
 		</div>
-		<div class="flex gap-2">
-			<button class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700">
-				Previous
-			</button>
-			<button class="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:bg-gray-700">
-				Next
-			</button>
+		<div class="flex gap-1 items-center">
+			<a
+				href={ templ.SafeURL(fmt.Sprintf("?page=%d", tableMax(1, currentPage-1))) }
+				class={ paginationBtnClass(currentPage <= 1) }
+			>
+				<span class="material-icons-outlined text-base">chevron_left</span>
+			</a>
+			for _, p := range paginationPages(currentPage, totalPages) {
+				<a
+					href={ templ.SafeURL(fmt.Sprintf("?page=%d", p)) }
+					class={ paginationPageClass(p == currentPage) }
+				>{ fmt.Sprintf("%d", p) }</a>
+			}
+			<a
+				href={ templ.SafeURL(fmt.Sprintf("?page=%d", tableMin(totalPages, currentPage+1))) }
+				class={ paginationBtnClass(currentPage >= totalPages) }
+			>
+				<span class="material-icons-outlined text-base">chevron_right</span>
+			</a>
 		</div>
 	</div>
 }
 
+// ---------------------------------------------------------------------------
+// Pure Go helpers
+// ---------------------------------------------------------------------------
+
+func paginationBtnClass(disabled bool) string {
+	base := "p-2 rounded-lg border text-gray-500 transition-colors"
+	if disabled {
+		return base + " border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed pointer-events-none"
+	}
+	return base + " border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
+}
+
+func paginationPageClass(active bool) string {
+	if active {
+		return "w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium text-white bg-primary-600"
+	}
+	return "w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+}
+
+func paginationPages(current, total int) []int {
+	if total <= 0 {
+		return nil
+	}
+	const maxPages = 5
+	start := current - maxPages/2
+	if start < 1 {
+		start = 1
+	}
+	end := start + maxPages - 1
+	if end > total {
+		end = total
+		start = tableMax(1, end-maxPages+1)
+	}
+	pages := make([]int, 0, end-start+1)
+	for i := start; i <= end; i++ {
+		pages = append(pages, i)
+	}
+	return pages
+}
+
+func tableMax(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
+func tableMin(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}

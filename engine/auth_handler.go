@@ -8,6 +8,7 @@ import (
 
 	"github.com/a-h/templ"
 	authpkg "github.com/bozz33/sublimeadmin/auth"
+	"github.com/bozz33/sublimeadmin/ui/layouts"
 	authtemplates "github.com/bozz33/sublimeadmin/views/auth"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -77,10 +78,10 @@ func (h *AuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // showLogin displays the login page.
 func (h *AuthHandler) showLogin(w http.ResponseWriter, r *http.Request) {
 	if h.authManager.IsAuthenticatedFromRequest(r) {
-		http.Redirect(w, r, "/admin", http.StatusFound)
+		http.Redirect(w, r, h.dashboardPath(), http.StatusFound)
 		return
 	}
-
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	templ.Handler(authtemplates.LoginPage()).ServeHTTP(w, r)
 }
 
@@ -130,7 +131,7 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 
 	intendedURL := h.getIntendedURL(r)
 	if intendedURL == "" {
-		intendedURL = "/admin"
+		intendedURL = h.dashboardPath()
 	}
 	http.Redirect(w, r, intendedURL, http.StatusFound)
 }
@@ -138,10 +139,10 @@ func (h *AuthHandler) handleLogin(w http.ResponseWriter, r *http.Request) {
 // showRegister displays the registration page.
 func (h *AuthHandler) showRegister(w http.ResponseWriter, r *http.Request) {
 	if h.authManager.IsAuthenticatedFromRequest(r) {
-		http.Redirect(w, r, "/admin", http.StatusFound)
+		http.Redirect(w, r, h.dashboardPath(), http.StatusFound)
 		return
 	}
-
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	templ.Handler(authtemplates.RegisterPage()).ServeHTTP(w, r)
 }
 
@@ -194,7 +195,7 @@ func (h *AuthHandler) handleRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/admin", http.StatusFound)
+	http.Redirect(w, r, h.dashboardPath(), http.StatusFound)
 }
 
 // handleLogout logs out the user.
@@ -204,21 +205,42 @@ func (h *AuthHandler) handleLogout(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/login", http.StatusFound)
+	http.Redirect(w, r, h.loginPath(), http.StatusFound)
 }
 
 // Helpers
 
 func (h *AuthHandler) showLoginWithError(w http.ResponseWriter, r *http.Request, message string) {
-	templ.Handler(authtemplates.LoginPage()).ServeHTTP(w, r)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templ.Handler(authtemplates.LoginPage(message)).ServeHTTP(w, r)
 }
 
 func (h *AuthHandler) showRegisterWithError(w http.ResponseWriter, r *http.Request, message string) {
-	templ.Handler(authtemplates.RegisterPage()).ServeHTTP(w, r)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	templ.Handler(authtemplates.RegisterPage(message)).ServeHTTP(w, r)
 }
 
 func (h *AuthHandler) getIntendedURL(r *http.Request) string {
 	return ""
+}
+
+// dashboardPath returns the panel's root URL (dashboard).
+// Uses the global PanelConfig so it stays consistent with template-generated links.
+func (h *AuthHandler) dashboardPath() string {
+	cfg := layouts.GetPanelConfig()
+	if cfg.Path == "" || cfg.Path == "/" {
+		return "/"
+	}
+	return cfg.Path
+}
+
+// loginPath returns the panel's login URL.
+func (h *AuthHandler) loginPath() string {
+	cfg := layouts.GetPanelConfig()
+	if cfg.Path == "" || cfg.Path == "/" {
+		return "/login"
+	}
+	return cfg.Path + "/login"
 }
 
 func (h *AuthHandler) verifyPassword(password, hash string) bool {

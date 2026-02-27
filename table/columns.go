@@ -1,8 +1,12 @@
 package table
 
 import (
+	"context"
 	"fmt"
+	"html/template"
+	"io"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/a-h/templ"
@@ -899,6 +903,400 @@ func (c *ColorColumn) Value(item any) string {
 }
 func (c *ColorColumn) Render(value string, _ any) templ.Component {
 	return ColorCellView(value)
+}
+
+// ---------------------------------------------------------------------------
+// Inline editing columns — render as interactive inputs in table cells.
+// When changed, they fire a Datastar @patch() to save the value server-side.
+// The resource must expose a PATCH /{slug}/{id} endpoint.
+// ---------------------------------------------------------------------------
+
+// TextInputColumn renders a cell as an editable text input.
+type TextInputColumn struct {
+	colKey    string
+	LabelStr  string
+	sortable  bool
+	patchURL  func(item any) string // builds the PATCH URL for this row
+	ValueFunc func(item any) string
+}
+
+// TextInput creates a new inline text input column.
+func TextInput(key string) *TextInputColumn {
+	return &TextInputColumn{colKey: key, LabelStr: key}
+}
+
+func (c *TextInputColumn) WithLabel(label string) *TextInputColumn { c.LabelStr = label; return c }
+func (c *TextInputColumn) Sortable() *TextInputColumn              { c.sortable = true; return c }
+func (c *TextInputColumn) PatchURL(fn func(item any) string) *TextInputColumn {
+	c.patchURL = fn
+	return c
+}
+func (c *TextInputColumn) WithValueFunc(fn func(item any) string) *TextInputColumn {
+	c.ValueFunc = fn
+	return c
+}
+
+func (c *TextInputColumn) Key() string        { return c.colKey }
+func (c *TextInputColumn) Label() string      { return c.LabelStr }
+func (c *TextInputColumn) Type() string       { return "text_input_col" }
+func (c *TextInputColumn) IsSortable() bool   { return c.sortable }
+func (c *TextInputColumn) IsSearchable() bool { return false }
+func (c *TextInputColumn) IsCopyable() bool   { return false }
+func (c *TextInputColumn) Value(item any) string {
+	if c.ValueFunc != nil {
+		return c.ValueFunc(item)
+	}
+	v := reflect.ValueOf(item)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	field := v.FieldByName(c.colKey)
+	if field.IsValid() {
+		return fmt.Sprintf("%v", field.Interface())
+	}
+	return ""
+}
+func (c *TextInputColumn) Render(value string, record any) templ.Component {
+	patchURL := ""
+	if c.patchURL != nil {
+		patchURL = c.patchURL(record)
+	}
+	return TextInputCellView(c.colKey, value, patchURL)
+}
+
+// SelectColumn renders a cell as an inline select dropdown.
+type SelectColumn struct {
+	colKey    string
+	LabelStr  string
+	options   []SelectColOption
+	patchURL  func(item any) string
+	ValueFunc func(item any) string
+}
+
+// SelectColOption represents an option for a SelectColumn.
+type SelectColOption struct {
+	Label string
+	Value string
+}
+
+// SelectCol creates a new inline select column (named SelectCol to avoid conflict with SelectFilter).
+func SelectCol(key string) *SelectColumn {
+	return &SelectColumn{colKey: key, LabelStr: key}
+}
+
+func (c *SelectColumn) WithLabel(label string) *SelectColumn { c.LabelStr = label; return c }
+func (c *SelectColumn) Options(opts map[string]string) *SelectColumn {
+	for v, l := range opts {
+		c.options = append(c.options, SelectColOption{Value: v, Label: l})
+	}
+	return c
+}
+func (c *SelectColumn) PatchURL(fn func(item any) string) *SelectColumn {
+	c.patchURL = fn
+	return c
+}
+func (c *SelectColumn) WithValueFunc(fn func(item any) string) *SelectColumn {
+	c.ValueFunc = fn
+	return c
+}
+
+func (c *SelectColumn) Key() string        { return c.colKey }
+func (c *SelectColumn) Label() string      { return c.LabelStr }
+func (c *SelectColumn) Type() string       { return "select_col" }
+func (c *SelectColumn) IsSortable() bool   { return false }
+func (c *SelectColumn) IsSearchable() bool { return false }
+func (c *SelectColumn) IsCopyable() bool   { return false }
+func (c *SelectColumn) Value(item any) string {
+	if c.ValueFunc != nil {
+		return c.ValueFunc(item)
+	}
+	v := reflect.ValueOf(item)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	field := v.FieldByName(c.colKey)
+	if field.IsValid() {
+		return fmt.Sprintf("%v", field.Interface())
+	}
+	return ""
+}
+func (c *SelectColumn) Render(value string, record any) templ.Component {
+	patchURL := ""
+	if c.patchURL != nil {
+		patchURL = c.patchURL(record)
+	}
+	return SelectCellView(c.colKey, value, c.options, patchURL)
+}
+
+// ToggleColumn renders a cell as an inline toggle switch.
+type ToggleColumn struct {
+	colKey    string
+	LabelStr  string
+	patchURL  func(item any) string
+	ValueFunc func(item any) string
+}
+
+// Toggle creates a new inline toggle column.
+func Toggle(key string) *ToggleColumn {
+	return &ToggleColumn{colKey: key, LabelStr: key}
+}
+
+func (c *ToggleColumn) WithLabel(label string) *ToggleColumn { c.LabelStr = label; return c }
+func (c *ToggleColumn) PatchURL(fn func(item any) string) *ToggleColumn {
+	c.patchURL = fn
+	return c
+}
+func (c *ToggleColumn) WithValueFunc(fn func(item any) string) *ToggleColumn {
+	c.ValueFunc = fn
+	return c
+}
+
+func (c *ToggleColumn) Key() string        { return c.colKey }
+func (c *ToggleColumn) Label() string      { return c.LabelStr }
+func (c *ToggleColumn) Type() string       { return "toggle_col" }
+func (c *ToggleColumn) IsSortable() bool   { return false }
+func (c *ToggleColumn) IsSearchable() bool { return false }
+func (c *ToggleColumn) IsCopyable() bool   { return false }
+func (c *ToggleColumn) Value(item any) string {
+	if c.ValueFunc != nil {
+		return c.ValueFunc(item)
+	}
+	v := reflect.ValueOf(item)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	field := v.FieldByName(c.colKey)
+	if field.IsValid() {
+		return fmt.Sprintf("%v", field.Interface())
+	}
+	return ""
+}
+func (c *ToggleColumn) Render(value string, record any) templ.Component {
+	patchURL := ""
+	if c.patchURL != nil {
+		patchURL = c.patchURL(record)
+	}
+	checked := value == "true" || value == "1" || value == "yes"
+	return ToggleCellView(c.colKey, checked, patchURL)
+}
+
+// CheckboxColumn renders a cell as an inline checkbox.
+type CheckboxColumn struct {
+	colKey    string
+	LabelStr  string
+	patchURL  func(item any) string
+	ValueFunc func(item any) string
+}
+
+// Checkbox creates a new inline checkbox column.
+func Checkbox(key string) *CheckboxColumn {
+	return &CheckboxColumn{colKey: key, LabelStr: key}
+}
+
+func (c *CheckboxColumn) WithLabel(label string) *CheckboxColumn { c.LabelStr = label; return c }
+func (c *CheckboxColumn) PatchURL(fn func(item any) string) *CheckboxColumn {
+	c.patchURL = fn
+	return c
+}
+func (c *CheckboxColumn) WithValueFunc(fn func(item any) string) *CheckboxColumn {
+	c.ValueFunc = fn
+	return c
+}
+
+func (c *CheckboxColumn) Key() string        { return c.colKey }
+func (c *CheckboxColumn) Label() string      { return c.LabelStr }
+func (c *CheckboxColumn) Type() string       { return "checkbox_col" }
+func (c *CheckboxColumn) IsSortable() bool   { return false }
+func (c *CheckboxColumn) IsSearchable() bool { return false }
+func (c *CheckboxColumn) IsCopyable() bool   { return false }
+func (c *CheckboxColumn) Value(item any) string {
+	if c.ValueFunc != nil {
+		return c.ValueFunc(item)
+	}
+	v := reflect.ValueOf(item)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	field := v.FieldByName(c.colKey)
+	if field.IsValid() {
+		return fmt.Sprintf("%v", field.Interface())
+	}
+	return ""
+}
+func (c *CheckboxColumn) Render(value string, record any) templ.Component {
+	patchURL := ""
+	if c.patchURL != nil {
+		patchURL = c.patchURL(record)
+	}
+	checked := value == "true" || value == "1" || value == "yes"
+	return CheckboxCellView(c.colKey, checked, patchURL)
+}
+
+// ---------------------------------------------------------------------------
+// TagsColumn — renders comma-separated values as colored badge pills.
+// ---------------------------------------------------------------------------
+
+// TagsColumn renders a cell value (comma-separated by default) as a row of
+// colored badge pills. Each tag can have an individual color via ColorMap.
+type TagsColumn struct {
+	colKey    string
+	LabelStr  string
+	ColorMap  map[string]string // tag value → Tailwind color ("green","red","blue",...)
+	Separator string            // default ","
+	ValueFunc func(item any) string
+}
+
+// Tags creates a new tags column.
+func Tags(key string) *TagsColumn {
+	return &TagsColumn{
+		colKey:    key,
+		LabelStr:  key,
+		Separator: ",",
+	}
+}
+
+// WithLabel sets the column label.
+func (c *TagsColumn) WithLabel(label string) *TagsColumn {
+	c.LabelStr = label
+	return c
+}
+
+// Colors sets a map of tag value → Tailwind color name.
+func (c *TagsColumn) Colors(m map[string]string) *TagsColumn {
+	c.ColorMap = m
+	return c
+}
+
+// WithSeparator sets the separator used to split the cell value into tags.
+func (c *TagsColumn) WithSeparator(sep string) *TagsColumn {
+	c.Separator = sep
+	return c
+}
+
+// Using sets a custom accessor function bypassing reflection.
+func (c *TagsColumn) Using(fn func(item any) string) *TagsColumn {
+	c.ValueFunc = fn
+	return c
+}
+
+func (c *TagsColumn) Key() string        { return c.colKey }
+func (c *TagsColumn) Label() string      { return c.LabelStr }
+func (c *TagsColumn) Type() string       { return "tags" }
+func (c *TagsColumn) IsSortable() bool   { return false }
+func (c *TagsColumn) IsSearchable() bool { return false }
+func (c *TagsColumn) IsCopyable() bool   { return false }
+
+func (c *TagsColumn) Value(item any) string {
+	if c.ValueFunc != nil {
+		return c.ValueFunc(item)
+	}
+	v := reflect.ValueOf(item)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
+	field := v.FieldByName(c.colKey)
+	if field.IsValid() {
+		return fmt.Sprintf("%v", field.Interface())
+	}
+	return ""
+}
+
+func (c *TagsColumn) Render(value string, _ any) templ.Component {
+	sep := c.Separator
+	if sep == "" {
+		sep = ","
+	}
+	colorMap := c.ColorMap
+	return templ.ComponentFunc(func(_ context.Context, w io.Writer) error {
+		if value == "" {
+			return nil
+		}
+		tags := strings.Split(value, sep)
+		var sb strings.Builder
+		sb.WriteString(`<div class="flex flex-wrap gap-1">`)
+		for _, tag := range tags {
+			tag = strings.TrimSpace(tag)
+			if tag == "" {
+				continue
+			}
+			color := "gray"
+			if colorMap != nil {
+				if col, ok := colorMap[tag]; ok {
+					color = col
+				}
+			}
+			cls := tagBadgeClass(color)
+			sb.WriteString(`<span class="`)
+			sb.WriteString(cls)
+			sb.WriteString(`">`)
+			sb.WriteString(template.HTMLEscapeString(tag))
+			sb.WriteString(`</span>`)
+		}
+		sb.WriteString(`</div>`)
+		_, err := io.WriteString(w, sb.String())
+		return err
+	})
+}
+
+// tagBadgeClass returns the Tailwind CSS classes for a badge with the given color.
+func tagBadgeClass(color string) string {
+	base := "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium "
+	colors := map[string]string{
+		"green":  base + "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
+		"red":    base + "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
+		"blue":   base + "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
+		"yellow": base + "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100",
+		"purple": base + "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
+		"orange": base + "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100",
+		"pink":   base + "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-100",
+		"indigo": base + "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-100",
+		"gray":   base + "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100",
+	}
+	if cls, ok := colors[color]; ok {
+		return cls
+	}
+	return colors["gray"]
+}
+
+// ---------------------------------------------------------------------------
+// ViewColumn — clickable eye icon linking to the item's detail page.
+// Equivalent to Filament's ViewColumn.
+// ---------------------------------------------------------------------------
+
+// ViewColumn renders a cell as a clickable "view" link to the item's detail page.
+type ViewColumn struct {
+	colKey   string
+	LabelStr string
+	URLFunc  func(item any) string // builds the URL for the detail page
+}
+
+// View creates a new view column.
+func View(key string) *ViewColumn {
+	return &ViewColumn{colKey: key, LabelStr: key}
+}
+
+func (c *ViewColumn) WithLabel(label string) *ViewColumn { c.LabelStr = label; return c }
+func (c *ViewColumn) URL(fn func(item any) string) *ViewColumn {
+	c.URLFunc = fn
+	return c
+}
+
+func (c *ViewColumn) Key() string        { return c.colKey }
+func (c *ViewColumn) Label() string      { return c.LabelStr }
+func (c *ViewColumn) Type() string       { return "view" }
+func (c *ViewColumn) IsSortable() bool   { return false }
+func (c *ViewColumn) IsSearchable() bool { return false }
+func (c *ViewColumn) IsCopyable() bool   { return false }
+
+func (c *ViewColumn) Value(item any) string {
+	if c.URLFunc != nil {
+		return c.URLFunc(item)
+	}
+	return ""
+}
+
+func (c *ViewColumn) Render(value string, _ any) templ.Component {
+	return ViewCellView(value)
 }
 
 // relativeTime returns a human-readable relative time string.

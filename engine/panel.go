@@ -2,6 +2,7 @@ package engine
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -22,6 +23,9 @@ import (
 	"github.com/bozz33/sublimeadmin/ui/layouts"
 	"github.com/bozz33/sublimeadmin/views/dashboard"
 	"github.com/bozz33/sublimeadmin/widget"
+	// Auto-register widget renderers (Stats, Chart, Grid, Timeline, Progress).
+	// This import ensures widget.Render() works without manual blank import in user projects.
+	_ "github.com/bozz33/sublimeadmin/views/widgets"
 )
 
 // Panel represents a complete admin dashboard panel.
@@ -86,6 +90,11 @@ type Panel struct {
 
 	// Custom middleware applied to all protected routes
 	Middlewares []func(http.Handler) http.Handler
+
+	// CSRF protection manager. Set via EnableCSRF().
+	// When non-nil, CSRF tokens are validated on all mutating requests (POST/PUT/DELETE/PATCH)
+	// and injected into request context so form templates can include them.
+	csrf *CSRFManager
 
 	// Lifecycle hooks
 	beforeBootHooks []BootHook
@@ -258,27 +267,29 @@ func (p *Panel) syncConfig() {
 }
 
 // AddResources adds a block of resources.
+// Nav items are registered once in Router() after all resources are added.
 func (p *Panel) AddResources(rs ...Resource) *Panel {
 	p.Resources = append(p.Resources, rs...)
-	p.registerNavItems()
 	return p
 }
 
 // AddPages adds custom pages to the panel.
 // Pages are standalone views (reports, settings, analytics, etc.)
+// Nav items are registered once in Router() after all pages are added.
 func (p *Panel) AddPages(pages ...Page) *Panel {
 	p.Pages = append(p.Pages, pages...)
-	p.registerNavItems()
 	return p
 }
 
 // navItem is a unified type for navigation items (resources and pages)
 type navItem struct {
-	slug  string
-	label string
-	icon  string
-	group string
-	sort  int
+	slug       string
+	label      string
+	icon       string
+	group      string
+	sort       int
+	badge      string // optional badge text (e.g. unread count)
+	badgeColor string // optional badge color ("green", "red", etc.)
 }
 
 // registerNavItems injects navigation items into the sidebar.
@@ -297,9 +308,13 @@ func (p *Panel) registerNavItems() {
 func (p *Panel) collectNavItems() []navItem {
 	items := make([]navItem, 0, len(p.Resources)+len(p.Pages)+len(p.NavItems))
 	for _, r := range p.Resources {
+		// Use background context for badge — nav is rendered server-side without request context
+		badge := r.Badge(context.Background())
+		badgeColor := r.BadgeColor(context.Background())
 		items = append(items, navItem{
 			slug: r.Slug(), label: r.PluralLabel(),
 			icon: r.Icon(), group: r.Group(), sort: r.Sort(),
+			badge: badge, badgeColor: badgeColor,
 		})
 	}
 	for _, pg := range p.Pages {
@@ -312,6 +327,7 @@ func (p *Panel) collectNavItems() []navItem {
 		items = append(items, navItem{
 			slug: ni.URL, label: ni.Label,
 			icon: ni.Icon, group: ni.Group, sort: ni.Sort,
+			badge: ni.Badge,
 		})
 	}
 	return items
@@ -368,18 +384,25 @@ func groupNavItems(allItems []navItem) []layouts.NavGroup {
 func toNavItems(items []navItem) []layouts.NavItem {
 	result := make([]layouts.NavItem, len(items))
 	for i, item := range items {
-		result[i] = layouts.NavItem{Slug: item.slug, Label: item.label, Icon: item.icon}
+		result[i] = layouts.NavItem{
+			Slug:       item.slug,
+			Label:      item.label,
+			Icon:       item.icon,
+			Badge:      item.badge,
+			BadgeColor: item.badgeColor,
+		}
 	}
 	return result
 }
 
 // Router generates the standard HTTP Handler with automatic CRUD.
-// It also calls syncConfig() and plugin.BootAll() exactly once.
+// It also calls syncConfig(), registerNavItems() and plugin.BootAll() exactly once.
 func (p *Panel) Router() http.Handler {
 	if err := p.runBeforeBoot(); err != nil {
 		panic("sublimeadmin: before_boot hook failed: " + err.Error())
 	}
 	p.syncConfig()
+	p.registerNavItems() // called once here after all resources/pages are added
 	if err := plugin.Boot(); err != nil {
 		panic("sublimeadmin: plugin boot failed: " + err.Error())
 	}
@@ -394,15 +417,62 @@ func (p *Panel) Router() http.Handler {
 		handler = p.Session.LoadAndSave(handler)
 	}
 	handler = SecurityHeadersMiddleware(handler)
+	if p.csrf != nil {
+		handler = p.csrf.Middleware(csrfTokenInjector(p.csrf, handler))
+	}
 	if err := p.runAfterBoot(); err != nil {
 		panic("sublimeadmin: after_boot hook failed: " + err.Error())
 	}
 	return handler
 }
 
+// EnableCSRF enables CSRF protection for all mutating requests (POST/PUT/DELETE/PATCH).
+// Tokens are injected into context and accessible via engine.CSRFTokenFromContext(ctx).
+// Include them in forms with: <input type="hidden" name="_token" value={ engine.CSRFTokenFromContext(ctx) }/>
+//
+// Call before Router(). Pass optional CSRFConfig to override defaults.
+func (p *Panel) EnableCSRF(cfg ...CSRFConfig) *Panel {
+	p.csrf = NewCSRFManager(cfg...)
+	return p
+}
+
+// csrfContextKey is the context key for the CSRF token value.
+const csrfContextKey contextKey = "csrf_token"
+
+// CSRFTokenFromContext returns the CSRF token from context.
+// Returns empty string if CSRF is disabled or not yet set.
+// Use in form templates: <input type="hidden" name="_token" value={ engine.CSRFTokenFromContext(ctx) }/>
+func CSRFTokenFromContext(ctx context.Context) string {
+	if t, ok := ctx.Value(csrfContextKey).(string); ok {
+		return t
+	}
+	return ""
+}
+
+// csrfTokenInjector wraps a handler to inject the current request's CSRF token
+// into the context so that templates can read it via CSRFTokenFromContext(ctx).
+func csrfTokenInjector(m *CSRFManager, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := GetCSRFToken(r)
+		ctx := context.WithValue(r.Context(), csrfContextKey, token)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 func (p *Panel) registerStaticRoutes(mux *http.ServeMux) {
 	fs := http.FileServer(http.FS(assets.FS))
+	// Always register at /assets/ — required for StripPrefix-mounted setups.
 	mux.Handle("/assets/", gzipMiddleware(cacheControlMiddleware(http.StripPrefix("/assets", fs))))
+
+	// When the panel has a non-root path AND is served directly (without an external
+	// http.StripPrefix), templates generate URLs like /admin/assets/css/output.css.
+	// Those requests would fall through to the "/" catch-all and return HTML instead of
+	// the actual CSS/JS file, causing catastrophic rendering.
+	// Registering a second handler at {Panel.Path}/assets/ fixes this.
+	if p.Path != "" && p.Path != "/" {
+		prefix := strings.TrimRight(p.Path, "/") + "/assets"
+		mux.Handle(prefix+"/", gzipMiddleware(cacheControlMiddleware(http.StripPrefix(prefix, fs))))
+	}
 }
 
 func (p *Panel) registerAuthRoutes(mux *http.ServeMux) {
@@ -435,7 +505,12 @@ func (p *Panel) registerCoreRoutes(mux *http.ServeMux) {
 	// Dashboard
 	mux.Handle("/", gzipMiddleware(p.protect(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_ = dashboard.Index(widget.GetAllWidgets(r.Context())).Render(r.Context(), w)
+		cfg := layouts.GetPanelConfigFromContext(r.Context())
+		dashCfg := dashboard.DashboardConfig{
+			Title:       "Dashboard",
+			Description: "Bienvenue dans votre panneau d'administration — " + cfg.Name,
+		}
+		_ = dashboard.Index(dashCfg, widget.GetAllWidgets(r.Context())).Render(r.Context(), w)
 	}))))
 	// Global search
 	mux.Handle("/api/search", p.protect(http.HandlerFunc(p.handleSearch)))
@@ -485,6 +560,10 @@ func (p *Panel) mountResource(mux *http.ServeMux, res Resource) {
 	}
 	if rm := NewRelationManagerHandler(res); rm.HasManagers() {
 		mux.Handle("/"+slug+"/relations/", p.protect(rm))
+	}
+	// Auto-register resource in global search if it implements search.Searchable.
+	if s, ok := res.(search.Searchable); ok {
+		search.Register(s)
 	}
 }
 

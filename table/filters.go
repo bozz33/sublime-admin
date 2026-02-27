@@ -163,3 +163,31 @@ func (f *CustomFilter) Key() string                   { return f.filterKey }
 func (f *CustomFilter) Label() string                 { return f.LabelStr }
 func (f *CustomFilter) Type() string                  { return "custom" }
 func (f *CustomFilter) FilterOptions() []FilterOption { return nil }
+
+// TrashedFilter adds a "trashed records" filter with Active / Only / All options.
+// Use it with resources that implement SoftDeletable.
+type TrashedFilter struct {
+	LabelStr string
+}
+
+// Trashed creates a new trashed filter.
+func Trashed() *TrashedFilter {
+	return &TrashedFilter{LabelStr: "Deleted records"}
+}
+
+// WithLabel sets the filter label.
+func (f *TrashedFilter) WithLabel(label string) *TrashedFilter {
+	f.LabelStr = label
+	return f
+}
+
+func (f *TrashedFilter) Key() string   { return "trashed" }
+func (f *TrashedFilter) Label() string { return f.LabelStr }
+func (f *TrashedFilter) Type() string  { return "trashed" }
+func (f *TrashedFilter) FilterOptions() []FilterOption {
+	return []FilterOption{
+		{Value: "active", Label: "Active only"},
+		{Value: "only", Label: "Deleted only"},
+		{Value: "all", Label: "All records"},
+	}
+}

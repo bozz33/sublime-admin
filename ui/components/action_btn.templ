@@ -5,17 +5,103 @@ import (
 	"fmt"
 )
 
+// ActionButton renders a single action as either a confirmation button or a link.
+// Delete confirmation uses Datastar global signals.
 templ ActionButton(a *actions.Action, item any) {
 	if a.RequiresConfirmation {
-		<button 
+		<button
 			type="button"
-			@click={ fmt.Sprintf("$dispatch('open-delete-modal', { url: '%s', title: '%s', desc: '%s' })", a.UrlResolver(item), a.ModalTitle, a.ModalDescription) }
+			data-delete-url={ a.UrlResolver(item) }
+			data-delete-title={ a.ModalTitle }
+			data-delete-desc={ a.ModalDescription }
+			data-on-click="const b=evt.target.closest('[data-delete-url]'); $deleteModalUrl=b.dataset.deleteUrl; $deleteModalTitle=b.dataset.deleteTitle; $deleteModalDesc=b.dataset.deleteDesc; $deleteModalOpen=true"
 			class={ "text-sm font-medium hover:underline", getActionColorClass(a.Color) }
 		>
+			if a.Icon != "" {
+				<span class="material-icons-outlined text-sm align-middle mr-0.5">{ a.Icon }</span>
+			}
 			{ a.Label }
 		</button>
 	} else {
-		<a href={ templ.SafeURL(a.UrlResolver(item)) } class={ "text-sm font-medium hover:underline", getActionColorClass(a.Color) }>
+		<a
+			href={ templ.SafeURL(a.UrlResolver(item)) }
+			class={ "text-sm font-medium hover:underline", getActionColorClass(a.Color) }
+		>
+			if a.Icon != "" {
+				<span class="material-icons-outlined text-sm align-middle mr-0.5">{ a.Icon }</span>
+			}
+			{ a.Label }
+		</a>
+	}
+}
+
+// ActionGroupButton renders an ActionGroup as a "..." dropdown button.
+// Uses Alpine.js scoped x-data for dropdown open/close state.
+// Each group on the page is independent.
+templ ActionGroupButton(g *actions.ActionGroup, item any) {
+	<div class="relative" x-data="{ open: false }">
+		<!-- Trigger button -->
+		<button
+			type="button"
+			@click="open = !open"
+			@click.outside="open = false"
+			class={ "inline-flex items-center gap-1 p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors", getActionColorClass(g.Color) }
+			title={ g.Label }
+		>
+			if g.Icon != "" {
+				<span class="material-icons-outlined text-base">{ g.Icon }</span>
+			} else {
+				<span class="material-icons-outlined text-base">more_vert</span>
+			}
+		</button>
+
+		<!-- Dropdown panel -->
+		<div
+			x-show="open"
+			x-cloak
+			x-transition:enter="transition ease-out duration-100"
+			x-transition:enter-start="opacity-0 scale-95"
+			x-transition:enter-end="opacity-100 scale-100"
+			x-transition:leave="transition ease-in duration-75"
+			x-transition:leave-start="opacity-100 scale-100"
+			x-transition:leave-end="opacity-0 scale-95"
+			class="absolute right-0 z-30 mt-1 w-44 bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden"
+		>
+			<ul class="py-1" role="menu">
+				for _, action := range g.Items() {
+					<li role="menuitem">
+						@groupActionItem(action, item)
+					</li>
+				}
+			</ul>
+		</div>
+	</div>
+}
+
+// groupActionItem renders a single action inside an ActionGroup dropdown.
+templ groupActionItem(a *actions.Action, item any) {
+	if a.RequiresConfirmation {
+		<button
+			type="button"
+			data-delete-url={ a.UrlResolver(item) }
+			data-delete-title={ a.ModalTitle }
+			data-delete-desc={ a.ModalDescription }
+			data-on-click="const b=evt.target.closest('[data-delete-url]'); $deleteModalUrl=b.dataset.deleteUrl; $deleteModalTitle=b.dataset.deleteTitle; $deleteModalDesc=b.dataset.deleteDesc; $deleteModalOpen=true"
+			class={ "w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left", getActionColorClass(a.Color) }
+		>
+			if a.Icon != "" {
+				<span class="material-icons-outlined text-base flex-shrink-0">{ a.Icon }</span>
+			}
+			{ a.Label }
+		</button>
+	} else {
+		<a
+			href={ templ.SafeURL(a.UrlResolver(item)) }
+			class={ "flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors", getActionColorClass(a.Color) }
+		>
+			if a.Icon != "" {
+				<span class="material-icons-outlined text-base flex-shrink-0">{ a.Icon }</span>
+			}
 			{ a.Label }
 		</a>
 	}
@@ -27,7 +113,18 @@ func getActionColorClass(color string) string {
 		return "text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
 	case "primary":
 		return "text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300"
+	case "success":
+		return "text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
+	case "warning":
+		return "text-yellow-600 hover:text-yellow-900 dark:text-yellow-400 dark:hover:text-yellow-300"
+	case "info":
+		return "text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
 	default:
 		return "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
 	}
+}
+
+// groupID generates a unique ID for a dropdown group to avoid conflicts.
+func groupID(label string) string {
+	return fmt.Sprintf("group-%s", label)
 }

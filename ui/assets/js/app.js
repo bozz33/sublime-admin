@@ -776,56 +776,64 @@ const Sidebar = {
 };
 
 // ============================================
-// HTMX INTEGRATION
+// DATASTAR INTEGRATION
 // ============================================
-const HTMXIntegration = {
+const DatastarIntegration = {
     init() {
-        // Show loading state on HTMX requests
-        document.body.addEventListener('htmx:beforeRequest', (e) => {
-            const target = e.detail.target;
-            if (target) {
-                target.classList.add('opacity-50', 'pointer-events-none');
+        // Show loading indicator on Datastar requests
+        document.addEventListener('datastar-request-started', () => {
+            document.body.classList.add('datastar-loading');
+        });
+        document.addEventListener('datastar-request-ended', () => {
+            document.body.classList.remove('datastar-loading');
+        });
+
+        // Handle toast signals pushed from server (datastar-merge-signals)
+        // Server sends: { toastMessage: "...", toastType: "success", toastVisible: true }
+        document.addEventListener('datastar-merge-signals', (e) => {
+            const signals = e.detail?.signals || {};
+            if (signals.toastVisible && signals.toastMessage) {
+                Toast.show(signals.toastMessage, signals.toastType || 'info');
             }
         });
 
-        // Remove loading state after HTMX requests
-        document.body.addEventListener('htmx:afterRequest', (e) => {
-            const target = e.detail.target;
-            if (target) {
-                target.classList.remove('opacity-50', 'pointer-events-none');
-            }
-        });
-
-        // Handle HTMX errors
-        document.body.addEventListener('htmx:responseError', (e) => {
-            Toast.error('Une erreur est survenue. Veuillez réessayer.');
-        });
-
-        // Reinitialize components after HTMX swap
-        document.body.addEventListener('htmx:afterSwap', (e) => {
-            // Reinit tables
-            e.detail.target.querySelectorAll('[data-table]').forEach(table => {
-                DataTable.init(table.id);
+        // Reinitialize chart components after Datastar DOM merges
+        document.addEventListener('datastar-merge-fragments', () => {
+            if (window.initDynamicCharts) window.initDynamicCharts();
+            // Reinit bulk action containers
+            document.querySelectorAll('[data-bulk-container]').forEach(container => {
+                BulkActions.init(container.id || 'table-container');
             });
         });
+    }
+};
 
-        // Handle flash messages from HTMX responses (legacy X-Flash-Message)
-        document.body.addEventListener('htmx:afterRequest', (e) => {
-            const flashHeader = e.detail.xhr?.getResponseHeader('X-Flash-Message');
-            const flashType = e.detail.xhr?.getResponseHeader('X-Flash-Type') || 'info';
-            if (flashHeader) {
-                Toast.show(flashHeader, flashType);
-            }
+// ============================================
+// SIDEBAR SYNC — keeps #main-content margin in sync with sidebar state
+// Uses MutationObserver to detect Datastar class changes on #sidebar.
+// ============================================
+const SidebarSync = {
+    init() {
+        const sidebar = document.getElementById('sidebar');
+        const main = document.getElementById('main-content');
+        if (!sidebar || !main) return;
 
-            // Unified X-Toast JSON header: {"message":"...","type":"success","duration":4000}
-            const xToast = e.detail.xhr?.getResponseHeader('X-Toast');
-            if (xToast) {
-                try {
-                    const d = JSON.parse(xToast);
-                    Toast.show(d.message || '', d.type || 'info', { duration: d.duration || 5000 });
-                } catch (_) {}
-            }
+        // Apply initial margin from localStorage
+        this.syncMain(sidebar, main);
+
+        // Watch for class mutations on sidebar (Datastar adds/removes w-64/w-20)
+        new MutationObserver(() => this.syncMain(sidebar, main)).observe(sidebar, {
+            attributes: true,
+            attributeFilter: ['class']
         });
+    },
+
+    syncMain(sidebar, main) {
+        // Sidebar is open when it has w-64; collapsed when w-20
+        const isOpen = sidebar.classList.contains('w-64') ||
+                       localStorage.getItem('sidebarCollapsed') !== 'true';
+        main.classList.toggle('lg:ml-64', isOpen);
+        main.classList.toggle('lg:ml-20', !isOpen);
     }
 };
 
@@ -835,9 +843,25 @@ const HTMXIntegration = {
 const SSEToast = {
     source: null,
 
+    // Update the Datastar $notifUnread signal.
+    // Datastar exposes a datastar-merge-signals custom event that patches signals.
+    _setNotifUnread(count) {
+        document.dispatchEvent(new CustomEvent('datastar-merge-signals', {
+            detail: { signals: { notifUnread: count } }
+        }));
+    },
+
     init(url) {
         if (!url || this.source) return;
         this.source = new EventSource(url);
+
+        // "connected" event — sent once on stream open with current unread_count.
+        this.source.addEventListener('connected', (e) => {
+            try {
+                const d = JSON.parse(e.data);
+                this._setNotifUnread(d.unread_count ?? 0);
+            } catch (_) {}
+        });
 
         // Listen for "toast" events sent by the Go SSE handler
         this.source.addEventListener('toast', (e) => {
@@ -847,11 +871,15 @@ const SSEToast = {
             } catch (_) {}
         });
 
-        // Listen for generic "notification" events
+        // "notification" event — new notification pushed from server.
+        // Show a toast and increment $notifUnread by 1.
         this.source.addEventListener('notification', (e) => {
             try {
                 const d = JSON.parse(e.data);
                 Toast.show(d.title || d.message || '', d.type || 'info');
+                // Increment unread count: read current value from the signal store if possible.
+                const current = window.__ds?.signals?.notifUnread?.get?.() ?? 0;
+                this._setNotifUnread(current + 1);
             } catch (_) {}
         });
 
@@ -927,12 +955,74 @@ const BulkActions = {
     clearSelection(containerId) {
         const container = document.getElementById(containerId);
         if (!container) return;
-        
+
         container.querySelectorAll('[data-select-all], [data-select-item]').forEach(cb => {
             cb.checked = false;
             cb.indeterminate = false;
         });
         this.updateUI(container);
+    },
+
+    // getSelected returns an array of selected item values from a bulk container.
+    getSelected(containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) {
+            // Fallback: search globally
+            return Array.from(document.querySelectorAll('[data-select-item]:checked'))
+                .map(cb => cb.value || cb.dataset.id || '');
+        }
+        return Array.from(container.querySelectorAll('[data-select-item]:checked'))
+            .map(cb => cb.value || cb.dataset.id || '');
+    },
+
+    // pendingAction stores the action to execute after bulk confirmation.
+    _pendingAction: null,
+
+    // setPendingAction is called before opening the bulk confirmation modal.
+    setPendingAction(action, ids, url) {
+        this._pendingAction = { action, ids, url };
+    },
+
+    // executePendingAction runs the pending action after user confirms the bulk modal.
+    executePendingAction() {
+        if (!this._pendingAction) return;
+        const { action, ids, url } = this._pendingAction;
+        this._pendingAction = null;
+
+        // Dispatch a custom event that the application can listen to
+        document.dispatchEvent(new CustomEvent('sublimego:bulk-action-confirmed', {
+            detail: { action, ids, url }
+        }));
+    },
+
+    // postBulkAction submits selected IDs to a URL via a hidden form (POST).
+    postBulkAction(url, containerId, method = 'POST') {
+        const ids = this.getSelected(containerId || 'table-container');
+        if (ids.length === 0) return;
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = url;
+        form.style.display = 'none';
+
+        if (method !== 'POST') {
+            const m = document.createElement('input');
+            m.type = 'hidden';
+            m.name = '_method';
+            m.value = method;
+            form.appendChild(m);
+        }
+
+        ids.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = id;
+            form.appendChild(input);
+        });
+
+        document.body.appendChild(form);
+        form.submit();
     }
 };
 
@@ -940,22 +1030,32 @@ const BulkActions = {
 // INITIALIZATION
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize all modules
+    // Core UI modules
     Theme.init();
     Modal.init();
     Toast.init();
     Dropdown.init();
-    Sidebar.init();
-    HTMXIntegration.init();
 
-    // Initialize tables
+    // Datastar integration (replaces HTMX)
+    DatastarIntegration.init();
+
+    // Sidebar margin sync (watches Datastar signal-driven class changes on #sidebar)
+    SidebarSync.init();
+
+    // Notifications SSE — read URL from meta tag injected by base.templ
+    const notifUrl = document.querySelector('meta[name="notifications-url"]')?.content;
+    if (notifUrl) {
+        SSEToast.init(notifUrl);
+    }
+
+    // Initialize legacy table instances (client-side sort/search/pagination)
     document.querySelectorAll('[data-table]').forEach(table => {
         DataTable.init(table.id);
     });
 
-    // Initialize bulk actions
+    // Initialize bulk action containers
     document.querySelectorAll('[data-bulk-container]').forEach(container => {
-        BulkActions.init(container.id);
+        BulkActions.init(container.id || 'table-container');
     });
 });
 
@@ -972,6 +1072,8 @@ window.SublimeGo = {
     Dropdown,
     Theme,
     Sidebar,
+    SidebarSync,
+    DatastarIntegration,
     BulkActions
 };
 
@@ -984,4 +1086,5 @@ window.FormValidator = FormValidator;
 window.Dropdown = Dropdown;
 window.Theme = Theme;
 window.Sidebar = Sidebar;
+window.SidebarSync = SidebarSync;
 window.BulkActions = BulkActions;

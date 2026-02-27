@@ -3,6 +3,7 @@ package form
 import (
 	"fmt"
 	"html/template"
+	"sort"
 	"strings"
 
 	"github.com/a-h/templ"
@@ -72,7 +73,8 @@ func (b *BaseField) IsChecked() bool {
 // TextInput represents a text input field.
 type TextInput struct {
 	BaseField
-	Type string
+	Type            string
+	LiveValidateURL string // if set, validates the field on blur via Datastar @get
 }
 
 func (f *TextInput) Render() templ.Component { return TextInputRender(f) }
@@ -144,6 +146,15 @@ func (f *TextInput) Default(val any) *TextInput {
 	return f
 }
 
+// WithLiveValidation enables real-time per-field validation via Datastar SSE.
+// url should be the validate-field endpoint (e.g. "/users/validate-field").
+// On blur, the field sends @get(url + "?field=name&value=...") and updates
+// the #field-error-{name} element with the server response.
+func (f *TextInput) WithLiveValidation(url string) *TextInput {
+	f.LiveValidateURL = url
+	return f
+}
+
 // TextareaInput represents a textarea field.
 type TextareaInput struct {
 	BaseField
@@ -185,10 +196,17 @@ type SelectOption struct {
 	Value string
 }
 
+// SelectOptGroup represents a group of select options (for grouped <optgroup> rendering).
+type SelectOptGroup struct {
+	Label   string
+	Options []SelectOption
+}
+
 // SelectInput represents a select field.
 type SelectInput struct {
 	BaseField
 	selectOptions []SelectOption
+	optGroups     []SelectOptGroup // grouped options (optional — overrides selectOptions when set)
 }
 
 func (f *SelectInput) Render() templ.Component { return SelectRender(f) }
@@ -201,11 +219,30 @@ func Select(name string) *SelectInput {
 	}
 }
 
-// Options sets the select options.
+// Options sets the select options from a map.
+// Keys are sorted alphabetically to guarantee deterministic rendering order.
+// For explicit ordering use OptionsOrdered() instead.
 func (s *SelectInput) Options(options map[string]string) *SelectInput {
-	for v, l := range options {
-		s.selectOptions = append(s.selectOptions, SelectOption{Value: v, Label: l})
+	keys := make([]string, 0, len(options))
+	for v := range options {
+		keys = append(keys, v)
 	}
+	sort.Strings(keys)
+	for _, v := range keys {
+		s.selectOptions = append(s.selectOptions, SelectOption{Value: v, Label: options[v]})
+	}
+	return s
+}
+
+// OptionsOrdered sets the select options from an ordered slice.
+func (s *SelectInput) OptionsOrdered(options []SelectOption) *SelectInput {
+	s.selectOptions = options
+	return s
+}
+
+// WithGroups sets grouped options (renders as <optgroup> elements).
+func (s *SelectInput) WithGroups(groups []SelectOptGroup) *SelectInput {
+	s.optGroups = groups
 	return s
 }
 
@@ -217,6 +254,9 @@ func (s *SelectInput) Label(label string) *SelectInput {
 
 // SelectOptions returns the available options.
 func (s *SelectInput) SelectOptions() []SelectOption { return s.selectOptions }
+
+// OptionGroups returns the grouped options (nil if not set).
+func (s *SelectInput) OptionGroups() []SelectOptGroup { return s.optGroups }
 
 // Required makes the field required.
 func (s *SelectInput) Required() *SelectInput {
@@ -536,7 +576,7 @@ type MarkdownEditorInput struct {
 }
 
 func (f *MarkdownEditorInput) Render() templ.Component {
-	return RichEditorRender(&RichEditorInput{BaseField: f.BaseField})
+	return MarkdownEditorRender(f)
 }
 
 // MarkdownEditor creates a Markdown editor field.
@@ -820,3 +860,217 @@ func (s *SliderInput) Default(val float64) *SliderInput {
 // ComponentType returns the component type identifier.
 func (s *SliderInput) ComponentType() string    { return "slider" }
 func (s *SliderInput) GetComponentType() string { return "slider" }
+
+// ---------------------------------------------------------------------------
+// RadioInput — radio button group (like Filament's Radio field).
+// ---------------------------------------------------------------------------
+
+// RadioOption represents a single radio button option.
+type RadioOption struct {
+	Label       string
+	Value       string
+	Description string // optional description shown below the label
+}
+
+// RadioInput represents a group of radio buttons.
+type RadioInput struct {
+	BaseField
+	radioOptions []RadioOption
+	inline       bool // horizontal layout when true
+}
+
+func (f *RadioInput) Render() templ.Component { return RadioInputRender(f) }
+
+// Radio creates a new radio button group field.
+func Radio(name string) *RadioInput {
+	return &RadioInput{
+		BaseField:    BaseField{fieldName: name, LabelStr: name},
+		radioOptions: make([]RadioOption, 0),
+	}
+}
+
+// Label sets the label.
+func (f *RadioInput) Label(label string) *RadioInput {
+	f.LabelStr = label
+	return f
+}
+
+// Options sets options from a map.
+// Keys are sorted alphabetically to guarantee deterministic rendering order.
+// For explicit ordering use OptionsOrdered() instead.
+func (f *RadioInput) Options(options map[string]string) *RadioInput {
+	keys := make([]string, 0, len(options))
+	for v := range options {
+		keys = append(keys, v)
+	}
+	sort.Strings(keys)
+	for _, v := range keys {
+		f.radioOptions = append(f.radioOptions, RadioOption{Value: v, Label: options[v]})
+	}
+	return f
+}
+
+// OptionsOrdered sets options in the given order.
+func (f *RadioInput) OptionsOrdered(options []RadioOption) *RadioInput {
+	f.radioOptions = options
+	return f
+}
+
+// Inline sets horizontal layout (radio buttons side by side).
+func (f *RadioInput) Inline() *RadioInput {
+	f.inline = true
+	return f
+}
+
+// Required marks the field as required.
+func (f *RadioInput) Required() *RadioInput {
+	f.BaseField.Required = true
+	f.fieldRules = append(f.fieldRules, "required")
+	return f
+}
+
+// Default sets the initially selected value.
+func (f *RadioInput) Default(val string) *RadioInput {
+	f.fieldValue = val
+	return f
+}
+
+// Help sets the help text.
+func (f *RadioInput) Help(text string) *RadioInput {
+	f.HelpText = text
+	return f
+}
+
+// Disabled disables all radio buttons.
+func (f *RadioInput) Disabled() *RadioInput {
+	f.BaseField.Disabled = true
+	return f
+}
+
+// RadioOptions returns the configured options.
+func (f *RadioInput) RadioOptions() []RadioOption { return f.radioOptions }
+
+// IsInline returns true if horizontal layout is active.
+func (f *RadioInput) IsInline() bool { return f.inline }
+
+// ComponentType returns the component type identifier.
+func (f *RadioInput) ComponentType() string    { return "radio" }
+func (f *RadioInput) GetComponentType() string { return "radio" }
+
+// ---------------------------------------------------------------------------
+// CheckboxListInput — list of checkboxes (like Filament's CheckboxList field).
+// ---------------------------------------------------------------------------
+
+// CheckboxOption represents a single checkbox option.
+type CheckboxOption struct {
+	Label       string
+	Value       string
+	Description string
+}
+
+// CheckboxListInput represents a group of checkboxes (multi-select).
+type CheckboxListInput struct {
+	BaseField
+	checkboxOptions []CheckboxOption
+	selectedValues  []string
+	inline          bool
+	columns         int // number of columns in grid layout (0 = single column)
+}
+
+func (f *CheckboxListInput) Render() templ.Component { return CheckboxListRender(f) }
+
+// CheckboxList creates a new checkbox list field.
+func CheckboxList(name string) *CheckboxListInput {
+	return &CheckboxListInput{
+		BaseField:       BaseField{fieldName: name, LabelStr: name},
+		checkboxOptions: make([]CheckboxOption, 0),
+		selectedValues:  make([]string, 0),
+	}
+}
+
+// Label sets the label.
+func (f *CheckboxListInput) Label(label string) *CheckboxListInput {
+	f.LabelStr = label
+	return f
+}
+
+// Options sets options from a map.
+// Keys are sorted alphabetically to guarantee deterministic rendering order.
+// For explicit ordering use OptionsOrdered() instead.
+func (f *CheckboxListInput) Options(options map[string]string) *CheckboxListInput {
+	keys := make([]string, 0, len(options))
+	for v := range options {
+		keys = append(keys, v)
+	}
+	sort.Strings(keys)
+	for _, v := range keys {
+		f.checkboxOptions = append(f.checkboxOptions, CheckboxOption{Value: v, Label: options[v]})
+	}
+	return f
+}
+
+// OptionsOrdered sets options in the given order.
+func (f *CheckboxListInput) OptionsOrdered(options []CheckboxOption) *CheckboxListInput {
+	f.checkboxOptions = options
+	return f
+}
+
+// Default sets the pre-selected values.
+func (f *CheckboxListInput) Default(vals []string) *CheckboxListInput {
+	f.selectedValues = vals
+	return f
+}
+
+// Inline sets horizontal layout.
+func (f *CheckboxListInput) Inline() *CheckboxListInput {
+	f.inline = true
+	return f
+}
+
+// Columns sets the number of columns for grid layout.
+func (f *CheckboxListInput) Columns(n int) *CheckboxListInput {
+	f.columns = n
+	return f
+}
+
+// Required marks the field as required.
+func (f *CheckboxListInput) Required() *CheckboxListInput {
+	f.BaseField.Required = true
+	f.fieldRules = append(f.fieldRules, "required")
+	return f
+}
+
+// Help sets the help text.
+func (f *CheckboxListInput) Help(text string) *CheckboxListInput {
+	f.HelpText = text
+	return f
+}
+
+// Disabled disables all checkboxes.
+func (f *CheckboxListInput) Disabled() *CheckboxListInput {
+	f.BaseField.Disabled = true
+	return f
+}
+
+// CheckboxOptions returns all configured options.
+func (f *CheckboxListInput) CheckboxOptions() []CheckboxOption { return f.checkboxOptions }
+
+// IsSelected returns true if the given value is in the selected set.
+func (f *CheckboxListInput) IsSelected(value string) bool {
+	for _, v := range f.selectedValues {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}
+
+// IsInline returns true if horizontal layout is active.
+func (f *CheckboxListInput) IsInline() bool { return f.inline }
+
+// GridColumns returns the grid column count (0 = no grid).
+func (f *CheckboxListInput) GridColumns() int { return f.columns }
+
+// ComponentType returns the component type identifier.
+func (f *CheckboxListInput) ComponentType() string    { return "checkbox_list" }
+func (f *CheckboxListInput) GetComponentType() string { return "checkbox_list" }

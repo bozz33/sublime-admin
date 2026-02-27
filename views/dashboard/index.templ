@@ -5,12 +5,36 @@ import (
 	"github.com/bozz33/sublimeadmin/widget"
 )
 
-templ Index(dashboardWidgets []widget.Widget) {
-	@layouts.Base("Dashboard") {
+// DashboardConfig holds the dashboard page configuration.
+type DashboardConfig struct {
+	Title       string // Page heading (default: "Dashboard")
+	Description string // Optional subtitle shown below heading
+}
+
+// DefaultDashboardConfig returns a ready-to-use default config.
+func DefaultDashboardConfig() DashboardConfig {
+	return DashboardConfig{
+		Title:       "Dashboard",
+		Description: "",
+	}
+}
+
+// Index renders the main dashboard page.
+// dashboardWidgets is a flat list of widget.Widget values.
+// GridWidget instances allow complex multi-column layouts.
+templ Index(cfg DashboardConfig, dashboardWidgets []widget.Widget) {
+	@layouts.Base(cfg.Title) {
 		<div class="px-4 sm:px-6 lg:px-8 py-8">
-			<h1 class="text-2xl font-semibold text-gray-900 dark:text-white mb-8">Dashboard</h1>
+			<!-- Page header -->
+			<div class="mb-6">
+				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">{ cfg.Title }</h1>
+				if cfg.Description != "" {
+					<p class="text-gray-500 dark:text-gray-400 mt-1">{ cfg.Description }</p>
+				}
+			</div>
 
 			if len(dashboardWidgets) == 0 {
+				<!-- Empty state -->
 				<div class="flex flex-col items-center justify-center py-16 px-4">
 					<div class="w-24 h-24 bg-primary-100 dark:bg-primary-900/30 rounded-full flex items-center justify-center mx-auto mb-8">
 						<span class="material-icons-outlined text-primary-500 text-5xl">dashboard</span>

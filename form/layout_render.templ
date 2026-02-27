@@ -105,7 +105,7 @@ templ WizardRender(w *Wizard) {
 					>
 						{ fmt.Sprintf("%d", i+1) }
 					</div>
-					<div x-show="sidebarOpen !== undefined || true" class="hidden sm:block">
+					<div class="hidden sm:block">
 						<p
 							class="text-xs font-medium"
 							:class={ fmt.Sprintf("step >= %d ? 'text-primary-600 dark:text-primary-400' : 'text-gray-500 dark:text-gray-400'", i) }
@@ -224,6 +224,75 @@ func calloutTextColor(color string) string {
 	default:
 		return "text-blue-800 dark:text-blue-300"
 	}
+}
+
+// FieldsetRender renders a fieldset with legend (native HTML element).
+templ FieldsetRender(f *Fieldset) {
+	<fieldset class="border border-gray-200 dark:border-gray-700 rounded-xl p-5 space-y-4">
+		if f.Legend != "" {
+			<legend class="px-2 text-sm font-semibold text-gray-700 dark:text-gray-300">{ f.Legend }</legend>
+		}
+		for _, child := range f.GetSchema() {
+			if child.IsVisible() {
+				@child.Render()
+			}
+		}
+	</fieldset>
+}
+
+// FlexRender renders components in a flexible row layout.
+templ FlexRender(f *Flex) {
+	<div class={ flexClass(f) }>
+		for _, child := range f.GetSchema() {
+			if child.IsVisible() {
+				@child.Render()
+			}
+		}
+	</div>
+}
+
+// SplitRender renders a two-column split layout.
+templ SplitRender(s *Split) {
+	<div class={ splitGridClass(s) }>
+		<div class={ fmt.Sprintf("col-span-%d space-y-4", s.LeftWidth) }>
+			for _, child := range s.Left {
+				if child.IsVisible() {
+					@child.Render()
+				}
+			}
+		</div>
+		<div class={ fmt.Sprintf("col-span-%d space-y-4", s.RightWidth) }>
+			for _, child := range s.Right {
+				if child.IsVisible() {
+					@child.Render()
+				}
+			}
+		</div>
+	</div>
+}
+
+func flexClass(f *Flex) string {
+	base := "flex"
+	if f.Wrap {
+		base += " flex-wrap"
+	}
+	base += fmt.Sprintf(" gap-%d", f.GapSize)
+	switch f.Align {
+	case "center":
+		base += " items-center"
+	case "end":
+		base += " items-end"
+	case "stretch":
+		base += " items-stretch"
+	default:
+		base += " items-start"
+	}
+	return base
+}
+
+func splitGridClass(s *Split) string {
+	total := s.LeftWidth + s.RightWidth
+	return fmt.Sprintf("grid grid-cols-%d gap-6", total)
 }
 
 func calloutBodyColor(color string) string {

@@ -255,3 +255,165 @@ func (c *Callout) Render() templ.Component  { return CalloutRender(c) }
 // Schema returns the callout's nested components.
 func (c *Callout) Schema() []Component    { return c.Components }
 func (c *Callout) GetSchema() []Component { return c.Components }
+
+// ---------------------------------------------------------------------------
+// Fieldset — HTML fieldset with legend (like Filament's Fieldset layout).
+// ---------------------------------------------------------------------------
+
+// Fieldset groups form components inside a native HTML <fieldset> element.
+type Fieldset struct {
+	Legend     string
+	Components []Component
+}
+
+// NewFieldset creates a new Fieldset with the given legend text.
+func NewFieldset(legend string) *Fieldset {
+	return &Fieldset{
+		Legend:     legend,
+		Components: make([]Component, 0),
+	}
+}
+
+// SetSchema sets the nested components.
+func (f *Fieldset) SetSchema(components ...Component) *Fieldset {
+	f.Components = components
+	return f
+}
+
+// IsVisible returns true.
+func (f *Fieldset) IsVisible() bool { return true }
+
+// ComponentType returns the component type identifier.
+func (f *Fieldset) ComponentType() string    { return "layout_fieldset" }
+func (f *Fieldset) GetComponentType() string { return "layout_fieldset" }
+func (f *Fieldset) Render() templ.Component  { return FieldsetRender(f) }
+
+// Schema returns the nested components.
+func (f *Fieldset) Schema() []Component    { return f.Components }
+func (f *Fieldset) GetSchema() []Component { return f.Components }
+
+// ---------------------------------------------------------------------------
+// Flex — flexible row layout (like Filament's Flex layout).
+// ---------------------------------------------------------------------------
+
+// FlexAlign defines alignment along the cross axis.
+type FlexAlign string
+
+const (
+	FlexAlignStart   FlexAlign = "start"
+	FlexAlignCenter  FlexAlign = "center"
+	FlexAlignEnd     FlexAlign = "end"
+	FlexAlignStretch FlexAlign = "stretch"
+)
+
+// Flex arranges form components in a flexible row.
+type Flex struct {
+	Components []Component
+	GapSize    int       // 1-12, default 4
+	Wrap       bool      // allow wrapping to next line
+	Align      FlexAlign // cross-axis alignment
+}
+
+// NewFlex creates a new Flex layout with sensible defaults.
+func NewFlex() *Flex {
+	return &Flex{
+		Components: make([]Component, 0),
+		GapSize:    4,
+		Wrap:       true,
+		Align:      FlexAlignStart,
+	}
+}
+
+// SetSchema sets the nested components.
+func (f *Flex) SetSchema(components ...Component) *Flex {
+	f.Components = components
+	return f
+}
+
+// WithGap sets the gap between items (Tailwind gap-N, 1-12).
+func (f *Flex) WithGap(gap int) *Flex {
+	f.GapSize = gap
+	return f
+}
+
+// NoWrap disables line wrapping.
+func (f *Flex) NoWrap() *Flex {
+	f.Wrap = false
+	return f
+}
+
+// WithAlign sets the cross-axis alignment.
+func (f *Flex) WithAlign(align FlexAlign) *Flex {
+	f.Align = align
+	return f
+}
+
+// IsVisible returns true.
+func (f *Flex) IsVisible() bool { return true }
+
+// ComponentType returns the component type identifier.
+func (f *Flex) ComponentType() string    { return "layout_flex" }
+func (f *Flex) GetComponentType() string { return "layout_flex" }
+func (f *Flex) Render() templ.Component  { return FlexRender(f) }
+
+// Schema returns the nested components.
+func (f *Flex) Schema() []Component    { return f.Components }
+func (f *Flex) GetSchema() []Component { return f.Components }
+
+// ---------------------------------------------------------------------------
+// Split — two-column fixed layout (like Filament's Split layout).
+// ---------------------------------------------------------------------------
+
+// Split divides the form into two columns (left and right).
+type Split struct {
+	Left       []Component
+	Right      []Component
+	LeftWidth  int // Tailwind col-span value for left column (default 1, right also 1 — equal)
+	RightWidth int
+}
+
+// NewSplit creates a new Split layout with equal columns.
+func NewSplit() *Split {
+	return &Split{
+		Left:       make([]Component, 0),
+		Right:      make([]Component, 0),
+		LeftWidth:  1,
+		RightWidth: 1,
+	}
+}
+
+// WithLeft sets the left column components.
+func (s *Split) WithLeft(components ...Component) *Split {
+	s.Left = components
+	return s
+}
+
+// WithRight sets the right column components.
+func (s *Split) WithRight(components ...Component) *Split {
+	s.Right = components
+	return s
+}
+
+// WithRatio sets the column ratio (e.g. WithRatio(2, 1) → 2/3 left, 1/3 right).
+func (s *Split) WithRatio(left, right int) *Split {
+	s.LeftWidth = left
+	s.RightWidth = right
+	return s
+}
+
+// IsVisible returns true.
+func (s *Split) IsVisible() bool { return true }
+
+// ComponentType returns the component type identifier.
+func (s *Split) ComponentType() string    { return "layout_split" }
+func (s *Split) GetComponentType() string { return "layout_split" }
+func (s *Split) Render() templ.Component  { return SplitRender(s) }
+
+// Schema returns all components from both columns.
+func (s *Split) Schema() []Component {
+	all := make([]Component, 0, len(s.Left)+len(s.Right))
+	all = append(all, s.Left...)
+	all = append(all, s.Right...)
+	return all
+}
+func (s *Split) GetSchema() []Component { return s.Schema() }

@@ -1,59 +1,63 @@
 package layouts
 
+import "fmt"
+
 // Auth is the layout for login/register pages (without sidebar).
-// Hybrid configuration: Tailwind CDN + Fonts CDN + local Alpine.js
+// Uses local Tailwind v4 (styles.css) + local Alpine.js — no CDN dependency.
 templ Auth(title string) {
+	{{ cfg := GetPanelConfig() }}
 	<!DOCTYPE html>
-	<html lang="en" x-data="{ darkMode: localStorage.getItem('darkMode') === 'true' }" x-init="$watch('darkMode', val => localStorage.setItem('darkMode', val))" :class="{ 'dark': darkMode }">
+	<html
+		lang="en"
+		x-data="{ darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches) }"
+		x-init="$watch('darkMode', val => localStorage.setItem('theme', val ? 'dark' : 'light'))"
+		:class="{ 'dark': darkMode }"
+	>
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>{ title } - { GetPanelConfig().Name }</title>
-			
+			<title>{ title } - { cfg.Name }</title>
+
 			<!-- Favicon -->
-			if GetPanelConfig().Favicon != "" {
-				<link rel="icon" href={ GetPanelConfig().Favicon }/>
+			if cfg.Favicon != "" {
+				<link rel="icon" href={ cfg.Favicon }/>
+			} else {
+				<link rel="icon" href={ assetPath(cfg.Path, "/assets/favicon.ico") }/>
 			}
-			
-			<!-- Tailwind CSS CDN v4 -->
-			<script src="https://cdn.tailwindcss.com"></script>
-			<script>
-				tailwind.config = {
-					darkMode: 'class',
-					theme: {
-						extend: {
-							colors: {
-								primary: {
-									50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
-									400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d',
-									800: '#166534', 900: '#14532d'
-								}
-							},
-							fontFamily: { sans: ['Inter', 'sans-serif'] }
-						}
-					}
-				}
-			</script>
-			
-			<!-- Fonts -->
+
+			<!-- Dynamic CSS Variables (Filament-style: color injected from PanelConfig) -->
+			@templ.Raw(fmt.Sprintf("<style>%s</style>", primaryCSSVars(cfg.PrimaryColor)))
+
+			<!-- Tailwind v4 LOCAL (styles.css — full 150KB, same as dashboard) -->
+			<link href={ assetPath(cfg.Path, "/assets/styles.css") } rel="stylesheet"/>
+
+			<!-- Fonts (CDN — acceptable for auth pages, no styling risk) -->
 			<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 			<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet"/>
-			
+
 			<!-- Custom styles (local) -->
-			<link href="/assets/css/custom.css" rel="stylesheet"/>
-		
+			<link href={ assetPath(cfg.Path, "/assets/css/custom.css") } rel="stylesheet"/>
+
 			<!-- Alpine.js (local) -->
-			<script src="/assets/js/alpine.min.js" defer></script>
+			<script src={ assetPath(cfg.Path, "/assets/js/alpine.min.js") } defer></script>
+
+			<!-- Datastar v1 (server-driven interactions) -->
+			<script type="module" src="https://cdn.jsdelivr.net/npm/@starfederation/datastar@1.0.0-beta.11/dist/datastar.min.js"></script>
+
 			<style>[x-cloak] { display: none !important; }</style>
 		</head>
 		<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased min-h-screen">
-			<!-- Centered Container - Style Filament -->
+			<!-- Centered Container — Style Filament -->
 			<div class="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8">
 				{ children... }
 			</div>
-			
-			<!-- Dark mode toggle -->
-			<button @click="darkMode = !darkMode" class="fixed bottom-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+
+			<!-- Dark mode toggle (fixed) -->
+			<button
+				@click="darkMode = !darkMode"
+				class="fixed bottom-4 right-4 p-3 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+				aria-label="Toggle dark mode"
+			>
 				<span x-show="!darkMode" class="material-icons-outlined">dark_mode</span>
 				<span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span>
 			</button>

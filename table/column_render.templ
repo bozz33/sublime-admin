@@ -1,6 +1,9 @@
 package table
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // TextCellView renders a plain text cell with optional prefix/suffix.
 templ TextCellView(value, prefix, suffix string) {
@@ -98,6 +101,19 @@ templ ColorCellView(value string) {
 		></span>
 		<span class="text-sm text-gray-700 dark:text-gray-300">{ value }</span>
 	</div>
+}
+
+// ViewCellView renders a clickable eye icon that links to the item's detail URL.
+templ ViewCellView(url string) {
+	if url != "" {
+		<a
+			href={ templ.SafeURL(url) }
+			class="inline-flex items-center justify-center p-1.5 rounded-lg text-gray-500 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors"
+			title="View"
+		>
+			<span class="material-icons-outlined text-lg">visibility</span>
+		</a>
+	}
 }
 
 // ---------------------------------------------------------------------------
@@ -199,4 +215,68 @@ func avatarCellBgColor(name string) string {
 		sum += int(r)
 	}
 	return colors[sum%len(colors)]
+}
+
+// ---------------------------------------------------------------------------
+// Inline editing column views — render as interactive form inputs.
+// On change, they PATCH the updated value to the server via Datastar.
+// ---------------------------------------------------------------------------
+
+// TextInputCellView renders a table cell as an editable text input.
+templ TextInputCellView(fieldKey, value, patchURL string) {
+	<input
+		type="text"
+		name={ fieldKey }
+		value={ value }
+		class="w-full min-w-0 px-2 py-1 text-sm rounded-lg border border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-transparent dark:text-white focus:bg-white dark:focus:bg-gray-700 transition-colors outline-none"
+		if patchURL != "" {
+			data-on-change={ fmt.Sprintf("@patch('%s', {contentType: 'form'})", patchURL) }
+		}
+	/>
+}
+
+// SelectCellView renders a table cell as an inline select dropdown.
+templ SelectCellView(fieldKey, value string, options []SelectColOption, patchURL string) {
+	<select
+		name={ fieldKey }
+		class="w-full min-w-0 px-2 py-1 text-sm rounded-lg border border-transparent hover:border-gray-300 dark:hover:border-gray-600 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 bg-transparent dark:text-white focus:bg-white dark:focus:bg-gray-700 transition-colors outline-none appearance-none"
+		if patchURL != "" {
+			data-on-change={ fmt.Sprintf("@patch('%s', {contentType: 'form'})", patchURL) }
+		}
+	>
+		for _, opt := range options {
+			<option value={ opt.Value } selected?={ opt.Value == value }>{ opt.Label }</option>
+		}
+	</select>
+}
+
+// ToggleCellView renders a table cell as an inline toggle switch.
+templ ToggleCellView(fieldKey string, checked bool, patchURL string) {
+	<label class="relative inline-flex items-center cursor-pointer">
+		<input
+			type="checkbox"
+			name={ fieldKey }
+			value="1"
+			checked?={ checked }
+			class="sr-only peer"
+			if patchURL != "" {
+				data-on-change={ fmt.Sprintf("@patch('%s', {contentType: 'form'})", patchURL) }
+			}
+		/>
+		<div class="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary-300 dark:peer-focus:ring-primary-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all dark:border-gray-600 peer-checked:bg-primary-600"></div>
+	</label>
+}
+
+// CheckboxCellView renders a table cell as an inline checkbox.
+templ CheckboxCellView(fieldKey string, checked bool, patchURL string) {
+	<input
+		type="checkbox"
+		name={ fieldKey }
+		value="1"
+		checked?={ checked }
+		class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:bg-gray-700 cursor-pointer"
+		if patchURL != "" {
+			data-on-change={ fmt.Sprintf("@patch('%s', {contentType: 'form'})", patchURL) }
+		}
+	/>
 }

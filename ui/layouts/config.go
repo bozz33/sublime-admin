@@ -113,17 +113,57 @@ func navLink(basePath, slug string) string {
 	return base + "/" + slug
 }
 
+// initSignals returns the Datastar data-signals expression string for the root html element.
+// It initialises all global layout signals: darkMode, sidebar, dropdowns, modals.
+func initSignals(defaultDark bool, collapsible bool) string {
+	darkExpr := "localStorage.getItem('theme')==='dark'||(!localStorage.getItem('theme')&&window.matchMedia('(prefers-color-scheme: dark)').matches)"
+	if defaultDark {
+		darkExpr = "localStorage.getItem('theme')!=='light'"
+	}
+	sidebarExpr := "localStorage.getItem('sidebarCollapsed')!=='true'"
+	if !collapsible {
+		sidebarExpr = "true"
+	}
+	return "{darkMode:" + darkExpr + ",sidebarOpen:" + sidebarExpr +
+		",sidebarMobileOpen:false" +
+		",notifOpen:false,notifUnread:0" +
+		",userMenuOpen:false" +
+		",deleteModalOpen:false,deleteModalUrl:'',deleteModalTitle:'',deleteModalDesc:''" +
+		",bulkModalOpen:false,bulkModalTitle:'',bulkModalDesc:'',bulkModalAction:''}"
+}
+
 // initAppData returns the Alpine.js x-data string for the root html element,
 // respecting the panel's default dark mode setting and sidebar collapse config.
+// Kept for backwards compatibility; prefer initSignals() for Datastar.
 func initAppData(defaultDark bool, collapsible bool) string {
-	sidebarState := `sidebarOpen: true, sidebarMobileOpen: false, sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true'`
+	// sidebarOpen is initialized from persisted localStorage so collapse state
+	// survives page reloads. When collapsible is disabled, always start open.
+	sidebarState := `sidebarOpen: localStorage.getItem('sidebarCollapsed') !== 'true', sidebarMobileOpen: false`
 	if !collapsible {
-		sidebarState = `sidebarOpen: true, sidebarMobileOpen: false, sidebarCollapsed: false`
+		sidebarState = `sidebarOpen: true, sidebarMobileOpen: false`
 	}
 	if defaultDark {
 		return `{ darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && true), ` + sidebarState + ` }`
 	}
 	return `{ darkMode: localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches), ` + sidebarState + ` }`
+}
+
+// primaryColorHex returns the hex value of the primary-500 shade (without #) for a given color name.
+// Used for dynamic avatar background URLs, etc.
+func primaryColorHex(color string) string {
+	hexMap := map[string]string{
+		"green":  "22c55e",
+		"blue":   "3b82f6",
+		"red":    "ef4444",
+		"purple": "a855f7",
+		"orange": "f97316",
+		"pink":   "ec4899",
+		"indigo": "6366f1",
+	}
+	if h, ok := hexMap[color]; ok {
+		return h
+	}
+	return "22c55e"
 }
 
 // primaryColorPalette returns a Tailwind-compatible JS color object for the given color name.
@@ -144,8 +184,11 @@ func primaryColorPalette(color string) string {
 }
 
 // primaryCSSVars generates a CSS :root block with CSS custom properties for the primary color.
-// This is the Filament-style approach: inject color variables into <head> so custom.css
-// can use var(--primary-500) instead of hardcoded hex values.
+// It injects TWO namespaces so both systems work:
+//   - --primary-{n}       used by custom.css and legacy code
+//   - --color-primary-{n} used by Tailwind v4 compiled output.css (bg-primary-500, etc.)
+//
+// This is the Filament-style dynamic theming approach.
 func primaryCSSVars(color string) string {
 	type shade struct {
 		num int
@@ -197,7 +240,10 @@ func primaryCSSVars(color string) string {
 	}
 	css := ":root {"
 	for _, s := range p.shades {
+		// --primary-{n}       → custom.css variables (legacy)
 		css += fmt.Sprintf("--primary-%d:%s;", s.num, s.hex)
+		// --color-primary-{n} → Tailwind v4 compiled classes (bg-primary-500, text-primary-600, etc.)
+		css += fmt.Sprintf("--color-primary-%d:%s;", s.num, s.hex)
 	}
 	css += "}"
 	return css

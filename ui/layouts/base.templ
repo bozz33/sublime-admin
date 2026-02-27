@@ -1,24 +1,36 @@
 package layouts
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/bozz33/sublimeadmin/ui/components"
+)
 
 // Base is the main skeleton of the SublimeAdmin application.
-// Hybrid configuration: Tailwind CDN + local assets (Alpine.js, HTMX, app.js, custom.css)
+// Hybrid: Datastar (global signals + server interactions) + Alpine.js (complex form components only).
 templ Base(title string) {
 	{{ cfg := GetPanelConfig() }}
 	<!DOCTYPE html>
 	<html
 		lang="en"
 		class="h-full"
-		x-data={ initAppData(cfg.DarkMode, cfg.SidebarCollapsible) }
-		x-init="$watch('darkMode', val => localStorage.setItem('theme', val ? 'dark' : 'light')); $watch('sidebarCollapsed', val => localStorage.setItem('sidebarCollapsed', val))"
-		:class="{ 'dark': darkMode }"
+		data-signals={ initSignals(cfg.DarkMode, cfg.SidebarCollapsible) }
+		data-class-dark="$darkMode"
 	>
 	<head>
 		<meta charset="UTF-8"/>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 		<meta name="color-scheme" content="light dark"/>
 		<title>{ title } - { cfg.Name }</title>
+
+		<!-- Dark mode FOUC prevention — runs synchronously before Datastar processes DOM -->
+		<script>
+			(function(){
+				var t=localStorage.getItem('theme');
+				if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme: dark)').matches)){
+					document.documentElement.classList.add('dark');
+				}
+			})();
+		</script>
 
 		<!-- Favicon -->
 		if cfg.Favicon != "" {
@@ -30,8 +42,8 @@ templ Base(title string) {
 		<!-- Dynamic CSS Variables (Filament-style: color injected from PanelConfig) -->
 		@templ.Raw(fmt.Sprintf("<style>%s</style>", primaryCSSVars(cfg.PrimaryColor)))
 
-		<!-- Tailwind CSS (compilé localement — Tailwind v4) -->
-		<link href={ assetPath(cfg.Path, "/assets/css/output.css") } rel="stylesheet"/>
+		<!-- Tailwind CSS v4 LOCAL (styles.css — 150KB complet, toutes les classes présentes) -->
+		<link href={ assetPath(cfg.Path, "/assets/styles.css") } rel="stylesheet"/>
 
 		<!-- Fonts (CDN) -->
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -40,11 +52,11 @@ templ Base(title string) {
 		<!-- Custom styles (local) -->
 		<link href={ assetPath(cfg.Path, "/assets/css/custom.css") } rel="stylesheet"/>
 
-		<!-- Alpine.js (local) -->
+		<!-- Alpine.js (local — conservé pour composants réactifs complexes: Section, Tabs, Wizard, Repeater) -->
 		<script src={ assetPath(cfg.Path, "/assets/js/alpine.min.js") } defer></script>
 
-		<!-- HTMX (local) -->
-		<script src={ assetPath(cfg.Path, "/assets/js/htmx.min.js") }></script>
+		<!-- Datastar v1 (signals globaux + interactions serveur — remplace HTMX) -->
+		<script type="module" src="https://cdn.jsdelivr.net/npm/@starfederation/datastar@1.0.0-beta.11/dist/datastar.min.js"></script>
 
 		<!-- ApexCharts (CDN) -->
 		<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -55,6 +67,11 @@ templ Base(title string) {
 		<!-- Charts JS (local) -->
 		<script src={ assetPath(cfg.Path, "/assets/js/charts.js") } defer></script>
 
+		<!-- Notifications SSE URL (consommé par app.js → SSEToast.init) -->
+		if cfg.Notifications {
+			<meta name="notifications-url" content={ assetPath(cfg.Path, "/api/notifications/stream") }/>
+		}
+
 		<style>[x-cloak] { display: none !important; }</style>
 	</head>
 	<body class="font-sans bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 antialiased">
@@ -63,10 +80,9 @@ templ Base(title string) {
 			<!-- Sidebar (desktop + mobile) -->
 			@Sidebar(ctx)
 
-			<!-- Main Content Area -->
+			<!-- Main Content Area — margin géré par SidebarSync dans app.js -->
 			<div
 				id="main-content"
-				:class="sidebarOpen ? 'lg:ml-64' : 'lg:ml-20'"
 				class="flex-1 flex flex-col min-h-screen transition-all duration-300"
 			>
 				<!-- Header -->
@@ -92,6 +108,15 @@ templ Base(title string) {
 
 		<!-- Toast Container -->
 		<div id="toast-container" class="fixed bottom-4 right-4 z-[9999] space-y-2 pointer-events-none"></div>
+
+		<!-- Global Search Modal (Cmd+K) -->
+		@components.GlobalSearchModal(assetPath(cfg.Path, "/api/search"))
+
+		<!-- Delete Confirmation Modal (Datastar signals) -->
+		@components.DeleteModal()
+
+		<!-- Bulk Action Confirmation Modal (Datastar signals) -->
+		@components.BulkModal()
 	</body>
 	</html>
 }

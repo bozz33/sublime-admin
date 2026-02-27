@@ -63,7 +63,32 @@ type ResourceViewable interface {
 	View(ctx context.Context, item any) templ.Component
 }
 
+// ResourceValidator is an optional interface for resources that support
+// real-time per-field validation via Datastar SSE.
+//
+// When implemented, the CRUDHandler exposes:
+//
+//	GET /{slug}/validate-field?field=name&value=xxx
+//
+// which returns a Datastar SSE fragment updating the field error element.
+// Usage in forms: use TextInput.WithLiveValidation("/{slug}/validate-field")
+type ResourceValidator interface {
+	ValidateField(ctx context.Context, field, value string) error
+}
+
 // Column defines a table column.
+//
+// Deprecated: Use the typed column constructors from the table package instead:
+//
+//	table.Text("key").WithLabel("Label").AsSortable()
+//	table.Badge("status").WithLabel("Status").WithColors(...)
+//	table.BoolCol("active").WithLabel("Active")
+//	table.DateCol("created_at").WithLabel("Created")
+//	table.Image("avatar").WithLabel("Avatar")
+//	table.Avatar("name").WithLabel("Name")
+//
+// The table.Column interface provides richer typed rendering than this struct.
+// engine.Column is kept for backward compatibility only.
 type Column struct {
 	Key         string
 	Label       string
@@ -300,4 +325,28 @@ type ResourceHookable interface {
 	AfterUpdate(ctx context.Context, id string, item any) error
 	BeforeDelete(ctx context.Context, id string) error
 	AfterDelete(ctx context.Context, id string) error
+}
+
+// ResourceSimple marks a resource as "simple" — its Create and Edit forms
+// open in an inline modal on the list page instead of navigating to a dedicated page.
+// Implement this interface to enable the modal-based CRUD workflow.
+type ResourceSimple interface {
+	IsSimpleResource() bool
+}
+
+// ResourcePatchable is an optional interface for resources that support
+// partial (single-field) updates from inline-edit table columns.
+//
+// When implemented, the CRUDHandler routes PATCH /{slug}/{id} to PatchField
+// instead of the full Update handler, making inline edits more efficient.
+//
+// Route added when ResourcePatchable is implemented:
+//
+//	PATCH /{slug}/{id}   → PatchField(ctx, id, fields)
+//
+// fields contains the submitted form values (typically one key/value pair).
+// Return a non-nil error to signal a validation or persistence failure; the
+// CRUDHandler will send a Datastar SSE error toast back to the browser.
+type ResourcePatchable interface {
+	PatchField(ctx context.Context, id string, fields map[string]string) error
 }

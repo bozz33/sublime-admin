@@ -1,18 +1,24 @@
 package components
 
+// DeleteModal — Version 2.0 — Datastar signals (no Alpine.js)
+// Listens to global signals: $deleteModalOpen, $deleteModalUrl, $deleteModalTitle, $deleteModalDesc
+// Trigger: set those signals from any button via data-on-click.
 templ DeleteModal() {
-	<div 
-		x-data="{ open: false, url: '', title: '', desc: '' }"
-		@open-delete-modal.window="open = true; url = $event.detail.url; title = $event.detail.title; desc = $event.detail.desc"
-		x-show="open"
-		class="relative z-50" 
-		aria-labelledby="modal-title" 
-		role="dialog" 
-		aria-modal="true" 
-		style="display: none;"
-		x-cloak
+	<div
+		data-show="$deleteModalOpen"
+		class="relative z-50"
+		aria-labelledby="delete-modal-title"
+		role="dialog"
+		aria-modal="true"
+		style="display:none"
 	>
-		<div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
+		<!-- Backdrop -->
+		<div
+			data-on-click="$deleteModalOpen = false"
+			class="fixed inset-0 bg-gray-500/75 transition-opacity"
+		></div>
+
+		<!-- Modal Panel -->
 		<div class="fixed inset-0 z-10 w-screen overflow-y-auto">
 			<div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
 				<div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
@@ -22,22 +28,99 @@ templ DeleteModal() {
 								<span class="material-icons-outlined text-2xl text-red-600 dark:text-red-400">warning</span>
 							</div>
 							<div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-								<h3 class="text-base font-semibold leading-6 text-gray-900 dark:text-white" x-text="title">Delete</h3>
+								<h3
+									id="delete-modal-title"
+									class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
+									data-text="$deleteModalTitle || 'Supprimer'"
+								>Supprimer</h3>
 								<div class="mt-2">
-									<p class="text-sm text-gray-500 dark:text-gray-400" x-text="desc">Are you sure?</p>
+									<p
+										class="text-sm text-gray-500 dark:text-gray-400"
+										data-text="$deleteModalDesc || 'Êtes-vous sûr de vouloir supprimer cet élément ?'"
+									>Êtes-vous sûr de vouloir supprimer cet élément ?</p>
 								</div>
 							</div>
 						</div>
 					</div>
-					<div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-						<form :action="url" method="POST" class="inline">
+					<div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-3">
+						<form data-bind-action="$deleteModalUrl" method="POST" class="inline">
 							<input type="hidden" name="_method" value="DELETE"/>
-							<button type="submit" class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto">
-								Confirm deletion
+							<button
+								type="submit"
+								class="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:w-auto"
+							>
+								Confirmer la suppression
 							</button>
 						</form>
-						<button @click="open = false" type="button" class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto">
-							Cancel
+						<button
+							data-on-click="$deleteModalOpen = false"
+							type="button"
+							class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto"
+						>
+							Annuler
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+}
+
+// BulkModal — confirmation dialog for bulk actions.
+// Listens to: $bulkModalOpen, $bulkModalTitle, $bulkModalDesc, $bulkModalAction
+templ BulkModal() {
+	<div
+		data-show="$bulkModalOpen"
+		class="relative z-50"
+		aria-labelledby="bulk-modal-title"
+		role="dialog"
+		aria-modal="true"
+		style="display:none"
+	>
+		<!-- Backdrop -->
+		<div
+			data-on-click="$bulkModalOpen = false"
+			class="fixed inset-0 bg-gray-500/75 transition-opacity"
+		></div>
+
+		<!-- Modal Panel -->
+		<div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+			<div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+				<div class="relative transform overflow-hidden rounded-lg bg-white dark:bg-gray-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+					<div class="bg-white dark:bg-gray-800 px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+						<div class="sm:flex sm:items-start">
+							<div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900/20 sm:mx-0 sm:h-10 sm:w-10">
+								<span class="material-icons-outlined text-2xl text-yellow-600 dark:text-yellow-400">warning</span>
+							</div>
+							<div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+								<h3
+									id="bulk-modal-title"
+									class="text-base font-semibold leading-6 text-gray-900 dark:text-white"
+									data-text="$bulkModalTitle || 'Confirmer l\'action'"
+								>Confirmer l'action</h3>
+								<div class="mt-2">
+									<p
+										class="text-sm text-gray-500 dark:text-gray-400"
+										data-text="$bulkModalDesc || 'Cette action s\'appliquera aux éléments sélectionnés.'"
+									>Cette action s'appliquera aux éléments sélectionnés.</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<div class="bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 gap-3">
+						<button
+							type="button"
+							data-on-click="SublimeGo.BulkActions.executePendingAction(); $bulkModalOpen = false"
+							class="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 sm:w-auto"
+						>
+							Confirmer
+						</button>
+						<button
+							data-on-click="$bulkModalOpen = false"
+							type="button"
+							class="mt-3 inline-flex w-full justify-center rounded-md bg-white dark:bg-gray-800 px-3 py-2 text-sm font-semibold text-gray-900 dark:text-white shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 sm:mt-0 sm:w-auto"
+						>
+							Annuler
 						</button>
 					</div>
 				</div>

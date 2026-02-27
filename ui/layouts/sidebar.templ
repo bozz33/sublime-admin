@@ -4,12 +4,13 @@ import "context"
 
 // NavItem represents a navigation item
 type NavItem struct {
-	Slug     string
-	Label    string
-	Icon     string // Material Icons Outlined name (ex: "people", "settings", "dashboard")
-	Badge    string // Optional badge (ex: "12", "New")
-	Children []NavItem // Optional submenu
-	Active   bool
+	Slug       string
+	Label      string
+	Icon       string    // Material Icons Outlined name (ex: "people", "settings", "dashboard")
+	Badge      string    // Optional badge (ex: "12", "New")
+	BadgeColor string    // Optional badge color: "green", "red", "yellow", "blue", "gray"
+	Children   []NavItem // Optional submenu
+	Active     bool
 }
 
 // NavGroup represents a navigation group
@@ -32,15 +33,16 @@ func SetNavGroups(groups []NavGroup) {
 	navGroups = groups
 }
 
-// Sidebar - Version 4.0 — Faithful conversion of dashboard/index.html sidebar
+// Sidebar — Version 5.0 — Datastar signals (replaces Alpine.js x-data/x-show/@click)
 // Uses Material Icons Outlined exclusively (no SVG inline)
 templ Sidebar(ctx context.Context) {
 	{{ cfg := GetPanelConfigFromContext(ctx) }}
 	{{ groups := GetNavGroups(ctx) }}
-	<!-- Desktop Sidebar -->
+	<!-- Desktop Sidebar — reacts to $sidebarOpen Datastar signal -->
 	<aside
 		id="sidebar"
-		:class="sidebarOpen ? 'w-64' : 'w-20'"
+		data-class-w-64="$sidebarOpen"
+		data-class-w-20="!$sidebarOpen"
 		class="hidden lg:flex flex-col fixed left-0 top-0 h-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transition-all duration-300 z-50"
 		aria-label="Sidebar"
 	>
@@ -54,7 +56,7 @@ templ Sidebar(ctx context.Context) {
 						<span class="material-icons-outlined text-white">eco</span>
 					</div>
 				}
-				<span x-show="sidebarOpen" x-cloak class="font-bold text-lg text-gray-800 dark:text-white whitespace-nowrap">{ cfg.Name }</span>
+				<span data-show="$sidebarOpen" class="font-bold text-lg text-gray-800 dark:text-white whitespace-nowrap">{ cfg.Name }</span>
 			</a>
 		</div>
 
@@ -65,7 +67,7 @@ templ Sidebar(ctx context.Context) {
 				for _, group := range groups {
 					if group.Label != "" {
 						<div class="mb-4">
-							<p x-show="sidebarOpen" class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{ group.Label }</p>
+							<p data-show="$sidebarOpen" class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{ group.Label }</p>
 						</div>
 					}
 					<ul class="space-y-1">
@@ -88,11 +90,11 @@ templ Sidebar(ctx context.Context) {
 		if cfg.SidebarCollapsible {
 			<div class="p-4 border-t border-gray-200 dark:border-gray-700">
 				<button
-					@click="sidebarOpen = !sidebarOpen"
+					data-on-click="$sidebarOpen = !$sidebarOpen; localStorage.setItem('sidebarCollapsed', $sidebarOpen ? 'false' : 'true')"
 					class="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 				>
-					<span class="material-icons-outlined text-xl" x-text="sidebarOpen ? 'chevron_left' : 'chevron_right'"></span>
-					<span x-show="sidebarOpen" x-cloak class="text-sm">Réduire</span>
+					<span class="material-icons-outlined text-xl" data-text="$sidebarOpen ? 'chevron_left' : 'chevron_right'">chevron_left</span>
+					<span data-show="$sidebarOpen" class="text-sm">Réduire</span>
 				</button>
 			</div>
 		}
@@ -100,23 +102,19 @@ templ Sidebar(ctx context.Context) {
 
 	<!-- Mobile Sidebar Overlay -->
 	<div
-		x-show="sidebarMobileOpen"
-		x-cloak
-		@click="sidebarMobileOpen = false"
+		data-show="$sidebarMobileOpen"
+		data-on-click="$sidebarMobileOpen = false"
 		class="fixed inset-0 bg-black/50 z-40 lg:hidden"
+		style="display:none"
 	></div>
 
-	<!-- Mobile Sidebar -->
+	<!-- Mobile Sidebar — slides in from left -->
 	<aside
-		x-show="sidebarMobileOpen"
-		x-cloak
-		x-transition:enter="transition ease-out duration-300"
-		x-transition:enter-start="-translate-x-full"
-		x-transition:enter-end="translate-x-0"
-		x-transition:leave="transition ease-in duration-300"
-		x-transition:leave-start="translate-x-0"
-		x-transition:leave-end="-translate-x-full"
-		class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-50 lg:hidden overflow-y-auto"
+		data-show="$sidebarMobileOpen"
+		data-class-translate-x-0="$sidebarMobileOpen"
+		data-class--translate-x-full="!$sidebarMobileOpen"
+		class="fixed left-0 top-0 h-full w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 z-50 lg:hidden overflow-y-auto transition-transform duration-300"
+		style="display:none"
 	>
 		<!-- Mobile Header -->
 		<div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
@@ -130,7 +128,7 @@ templ Sidebar(ctx context.Context) {
 				}
 				<span class="font-bold text-lg text-gray-800 dark:text-white">{ cfg.Name }</span>
 			</a>
-			<button @click="sidebarMobileOpen = false" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+			<button data-on-click="$sidebarMobileOpen = false" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
 				<span class="material-icons-outlined">close</span>
 			</button>
 		</div>
@@ -161,33 +159,29 @@ templ Sidebar(ctx context.Context) {
 	</aside>
 }
 
-// SidebarNavItem - Desktop navigation item with Material Icons Outlined
+// SidebarNavItem — Desktop navigation item (Datastar signals)
 templ SidebarNavItem(basePath string, item NavItem) {
 	if len(item.Children) > 0 {
 		<!-- Item with submenu -->
-		<li x-data="{ open: false }">
+		<li data-signals="{ submenu_open: false }">
 			<button
-				@click="open = !open"
+				data-on-click="$submenu_open = !$submenu_open"
 				class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 			>
 				<span class="flex items-center gap-3">
 					<span class="material-icons-outlined text-xl">{ item.Icon }</span>
-					<span x-show="sidebarOpen" x-cloak>{ item.Label }</span>
+					<span data-show="$sidebarOpen">{ item.Label }</span>
 				</span>
 				<span
+					data-class-rotate-180="$submenu_open"
+					data-show="$sidebarOpen"
 					class="material-icons-outlined text-sm transition-transform duration-200"
-					:class="open ? 'rotate-180' : ''"
-					x-show="sidebarOpen"
-					x-cloak
 				>expand_more</span>
 			</button>
 			<ul
-				x-show="open && sidebarOpen"
-				x-cloak
-				x-transition:enter="transition ease-out duration-200"
-				x-transition:enter-start="opacity-0 -translate-y-1"
-				x-transition:enter-end="opacity-100 translate-y-0"
+				data-show="$submenu_open && $sidebarOpen"
 				class="mt-1 ml-4 pl-4 border-l border-gray-200 dark:border-gray-700 space-y-1"
+				style="display:none"
 			>
 				for _, child := range item.Children {
 					<li>
@@ -214,11 +208,10 @@ templ SidebarNavItem(basePath string, item NavItem) {
 				class={ "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors", templ.KV("bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400 font-medium", item.Active), templ.KV("text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700", !item.Active) }
 			>
 				<span class="material-icons-outlined text-xl">{ item.Icon }</span>
-				<span x-show="sidebarOpen" x-cloak>{ item.Label }</span>
+				<span data-show="$sidebarOpen">{ item.Label }</span>
 				if item.Badge != "" {
 					<span
-						x-show="sidebarOpen"
-						x-cloak
+						data-show="$sidebarOpen"
 						class="ml-auto px-2 py-0.5 text-xs font-medium rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
 					>
 						{ item.Badge }
@@ -229,12 +222,12 @@ templ SidebarNavItem(basePath string, item NavItem) {
 	}
 }
 
-// SidebarMobileNavItem - Mobile navigation item (always expanded)
+// SidebarMobileNavItem — Mobile navigation item (always expanded, no signals needed)
 templ SidebarMobileNavItem(basePath string, item NavItem) {
 	if len(item.Children) > 0 {
-		<li x-data="{ open: false }">
+		<li data-signals="{ mobile_submenu_open: false }">
 			<button
-				@click="open = !open"
+				data-on-click="$mobile_submenu_open = !$mobile_submenu_open"
 				class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 			>
 				<span class="flex items-center gap-3">
@@ -242,15 +235,14 @@ templ SidebarMobileNavItem(basePath string, item NavItem) {
 					{ item.Label }
 				</span>
 				<span
+					data-class-rotate-180="$mobile_submenu_open"
 					class="material-icons-outlined text-sm transition-transform duration-200"
-					:class="open ? 'rotate-180' : ''"
 				>expand_more</span>
 			</button>
 			<ul
-				x-show="open"
-				x-cloak
-				x-transition
+				data-show="$mobile_submenu_open"
 				class="mt-1 ml-4 pl-4 border-l border-gray-200 dark:border-gray-700 space-y-1"
+				style="display:none"
 			>
 				for _, child := range item.Children {
 					<li>

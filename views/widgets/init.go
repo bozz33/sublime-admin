@@ -18,4 +18,7 @@ func init() {
 	widget.SetProgressRenderer(func(w *widget.ProgressWidget) templ.Component {
 		return Progress(w)
 	})
+	widget.SetGridRenderer(func(g *widget.GridWidget) templ.Component {
+		return Grid(g)
+	})
 }

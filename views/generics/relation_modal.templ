@@ -1,0 +1,60 @@
+package generics
+
+// RelationCreateModal renders a hidden Alpine.js modal that listens for
+// open-create-modal events, fetches the form from /form, and shows it.
+// The modal is self-contained; dispatch window event "open-create-modal"
+// with detail { url: "<base-relation-url>" } to open it.
+templ RelationCreateModal() {
+	<div
+		x-data="{
+            open: false,
+            loading: false,
+            formHtml: '',
+            postUrl: '',
+            async openModal(url) {
+                this.postUrl = url;
+                this.loading = true;
+                this.open = true;
+                const resp = await fetch(url + '/form');
+                this.formHtml = await resp.text();
+                this.loading = false;
+            }
+        }"
+		@open-create-modal.window="openModal($event.detail.url)"
+		@keydown.escape.window="open = false"
+		x-cloak
+	>
+		<!-- Backdrop -->
+		<div
+			x-show="open"
+			class="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4"
+			@click.self="open = false"
+		>
+			<!-- Modal panel -->
+			<div
+				x-show="open"
+				class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+			>
+				<!-- Header -->
+				<div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+					<h2 class="text-base font-semibold text-gray-900 dark:text-white">New related record</h2>
+					<button
+						type="button"
+						@click="open = false"
+						class="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-700"
+					>
+						<span class="material-icons-outlined text-xl">close</span>
+					</button>
+				</div>
+				<!-- Body -->
+				<div class="px-6 py-4">
+					<div x-show="loading" class="flex justify-center py-8">
+						<span class="material-icons-outlined animate-spin text-3xl text-primary-600">refresh</span>
+					</div>
+					<!-- Form fetched from server rendered here via innerHTML -->
+					<div x-show="!loading" x-html="formHtml"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+}

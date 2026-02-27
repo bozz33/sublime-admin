@@ -11,8 +11,8 @@ import templruntime "github.com/a-h/templ/runtime"
 import "github.com/bozz33/sublimeadmin/ui/layouts"
 
 // RegisterPage - Registration page with Filament-style design.
-// Clean design, centered form.
-func RegisterPage() templ.Component {
+// errorMsg is an optional error message to display (e.g. "Email already in use").
+func RegisterPage(errorMsg ...string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -33,6 +33,8 @@ func RegisterPage() templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
+		cfg := layouts.GetPanelConfig()
+		basePath := cfg.Path
 		templ_7745c5c3_Var2 := templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 			templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 			templ_7745c5c3_Buffer, templ_7745c5c3_IsBuffer := templruntime.GetBuffer(templ_7745c5c3_W)
@@ -45,20 +47,69 @@ func RegisterPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!-- Centered Logo --> <div class=\"sm:mx-auto sm:w-full sm:max-w-md\"><div class=\"flex justify-center\"><div class=\"flex items-center gap-3\"><div class=\"w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center\"><span class=\"material-icons-outlined text-white text-2xl\">eco</span></div><span class=\"font-bold text-xl text-gray-800 dark:text-white\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!-- Centered Logo --> <div class=\"sm:mx-auto sm:w-full sm:max-w-md\"><div class=\"flex justify-center\"><div class=\"flex items-center gap-3\"><div class=\"w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center\"><span class=\"material-icons-outlined text-white text-2xl\">eco</span></div><span class=\"font-bold text-xl text-gray-800 dark:text-white\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
-			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(layouts.GetPanelConfig().Name)
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(cfg.Name)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/auth/register.templ`, Line: 16, Col: 98}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/auth/register.templ`, Line: 18, Col: 77}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</span></div></div><h2 class=\"mt-6 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-white\">Create an account</h2><p class=\"mt-2 text-center text-sm text-gray-600 dark:text-gray-400\">Already registered? <a href=\"/login\" class=\"font-medium text-green-600 hover:text-green-500\">Sign in</a></p></div><!-- Form --> <div class=\"mt-8 sm:mx-auto sm:w-full sm:max-w-md\"><div class=\"bg-white dark:bg-gray-800 py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-200 dark:border-gray-700\"><form action=\"/register\" method=\"POST\" class=\"space-y-6\" x-data=\"{ showPassword: false }\"><!-- Name --><div><label for=\"name\" class=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Full name</label><div class=\"mt-1 relative\"><div class=\"absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none\"><span class=\"material-icons-outlined text-gray-400 text-xl\">person</span></div><input id=\"name\" name=\"name\" type=\"text\" autocomplete=\"name\" required class=\"block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm\" placeholder=\"John Doe\"></div></div><!-- Email --><div><label for=\"email\" class=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Email address</label><div class=\"mt-1 relative\"><div class=\"absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none\"><span class=\"material-icons-outlined text-gray-400 text-xl\">email</span></div><input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"email\" required class=\"block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm\" placeholder=\"you@example.com\"></div></div><!-- Password --><div><label for=\"password\" class=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Password</label><div class=\"mt-1 relative\"><div class=\"absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none\"><span class=\"material-icons-outlined text-gray-400 text-xl\">lock</span></div><input id=\"password\" name=\"password\" :type=\"showPassword ? 'text' : 'password'\" autocomplete=\"new-password\" required class=\"block w-full pl-11 pr-11 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm\" placeholder=\"••••••••\"> <button type=\"button\" @click=\"showPassword = !showPassword\" class=\"absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600\"><span class=\"material-icons-outlined text-xl\" x-text=\"showPassword ? 'visibility_off' : 'visibility'\"></span></button></div><p class=\"mt-1.5 text-xs text-gray-500 dark:text-gray-400\">Minimum 8 characters with uppercase, lowercase and number</p></div><!-- Confirm password --><div><label for=\"password_confirmation\" class=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Confirm password</label><div class=\"mt-1 relative\"><div class=\"absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none\"><span class=\"material-icons-outlined text-gray-400 text-xl\">lock</span></div><input id=\"password_confirmation\" name=\"password_confirmation\" :type=\"showPassword ? 'text' : 'password'\" autocomplete=\"new-password\" required class=\"block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm\" placeholder=\"••••••••\"></div></div><!-- Terms --><div class=\"flex items-start\"><input id=\"terms\" name=\"terms\" type=\"checkbox\" required class=\"h-4 w-4 mt-0.5 text-green-500 focus:ring-green-500 border-gray-300 dark:border-gray-600 rounded\"> <label for=\"terms\" class=\"ml-2 block text-sm text-gray-700 dark:text-gray-300\">I agree to the <a href=\"/terms\" class=\"text-green-600 hover:text-green-500\">terms of service</a> and <a href=\"/privacy\" class=\"text-green-600 hover:text-green-500\">privacy policy</a></label></div><!-- Submit Button --><div><button type=\"submit\" class=\"w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors\">Create account</button></div></form></div></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</span></div></div><h2 class=\"mt-6 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-white\">Create an account</h2><p class=\"mt-2 text-center text-sm text-gray-600 dark:text-gray-400\">Already registered? <a href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var4 templ.SafeURL
+			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(basePath + "/login"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/auth/register.templ`, Line: 25, Col: 68}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"font-medium text-primary-600 hover:text-primary-500\">Sign in</a></p></div><!-- Form --> <div class=\"mt-8 sm:mx-auto sm:w-full sm:max-w-md\"><div class=\"bg-white dark:bg-gray-800 py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-200 dark:border-gray-700\"><!-- Error message -->")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if len(errorMsg) > 0 && errorMsg[0] != "" {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"mb-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400\"><span class=\"material-icons-outlined text-xl flex-shrink-0\">error_outline</span> <span>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				var templ_7745c5c3_Var5 string
+				templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg[0])
+				if templ_7745c5c3_Err != nil {
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/auth/register.templ`, Line: 37, Col: 25}
+				}
+				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</span></div>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<form action=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var6 templ.SafeURL
+			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(basePath + "/register"))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `views/auth/register.templ`, Line: 41, Col: 56}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "\" method=\"POST\" class=\"space-y-6\" x-data=\"{ showPassword: false }\"><!-- Name --><div><label for=\"name\" class=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Full name</label><div class=\"mt-1 relative\"><div class=\"absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none\"><span class=\"material-icons-outlined text-gray-400 text-xl\">person</span></div><input id=\"name\" name=\"name\" type=\"text\" autocomplete=\"name\" required class=\"block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm\" placeholder=\"John Doe\"></div></div><!-- Email --><div><label for=\"email\" class=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Email address</label><div class=\"mt-1 relative\"><div class=\"absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none\"><span class=\"material-icons-outlined text-gray-400 text-xl\">email</span></div><input id=\"email\" name=\"email\" type=\"email\" autocomplete=\"email\" required class=\"block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm\" placeholder=\"you@example.com\"></div></div><!-- Password --><div><label for=\"password\" class=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Password</label><div class=\"mt-1 relative\"><div class=\"absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none\"><span class=\"material-icons-outlined text-gray-400 text-xl\">lock</span></div><input id=\"password\" name=\"password\" :type=\"showPassword ? 'text' : 'password'\" autocomplete=\"new-password\" required class=\"block w-full pl-11 pr-11 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm\" placeholder=\"••••••••\"> <button type=\"button\" @click=\"showPassword = !showPassword\" class=\"absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600\"><span class=\"material-icons-outlined text-xl\" x-text=\"showPassword ? 'visibility_off' : 'visibility'\"></span></button></div><p class=\"mt-1.5 text-xs text-gray-500 dark:text-gray-400\">Minimum 8 characters with uppercase, lowercase and number</p></div><!-- Confirm password --><div><label for=\"password_confirmation\" class=\"block text-sm font-medium text-gray-700 dark:text-gray-300\">Confirm password</label><div class=\"mt-1 relative\"><div class=\"absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none\"><span class=\"material-icons-outlined text-gray-400 text-xl\">lock</span></div><input id=\"password_confirmation\" name=\"password_confirmation\" :type=\"showPassword ? 'text' : 'password'\" autocomplete=\"new-password\" required class=\"block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm\" placeholder=\"••••••••\"></div></div><!-- Terms --><div class=\"flex items-start\"><input id=\"terms\" name=\"terms\" type=\"checkbox\" required class=\"h-4 w-4 mt-0.5 text-primary-500 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded\"> <label for=\"terms\" class=\"ml-2 block text-sm text-gray-700 dark:text-gray-300\">I agree to the <a href=\"/terms\" class=\"text-primary-600 hover:text-primary-500\">terms of service</a> and <a href=\"/privacy\" class=\"text-primary-600 hover:text-primary-500\">privacy policy</a></label></div><!-- Submit Button --><div><button type=\"submit\" class=\"w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors\">Create account</button></div></form></div></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

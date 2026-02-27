@@ -1,8 +1,14 @@
 package form
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+)
 
 // TextInputRender renders a text/email/password/number/date input.
+// If LiveValidateURL is set, validates on blur via Datastar SSE and updates
+// the #field-error-{name} element with the server response.
+// Server-side validation errors from context are shown inline automatically.
 templ TextInputRender(f *TextInput) {
 	<div class="space-y-1">
 		if f.GetLabel() != "" {
@@ -13,16 +19,31 @@ templ TextInputRender(f *TextInput) {
 				}
 			</label>
 		}
-		<input
-			type={ f.Type }
-			id={ f.GetName() }
-			name={ f.GetName() }
-			value={ f.GetValueString() }
-			placeholder={ f.GetPlaceholder() }
-			if f.IsRequired() { required }
-			if f.IsDisabled() { disabled }
-			class={ typedFieldInputClass(f.IsDisabled()) }
-		/>
+		if f.LiveValidateURL != "" {
+			<input
+				type={ f.Type }
+				id={ f.GetName() }
+				name={ f.GetName() }
+				value={ f.GetValueString() }
+				placeholder={ f.GetPlaceholder() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				data-on-blur={ "@get('" + f.LiveValidateURL + "?field=" + f.GetName() + "&value='+encodeURIComponent(evt.target.value))" }
+				class={ inputClassWithError(ctx, f.GetName(), f.IsDisabled()) }
+			/>
+		} else {
+			<input
+				type={ f.Type }
+				id={ f.GetName() }
+				name={ f.GetName() }
+				value={ f.GetValueString() }
+				placeholder={ f.GetPlaceholder() }
+				if f.IsRequired() { required }
+				if f.IsDisabled() { disabled }
+				class={ inputClassWithError(ctx, f.GetName(), f.IsDisabled()) }
+			/>
+		}
+		<p id={ "field-error-" + f.GetName() } class={ fieldErrorPClass(ctx, f.GetName()) }>{ formFieldError(ctx, f.GetName()) }</p>
 		if f.GetHelp() != "" {
 			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
 		}
@@ -47,8 +68,9 @@ templ TextareaRender(f *TextareaInput) {
 			rows={ fmt.Sprintf("%d", f.RowCount) }
 			if f.IsRequired() { required }
 			if f.IsDisabled() { disabled }
-			class={ typedFieldInputClass(f.IsDisabled()) + " resize-y" }
+			class={ inputClassWithError(ctx, f.GetName(), f.IsDisabled()) + " resize-y" }
 		>{ f.GetValueString() }</textarea>
+		<p id={ "field-error-" + f.GetName() } class={ fieldErrorPClass(ctx, f.GetName()) }>{ formFieldError(ctx, f.GetName()) }</p>
 		if f.GetHelp() != "" {
 			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
 		}
@@ -72,7 +94,7 @@ templ SelectRender(f *SelectInput) {
 				name={ f.GetName() }
 				if f.IsRequired() { required }
 				if f.IsDisabled() { disabled }
-				class={ typedFieldInputClass(f.IsDisabled()) + " appearance-none pr-8" }
+				class={ inputClassWithError(ctx, f.GetName(), f.IsDisabled()) + " appearance-none pr-8" }
 			>
 				if f.GetPlaceholder() != "" {
 					<option value="">{ f.GetPlaceholder() }</option>
@@ -87,6 +109,7 @@ templ SelectRender(f *SelectInput) {
 				<span class="material-icons-outlined text-gray-400 text-sm">expand_more</span>
 			</div>
 		</div>
+		<p id={ "field-error-" + f.GetName() } class={ fieldErrorPClass(ctx, f.GetName()) }>{ formFieldError(ctx, f.GetName()) }</p>
 		if f.GetHelp() != "" {
 			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
 		}
@@ -191,8 +214,9 @@ templ DatePickerRender(f *DatePicker) {
 			if f.MaxDate != "" { max={ f.MaxDate } }
 			if f.IsRequired() { required }
 			if f.IsDisabled() { disabled }
-			class={ typedFieldInputClass(f.IsDisabled()) }
+			class={ inputClassWithError(ctx, f.GetName(), f.IsDisabled()) }
 		/>
+		<p id={ "field-error-" + f.GetName() } class={ fieldErrorPClass(ctx, f.GetName()) }>{ formFieldError(ctx, f.GetName()) }</p>
 		if f.GetHelp() != "" {
 			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
 		}
@@ -422,6 +446,116 @@ templ KeyValueRender(f *KeyValueInput) {
 	</div>
 }
 
+// RadioInputRender renders a radio button group field.
+templ RadioInputRender(f *RadioInput) {
+	<div class="space-y-2">
+		if f.GetLabel() != "" {
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+				if f.IsRequired() {
+					<span class="text-red-500 ml-1">*</span>
+				}
+			</label>
+		}
+		<div class={ radioGroupClass(f.IsInline()) }>
+			for _, opt := range f.RadioOptions() {
+				<label class={ radioLabelClass(f.IsDisabled()) }>
+					<input
+						type="radio"
+						name={ f.GetName() }
+						id={ fmt.Sprintf("%s_%s", f.GetName(), opt.Value) }
+						value={ opt.Value }
+						checked?={ opt.Value == f.GetValueString() }
+						if f.IsDisabled() { disabled }
+						class="w-4 h-4 border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:bg-gray-700 dark:focus:ring-offset-gray-800"
+					/>
+					<div>
+						<span class="text-sm font-medium text-gray-700 dark:text-gray-300">{ opt.Label }</span>
+						if opt.Description != "" {
+							<p class="text-xs text-gray-500 dark:text-gray-400">{ opt.Description }</p>
+						}
+					</div>
+				</label>
+			}
+		</div>
+		<p id={ "field-error-" + f.GetName() } class={ fieldErrorPClass(ctx, f.GetName()) }>{ formFieldError(ctx, f.GetName()) }</p>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+// CheckboxListRender renders a multi-select checkbox list field.
+templ CheckboxListRender(f *CheckboxListInput) {
+	<div class="space-y-2">
+		if f.GetLabel() != "" {
+			<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+				{ f.GetLabel() }
+				if f.IsRequired() {
+					<span class="text-red-500 ml-1">*</span>
+				}
+			</label>
+		}
+		<div class={ checkboxListGroupClass(f) }>
+			for _, opt := range f.CheckboxOptions() {
+				<label class={ checkboxListLabelClass(f.IsDisabled()) }>
+					<input
+						type="checkbox"
+						name={ fmt.Sprintf("%s[]", f.GetName()) }
+						value={ opt.Value }
+						checked?={ f.IsSelected(opt.Value) }
+						if f.IsDisabled() { disabled }
+						class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:bg-gray-700"
+					/>
+					<div>
+						<span class="text-sm font-medium text-gray-700 dark:text-gray-300">{ opt.Label }</span>
+						if opt.Description != "" {
+							<p class="text-xs text-gray-500 dark:text-gray-400">{ opt.Description }</p>
+						}
+					</div>
+				</label>
+			}
+		</div>
+		<p id={ "field-error-" + f.GetName() } class={ fieldErrorPClass(ctx, f.GetName()) }>{ formFieldError(ctx, f.GetName()) }</p>
+		if f.GetHelp() != "" {
+			<p class="text-xs text-gray-500 dark:text-gray-400">{ f.GetHelp() }</p>
+		}
+	</div>
+}
+
+func radioGroupClass(inline bool) string {
+	if inline {
+		return "flex flex-wrap gap-4"
+	}
+	return "space-y-2"
+}
+
+func radioLabelClass(disabled bool) string {
+	base := "flex items-start gap-3 cursor-pointer"
+	if disabled {
+		return base + " opacity-50 cursor-not-allowed"
+	}
+	return base
+}
+
+func checkboxListGroupClass(f *CheckboxListInput) string {
+	if f.GridColumns() > 0 {
+		return fmt.Sprintf("grid grid-cols-%d gap-2", f.GridColumns())
+	}
+	if f.IsInline() {
+		return "flex flex-wrap gap-4"
+	}
+	return "space-y-2"
+}
+
+func checkboxListLabelClass(disabled bool) string {
+	base := "flex items-start gap-3 cursor-pointer"
+	if disabled {
+		return base + " opacity-50 cursor-not-allowed"
+	}
+	return base
+}
+
 func typedFieldInputClass(disabled bool) string {
 	base := "block w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
 	if disabled {
@@ -449,4 +583,34 @@ func sliderDefault(f *SliderInput) string {
 		return v
 	}
 	return fmt.Sprintf("%.0f", f.Min)
+}
+
+// formFieldError returns the server-side error message for a field from context.
+// Returns empty string when no error is present (fresh form or field has no error).
+func formFieldError(ctx context.Context, name string) string {
+	if errs := GetFormErrors(ctx); errs != nil {
+		return errs[name]
+	}
+	return ""
+}
+
+// fieldErrorPClass returns the CSS class for the field error paragraph.
+// Shows red text when an error is present, hidden otherwise.
+func fieldErrorPClass(ctx context.Context, name string) string {
+	if formFieldError(ctx, name) != "" {
+		return "mt-1 text-sm text-red-600 dark:text-red-400"
+	}
+	return "mt-1 text-sm"
+}
+
+// inputClassWithError returns the input CSS class, adding red border when there is a field error.
+func inputClassWithError(ctx context.Context, name string, disabled bool) string {
+	if formFieldError(ctx, name) != "" {
+		base := "block w-full rounded-xl border border-red-500 dark:border-red-500 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors"
+		if disabled {
+			return base + " opacity-60 cursor-not-allowed"
+		}
+		return base
+	}
+	return typedFieldInputClass(disabled)
 }

@@ -14,8 +14,8 @@ import (
 	"strings"
 )
 
-// Topbar - Version 4.0 — Faithful conversion of dashboard/index.html header
-// Uses Material Icons Outlined exclusively (no SVG inline)
+// Topbar — Version 5.0 — Full Datastar (no Alpine.js)
+// Uses global Datastar signals: $darkMode, $sidebarMobileOpen, $notifOpen, $userMenuOpen
 func Topbar(ctx context.Context) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -38,12 +38,12 @@ func Topbar(ctx context.Context) templ.Component {
 		}
 		ctx = templ.ClearChildren(ctx)
 		cfg := GetPanelConfigFromContext(ctx)
+		primaryHex := primaryColorHex(cfg.PrimaryColor)
 		userEmail := "admin@example.com"
 		userName := "Admin"
 		userRole := "Administrator"
-		avatarURL := "https://ui-avatars.com/api/?name=Admin&background=22c55e&color=fff"
+		avatarURL := "https://ui-avatars.com/api/?name=Admin&background=" + primaryHex + "&color=fff"
 
-		// Get user from context
 		user := auth.UserFromContext(ctx)
 		if user != nil && user.IsAuthenticated() {
 			userEmail = user.Email
@@ -51,150 +51,160 @@ func Topbar(ctx context.Context) templ.Component {
 			if len(emailParts) > 0 && len(emailParts[0]) > 0 {
 				namePart := emailParts[0]
 				userName = strings.ToUpper(namePart[:1]) + namePart[1:]
-				avatarURL = "https://ui-avatars.com/api/?name=" + namePart + "&background=22c55e&color=fff"
+				avatarURL = "https://ui-avatars.com/api/?name=" + namePart + "&background=" + primaryHex + "&color=fff"
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<header class=\"sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700\"><div class=\"flex items-center justify-between h-16 px-4 lg:px-6\"><!-- Left: Mobile Menu + Search --><div class=\"flex items-center gap-4\"><!-- Mobile Menu Toggle --><button @click=\"sidebarMobileOpen = true\" class=\"lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700\"><span class=\"material-icons-outlined\">menu</span></button><!-- Global Search --><div class=\"hidden md:block relative\"><span class=\"absolute left-3 top-1/2 -translate-y-1/2 text-gray-400\"><span class=\"material-icons-outlined text-xl\">search</span></span> <input type=\"text\" placeholder=\"Rechercher...\" class=\"w-64 lg:w-80 h-10 pl-10 pr-4 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500\"></div></div><!-- Right: Actions --><div class=\"flex items-center gap-2 lg:gap-4\"><!-- Dark Mode Toggle --><button @click=\"darkMode = !darkMode\" class=\"p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors\"><span x-show=\"!darkMode\" class=\"material-icons-outlined\">dark_mode</span> <span x-show=\"darkMode\" x-cloak class=\"material-icons-outlined\">light_mode</span></button><!-- Notification Bell --><div x-data=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!-- Transparent backdrop: closes all dropdowns when clicking outside --><div data-show=\"$notifOpen || $userMenuOpen\" data-on-click=\"$notifOpen = false; $userMenuOpen = false\" class=\"fixed inset-0 z-20\" style=\"display:none\"></div><header class=\"sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700\"><div class=\"flex items-center justify-between h-16 px-4 lg:px-6\"><!-- Left: Mobile Menu + Search --><div class=\"flex items-center gap-4\"><!-- Mobile Menu Toggle --><button data-on-click=\"$sidebarMobileOpen = true\" class=\"lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700\" aria-label=\"Open menu\"><span class=\"material-icons-outlined\">menu</span></button><!-- Global Search — Cmd+K trigger button --><button onclick=\"document.dispatchEvent(new CustomEvent('sublimego:search-open'))\" class=\"hidden md:flex items-center gap-2 w-64 lg:w-80 h-10 pl-3 pr-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-400 hover:border-primary-400 hover:bg-white dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500\" aria-label=\"Recherche globale (Cmd+K)\"><span class=\"material-icons-outlined text-xl\">search</span> <span class=\"flex-1 text-left\">Rechercher...</span> <kbd class=\"hidden lg:flex items-center gap-0.5 text-xs text-gray-400 border border-gray-300 dark:border-gray-500 rounded px-1 py-0.5 font-mono\">⌘K</kbd></button></div><!-- Right: Actions --><div class=\"flex items-center gap-2 lg:gap-4\"><!-- Dark Mode Toggle --><button data-on-click=\"$darkMode = !$darkMode; localStorage.setItem('theme', $darkMode ? 'dark' : 'light')\" class=\"p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors\" aria-label=\"Toggle dark mode\"><span data-show=\"!$darkMode\" class=\"material-icons-outlined\">dark_mode</span> <span data-show=\"$darkMode\" class=\"material-icons-outlined\" style=\"display:none\">light_mode</span></button><!-- Notification Bell (only when Notifications enabled) -->")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs("{ unread: 0, open: false, init() { const es = new EventSource('" + assetPath(cfg.Path, "/api/notifications/stream") + "'); es.onmessage = e => { const d = JSON.parse(e.data); if(d.unread_count !== undefined) this.unread = d.unread_count; }; } }")
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 68, Col: 260}
+		if cfg.Notifications {
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"relative z-30\"><button data-on-click=\"$notifOpen = !$notifOpen; $userMenuOpen = false\" class=\"relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors\" aria-label=\"Notifications\"><span class=\"material-icons-outlined\">notifications</span><!-- Unread badge dot (visible when count > 0) --><span data-show=\"$notifUnread > 0\" class=\"absolute top-1 right-1 flex items-center justify-center min-w-[1.1rem] h-[1.1rem] bg-red-500 rounded-full text-white text-[0.6rem] font-bold leading-none px-0.5\" style=\"display:none\" data-text=\"$notifUnread\"></span></button><!-- Notification Dropdown --><div data-show=\"$notifOpen\" class=\"absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden\" style=\"display:none\"><div class=\"px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between\"><h3 class=\"font-semibold\">Notifications</h3><!-- \"Tout lire\" button: POST to read-all then reset $notifUnread --><button data-show=\"$notifUnread > 0\" data-on-click=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var2 string
+			templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs("fetch('" + navLink(cfg.Path, "api/notifications/read-all") + "', {method:'POST'}).then(() => { $notifUnread = 0; })")
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 104, Col: 142}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"text-xs text-primary-600 hover:underline\" style=\"display:none\">Tout lire</button></div><div class=\"max-h-80 overflow-y-auto\"><p class=\"px-4 py-6 text-sm text-center text-gray-400 dark:text-gray-500\">Aucune notification</p></div><div class=\"px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between\"><a href=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var3 templ.SafeURL
+			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(navLink(cfg.Path, "notifications")))
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 115, Col: 67}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "\" class=\"text-sm text-primary-600 hover:underline\">Voir toutes les notifications</a></div></div></div>")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\" class=\"relative\"><button @click=\"open = !open\" class=\"relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors\"><span class=\"material-icons-outlined\">notifications</span> <span x-show=\"unread > 0\" x-cloak class=\"absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full\"></span></button><!-- Notification Dropdown --><div x-show=\"open\" x-cloak @click.away=\"open = false\" class=\"absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden\"><div class=\"px-4 py-3 border-b border-gray-200 dark:border-gray-700\"><h3 class=\"font-semibold\">Notifications</h3></div><div class=\"max-h-80 overflow-y-auto\"><p class=\"px-4 py-6 text-sm text-center text-gray-400 dark:text-gray-500\">Aucune notification</p></div><div class=\"px-4 py-3 border-t border-gray-200 dark:border-gray-700\"><a href=\"")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		var templ_7745c5c3_Var3 templ.SafeURL
-		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(navLink(cfg.Path, "notifications")))
-		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 96, Col: 66}
-		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\" class=\"text-sm text-primary-600 hover:underline\">Voir toutes les notifications</a></div></div></div><!-- Separator --><div class=\"hidden lg:block w-px h-6 bg-gray-200 dark:bg-gray-700\"></div><!-- User Menu --><div x-data=\"{ open: false }\" class=\"relative\"><button @click=\"open = !open\" class=\"flex items-center gap-3 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors\"><div class=\"hidden lg:block text-right\"><p class=\"text-sm font-semibold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<!-- Separator --><div class=\"hidden lg:block w-px h-6 bg-gray-200 dark:bg-gray-700\"></div><!-- User Menu --><div class=\"relative z-30\"><button data-on-click=\"$userMenuOpen = !$userMenuOpen; $notifOpen = false\" class=\"flex items-center gap-3 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors\"><div class=\"hidden lg:block text-right\"><p class=\"text-sm font-semibold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(userName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 111, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 133, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</p><p class=\"text-xs text-gray-500\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</p><p class=\"text-xs text-gray-500\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var5 string
 		templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(userRole)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 112, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 134, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p></div><img src=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</p></div><img src=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(avatarURL)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 114, Col: 26}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 136, Col: 26}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "\" alt=\"Avatar\" class=\"w-9 h-9 rounded-full\"></button><!-- User Dropdown --><div x-show=\"open\" x-cloak @click.away=\"open = false\" class=\"absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden\"><div class=\"px-4 py-3 border-b border-gray-200 dark:border-gray-700\"><p class=\"text-sm font-semibold\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" alt=\"Avatar\" class=\"w-9 h-9 rounded-full\"></button><!-- User Dropdown --><div data-show=\"$userMenuOpen\" class=\"absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden\" style=\"display:none\"><div class=\"px-4 py-3 border-b border-gray-200 dark:border-gray-700\"><p class=\"text-sm font-semibold\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var7 string
 		templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(userName)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 124, Col: 50}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 145, Col: 50}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</p><p class=\"text-xs text-gray-500\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "</p><p class=\"text-xs text-gray-500\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var8 string
 		templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(userEmail)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 125, Col: 51}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 146, Col: 51}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</p></div><div class=\"py-2\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</p></div><div class=\"py-2\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		if cfg.Profile {
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<a href=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<a href=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var9 templ.SafeURL
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(navLink(cfg.Path, "profile")))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 129, Col: 61}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 150, Col: 61}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\" class=\"flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700\"><span class=\"material-icons-outlined text-lg\">person</span> Mon Profil</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" class=\"flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700\"><span class=\"material-icons-outlined text-lg\">person</span> Mon Profil</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<a href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var10 templ.SafeURL
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(navLink(cfg.Path, "settings")))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 134, Col: 61}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 155, Col: 61}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" class=\"flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700\"><span class=\"material-icons-outlined text-lg\">settings</span> Paramètres</a></div><div class=\"py-2 border-t border-gray-200 dark:border-gray-700\"><a href=\"")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "\" class=\"flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700\"><span class=\"material-icons-outlined text-lg\">settings</span> Paramètres</a></div><div class=\"py-2 border-t border-gray-200 dark:border-gray-700\"><a href=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var11 templ.SafeURL
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(navLink(cfg.Path, "logout")))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 140, Col: 59}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `ui/layouts/topbar.templ`, Line: 161, Col: 59}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "\" class=\"flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-gray-700\"><span class=\"material-icons-outlined text-lg\">logout</span> Déconnexion</a></div></div></div></div></div></header>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" class=\"flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-gray-50 dark:hover:bg-gray-700\"><span class=\"material-icons-outlined text-lg\">logout</span> Déconnexion</a></div></div></div></div></div></header>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

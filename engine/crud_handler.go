@@ -2,12 +2,15 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 
 	"github.com/a-h/templ"
+	datastarPkg "github.com/bozz33/sublimeadmin/datastar"
+	formPkg "github.com/bozz33/sublimeadmin/form"
 	"github.com/bozz33/sublimeadmin/ui/layouts"
 )
 
@@ -122,19 +125,31 @@ func (h *CRUDHandler) Edit(w http.ResponseWriter, r *http.Request, id string) {
 		return
 	}
 
+	// Inject relation managers into context if the resource supports them.
+	if rwr, ok := h.Resource.(RelationManagerAware); ok {
+		ctx = context.WithValue(ctx, contextKeyRelationManagers, rwr.GetRelationManagers())
+	}
+
 	component := h.Resource.Form(ctx, item)
 	render(w, r, "Edit "+h.Resource.Label(), component)
 }
 
 // Store handles creation.
+// If the resource returns a ValidationErrors error, the form is re-rendered
+// with inline field errors instead of returning HTTP 500.
 func (h *CRUDHandler) Store(w http.ResponseWriter, r *http.Request) {
-	if !h.Resource.CanCreate(r.Context()) {
+	ctx := r.Context()
+
+	if !h.Resource.CanCreate(ctx) {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
-	if err := h.Resource.Create(r.Context(), r); err != nil {
-		http.Error(w, "Creation error: "+err.Error(), http.StatusInternalServerError)
+	if err := h.Resource.Create(ctx, r); err != nil {
+		ctx2 := injectFormErrors(ctx, err)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		component := h.Resource.Form(ctx2, nil)
+		render(w, r.WithContext(ctx2), "Create "+h.Resource.Label(), component)
 		return
 	}
 
@@ -142,14 +157,23 @@ func (h *CRUDHandler) Store(w http.ResponseWriter, r *http.Request) {
 }
 
 // Update handles updates.
+// If the resource returns a ValidationErrors error, the form is re-rendered
+// with inline field errors instead of returning HTTP 500.
 func (h *CRUDHandler) Update(w http.ResponseWriter, r *http.Request, id string) {
-	if !h.Resource.CanUpdate(r.Context()) {
+	ctx := r.Context()
+
+	if !h.Resource.CanUpdate(ctx) {
 		http.Error(w, "Forbidden", http.StatusForbidden)
 		return
 	}
 
-	if err := h.Resource.Update(r.Context(), id, r); err != nil {
-		http.Error(w, "Update error: "+err.Error(), http.StatusInternalServerError)
+	if err := h.Resource.Update(ctx, id, r); err != nil {
+		// Re-fetch item to pre-populate the form with submitted values.
+		item, _ := h.Resource.Get(ctx, id)
+		ctx2 := injectFormErrors(ctx, err)
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		component := h.Resource.Form(ctx2, item)
+		render(w, r.WithContext(ctx2), "Edit "+h.Resource.Label(), component)
 		return
 	}
 
@@ -157,6 +181,8 @@ func (h *CRUDHandler) Update(w http.ResponseWriter, r *http.Request, id string) 
 }
 
 // Delete handles deletion.
+// If the resource implements SoftDeletable, this performs a soft delete.
+// Otherwise it permanently deletes the item.
 func (h *CRUDHandler) Delete(w http.ResponseWriter, r *http.Request, id string) {
 	ctx := r.Context()
 
@@ -165,8 +191,66 @@ func (h *CRUDHandler) Delete(w http.ResponseWriter, r *http.Request, id string) 
 		return
 	}
 
+	// Use soft delete when resource supports it.
+	if sd, ok := h.Resource.(SoftDeletable); ok {
+		if err := sd.SoftDelete(ctx, id); err != nil {
+			http.Error(w, "Soft delete error: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, "/"+h.Resource.Slug(), http.StatusSeeOther)
+		return
+	}
+
 	if err := h.Resource.Delete(ctx, id); err != nil {
 		http.Error(w, "Delete error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/"+h.Resource.Slug(), http.StatusSeeOther)
+}
+
+// Restore handles restoring a soft-deleted item.
+// Only available when the resource implements SoftDeletable.
+func (h *CRUDHandler) Restore(w http.ResponseWriter, r *http.Request, id string) {
+	ctx := r.Context()
+
+	if !h.Resource.CanDelete(ctx) {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	sd, ok := h.Resource.(SoftDeletable)
+	if !ok {
+		http.Error(w, "Resource does not support soft delete", http.StatusBadRequest)
+		return
+	}
+
+	if err := sd.Restore(ctx, id); err != nil {
+		http.Error(w, "Restore error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/"+h.Resource.Slug(), http.StatusSeeOther)
+}
+
+// ForceDelete permanently deletes a (possibly soft-deleted) item.
+// Only available when the resource implements SoftDeletable.
+func (h *CRUDHandler) ForceDelete(w http.ResponseWriter, r *http.Request, id string) {
+	ctx := r.Context()
+
+	if !h.Resource.CanDelete(ctx) {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	sd, ok := h.Resource.(SoftDeletable)
+	if !ok {
+		http.Error(w, "Resource does not support force delete", http.StatusBadRequest)
+		return
+	}
+
+	if err := sd.ForceDelete(ctx, id); err != nil {
+		http.Error(w, "Force delete error: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -212,11 +296,113 @@ func (h *CRUDHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.routeGET(w, r, path, parts)
 	case http.MethodPost:
 		h.routePOST(w, r, path, parts)
+	case http.MethodPatch:
+		if len(parts) >= 1 && parts[0] != "" {
+			h.Patch(w, r, parts[0])
+		} else {
+			http.NotFound(w, r)
+		}
 	case http.MethodDelete:
 		if len(parts) >= 1 {
 			h.Delete(w, r, parts[0])
 		}
 	}
+}
+
+// Patch handles partial updates from inline-edit table columns.
+// Route: PATCH /{slug}/{id}
+//
+// Expects a single field=value pair in the request body.
+// If the resource implements ResourcePatchable, its PatchField method is called.
+// Otherwise the full Update path is used as a fallback.
+// On success returns a Datastar SSE toast notification.
+func (h *CRUDHandler) Patch(w http.ResponseWriter, r *http.Request, id string) {
+	ctx := r.Context()
+
+	if !h.Resource.CanUpdate(ctx) {
+		http.Error(w, "Forbidden", http.StatusForbidden)
+		return
+	}
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Bad request", http.StatusBadRequest)
+		return
+	}
+
+	sse := datastarPkg.NewSSE(w)
+
+	// Prefer ResourcePatchable when available (more efficient — single field update).
+	if patchable, ok := h.Resource.(ResourcePatchable); ok {
+		// Collect all submitted form fields as a map.
+		fields := make(map[string]string, len(r.Form))
+		for k, vals := range r.Form {
+			if len(vals) > 0 {
+				fields[k] = vals[0]
+			}
+		}
+		if err := patchable.PatchField(ctx, id, fields); err != nil {
+			sse.Toast(htmlEscapeString(err.Error()), "error")
+			return
+		}
+		sse.Toast("Saved", "success")
+		return
+	}
+
+	// Fallback: full update.
+	if err := h.Resource.Update(ctx, id, r); err != nil {
+		sse.Toast(htmlEscapeString(err.Error()), "error")
+		return
+	}
+	sse.Toast("Saved", "success")
+}
+
+// ValidateField handles real-time per-field validation via Datastar SSE.
+//
+// Route: GET /{slug}/validate-field?field=name&value=xxx
+//
+// If the resource implements ResourceValidator, the field is validated and a
+// Datastar SSE fragment is returned updating the #field-error-{name} element.
+// If the resource does not implement ResourceValidator, 204 No Content is returned.
+func (h *CRUDHandler) ValidateField(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	field := r.URL.Query().Get("field")
+	value := r.URL.Query().Get("value")
+	if field == "" {
+		http.Error(w, "missing field parameter", http.StatusBadRequest)
+		return
+	}
+
+	validator, ok := h.Resource.(ResourceValidator)
+	if !ok {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	sse := datastarPkg.NewSSE(w)
+	if err := validator.ValidateField(ctx, field, value); err != nil {
+		// Send error fragment
+		errHTML := fmt.Sprintf(
+			`<p id="field-error-%s" class="mt-1 text-sm text-red-600 dark:text-red-400">%s</p>`,
+			field, htmlEscapeString(err.Error()),
+		)
+		sse.MergeFragment(errHTML)
+	} else {
+		// Clear any previous error
+		clearHTML := fmt.Sprintf(`<p id="field-error-%s" class="mt-1 text-sm"></p>`, field)
+		sse.MergeFragment(clearHTML)
+	}
+}
+
+// htmlEscapeString escapes a string for safe HTML insertion.
+func htmlEscapeString(s string) string {
+	r := strings.NewReplacer(
+		"&", "&amp;",
+		"<", "&lt;",
+		">", "&gt;",
+		`"`, "&#34;",
+		"'", "&#39;",
+	)
+	return r.Replace(s)
 }
 
 // routeGET dispatches GET requests.
@@ -226,6 +412,8 @@ func (h *CRUDHandler) routeGET(w http.ResponseWriter, r *http.Request, path stri
 		h.List(w, r)
 	case path == "create":
 		h.Create(w, r)
+	case path == "validate-field":
+		h.ValidateField(w, r)
 	case len(parts) == 2 && parts[1] == "edit":
 		h.Edit(w, r, parts[0])
 	case len(parts) == 1 && parts[0] != "":
@@ -252,6 +440,22 @@ func (h *CRUDHandler) routePOST(w http.ResponseWriter, r *http.Request, path str
 		h.Store(w, r)
 	case len(parts) >= 1:
 		h.Update(w, r, parts[0])
+	}
+}
+
+// injectFormErrors converts an error into FormErrors and injects it into context.
+// If the error implements ValidationErrors (with FieldErrors()), per-field errors
+// are used. Otherwise, the error message is stored under the "_error" key.
+func injectFormErrors(ctx context.Context, err error) context.Context {
+	var fe formPkg.FormErrors
+	var ve formPkg.ValidationErrors
+	switch {
+	case errors.As(err, &fe):
+		return formPkg.WithFormErrors(ctx, fe)
+	case errors.As(err, &ve):
+		return formPkg.WithFormErrors(ctx, formPkg.FormErrors(ve.FieldErrors()))
+	default:
+		return formPkg.WithFormErrors(ctx, formPkg.FormErrors{"_error": err.Error()})
 	}
 }
 

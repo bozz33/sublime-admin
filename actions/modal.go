@@ -2,7 +2,9 @@ package actions
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 )
 
 // ModalSize defines the size of a modal dialog.
@@ -132,19 +134,206 @@ func (m *ModalAction) WithSuccessMessage(msg string) *ModalAction {
 	return m
 }
 
-// ServeHTTP handles the modal form submission.
+// ServeHTTP handles modal rendering (GET) and form submission (POST).
+//
+//   - GET  → returns the modal HTML fragment (form or confirmation dialog)
+//   - POST → processes the form submission and redirects back
 func (m *ModalAction) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	switch r.Method {
+	case http.MethodGet:
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := m.renderModalFragment(w, r); err != nil {
+			http.Error(w, "failed to render modal", http.StatusInternalServerError)
+		}
+
+	case http.MethodPost:
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "bad request", http.StatusBadRequest)
+			return
+		}
+		// Execute BeforeFunc if configured
+		if m.Action.BeforeFunc != nil {
+			if err := m.Action.BeforeFunc(r.Context(), nil); err != nil {
+				http.Error(w, m.Action.FailureMessage, http.StatusInternalServerError)
+				return
+			}
+		}
+		// Redirect to FormAction or Referer
+		redirectTo := m.FormAction
+		if redirectTo == "" {
+			redirectTo = r.Header.Get("Referer")
+		}
+		if redirectTo == "" {
+			redirectTo = "/"
+		}
+		http.Redirect(w, r, redirectTo, http.StatusSeeOther)
+
+	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		return
 	}
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
+}
+
+// renderModalFragment writes the modal HTML fragment to w.
+func (m *ModalAction) renderModalFragment(w http.ResponseWriter, r *http.Request) error {
+	action := m.FormAction
+	if action == "" {
+		action = r.URL.Path
 	}
-	// Delegate to action execute with a no-op handler by default.
-	// Callers should override by registering a proper HTTP handler.
-	http.Error(w, "modal action handler not configured", http.StatusNotImplemented)
+	method := m.FormMethod
+	if method == "" {
+		method = "POST"
+	}
+	sizeClass := modalSizeClass(m.Size)
+
+	// Determine if this is a slide-over or centered modal
+	wrapperClass := "fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+	panelClass := sizeClass + " w-full bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden"
+	if m.IsSlideOver {
+		wrapperClass = "fixed inset-0 z-50 flex items-end justify-end bg-black/50"
+		panelClass = "h-full " + sizeClass + " bg-white dark:bg-gray-800 shadow-xl overflow-y-auto"
+	}
+
+	fmt.Fprintf(w, `<div id="modal-fragment" class="%s">`, wrapperClass)
+	fmt.Fprintf(w, `<div class="%s">`, panelClass)
+
+	// Header
+	title := m.Action.ModalTitle
+	if title == "" {
+		title = m.Action.Label
+	}
+	fmt.Fprintf(w, `<div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">`)
+	fmt.Fprintf(w, `<h2 class="text-lg font-semibold text-gray-900 dark:text-white">%s</h2>`, htmlEscape(title))
+	fmt.Fprintf(w, `<button type="button" onclick="document.getElementById('modal-fragment').remove()" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-400 hover:text-gray-600 transition-colors"><span class="material-icons-outlined">close</span></button>`)
+	fmt.Fprintf(w, `</div>`)
+
+	// Body
+	fmt.Fprintf(w, `<div class="px-6 py-4">`)
+	if m.Action.ModalDescription != "" {
+		fmt.Fprintf(w, `<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">%s</p>`, htmlEscape(m.Action.ModalDescription))
+	}
+
+	// Form with fields
+	if len(m.FormFields) > 0 {
+		fmt.Fprintf(w, `<form method="POST" action="%s" class="space-y-4">`, htmlEscape(action))
+		if method != "POST" {
+			fmt.Fprintf(w, `<input type="hidden" name="_method" value="%s"/>`, htmlEscape(method))
+		}
+		for _, field := range m.FormFields {
+			renderModalFieldHTML(w, field)
+		}
+		fmt.Fprintf(w, `<div class="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">`)
+		cancelLabel := m.Action.CancelLabel
+		if cancelLabel == "" {
+			cancelLabel = "Cancel"
+		}
+		confirmLabel := m.Action.ConfirmLabel
+		if confirmLabel == "" {
+			confirmLabel = "Submit"
+		}
+		fmt.Fprintf(w, `<button type="button" onclick="document.getElementById('modal-fragment').remove()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">%s</button>`, htmlEscape(cancelLabel))
+		fmt.Fprintf(w, `<button type="submit" class="px-4 py-2 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-xl transition-colors">%s</button>`, htmlEscape(confirmLabel))
+		fmt.Fprintf(w, `</div></form>`)
+	} else if m.Action.RequiresConfirmation {
+		// Pure confirmation dialog (no form fields)
+		fmt.Fprintf(w, `<div class="flex items-start gap-4">`)
+		fmt.Fprintf(w, `<div class="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center flex-shrink-0"><span class="material-icons-outlined text-red-500 text-2xl">warning</span></div>`)
+		fmt.Fprintf(w, `<div class="flex-1"><p class="text-sm text-gray-600 dark:text-gray-400">%s</p></div>`, htmlEscape(m.Action.ModalDescription))
+		fmt.Fprintf(w, `</div>`)
+		fmt.Fprintf(w, `<div class="flex items-center justify-end gap-3 mt-6">`)
+		cancelLabel := m.Action.CancelLabel
+		if cancelLabel == "" {
+			cancelLabel = "Cancel"
+		}
+		confirmLabel := m.Action.ConfirmLabel
+		if confirmLabel == "" {
+			confirmLabel = "Confirm"
+		}
+		colorClass := "bg-red-600 hover:bg-red-700"
+		if m.Action.Color != "danger" {
+			colorClass = "bg-primary-600 hover:bg-primary-700"
+		}
+		fmt.Fprintf(w, `<button type="button" onclick="document.getElementById('modal-fragment').remove()" class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">%s</button>`, htmlEscape(cancelLabel))
+		fmt.Fprintf(w, `<form method="POST" action="%s" style="display:inline">`, htmlEscape(action))
+		if method != "POST" {
+			fmt.Fprintf(w, `<input type="hidden" name="_method" value="%s"/>`, htmlEscape(method))
+		}
+		fmt.Fprintf(w, `<button type="submit" class="px-4 py-2 text-sm font-semibold text-white %s rounded-xl transition-colors">%s</button>`, colorClass, htmlEscape(confirmLabel))
+		fmt.Fprintf(w, `</form></div>`)
+	}
+
+	fmt.Fprintf(w, `</div></div></div>`)
+	return nil
+}
+
+// renderModalFieldHTML writes a single form field HTML for a modal.
+func renderModalFieldHTML(w http.ResponseWriter, f ModalField) {
+	fmt.Fprintf(w, `<div class="space-y-1">`)
+	if f.Label != "" {
+		req := ""
+		if f.Required {
+			req = `<span class="text-red-500 ml-1">*</span>`
+		}
+		fmt.Fprintf(w, `<label for="%s" class="block text-sm font-medium text-gray-700 dark:text-gray-300">%s%s</label>`,
+			htmlEscape(f.Name), htmlEscape(f.Label), req)
+	}
+
+	inputClass := "block w-full rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+
+	switch f.Type {
+	case "select":
+		fmt.Fprintf(w, `<select id="%s" name="%s" class="%s">`, htmlEscape(f.Name), htmlEscape(f.Name), inputClass)
+		if f.Placeholder != "" {
+			fmt.Fprintf(w, `<option value="">%s</option>`, htmlEscape(f.Placeholder))
+		}
+		for _, opt := range f.Options {
+			selected := ""
+			if opt.Value == f.Value {
+				selected = ` selected`
+			}
+			fmt.Fprintf(w, `<option value="%s"%s>%s</option>`, htmlEscape(opt.Value), selected, htmlEscape(opt.Label))
+		}
+		fmt.Fprintf(w, `</select>`)
+	case "textarea":
+		fmt.Fprintf(w, `<textarea id="%s" name="%s" placeholder="%s" class="%s resize-y min-h-[80px]">%s</textarea>`,
+			htmlEscape(f.Name), htmlEscape(f.Name), htmlEscape(f.Placeholder), inputClass, htmlEscape(f.Value))
+	case "hidden":
+		fmt.Fprintf(w, `<input type="hidden" name="%s" value="%s"/>`, htmlEscape(f.Name), htmlEscape(f.Value))
+	default:
+		fieldType := f.Type
+		if fieldType == "" {
+			fieldType = "text"
+		}
+		req := ""
+		if f.Required {
+			req = ` required`
+		}
+		fmt.Fprintf(w, `<input type="%s" id="%s" name="%s" value="%s" placeholder="%s" class="%s"%s/>`,
+			htmlEscape(fieldType), htmlEscape(f.Name), htmlEscape(f.Name),
+			htmlEscape(f.Value), htmlEscape(f.Placeholder), inputClass, req)
+	}
+	fmt.Fprintf(w, `</div>`)
+}
+
+// modalSizeClass returns the Tailwind width class for a modal size.
+func modalSizeClass(size ModalSize) string {
+	switch size {
+	case ModalSizeSM:
+		return "max-w-sm"
+	case ModalSizeLG:
+		return "max-w-2xl"
+	case ModalSizeXL:
+		return "max-w-4xl"
+	case ModalSizeFull:
+		return "max-w-full"
+	default:
+		return "max-w-lg"
+	}
+}
+
+// htmlEscape escapes a string for safe HTML attribute/content usage.
+func htmlEscape(s string) string {
+	r := strings.NewReplacer("&", "&amp;", "<", "&lt;", ">", "&gt;", `"`, "&#34;", "'", "&#39;")
+	return r.Replace(s)
 }
 
 // ConfirmAction creates a pre-configured delete confirmation modal action.

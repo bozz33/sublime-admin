@@ -28,6 +28,8 @@ type BaseResource struct {
 	tableHeaderActions []HeaderAction
 	tableExportURL     string
 	tableImportURL     string
+	recordUrlFn        func(item any) string // optional: custom row URL override
+	columnManager      bool
 }
 
 // NewBaseResource creates a BaseResource with required values.
@@ -118,6 +120,20 @@ func (b *BaseResource) SetHeaderActions(actions ...HeaderAction) *BaseResource {
 	return b
 }
 
+// SetRecordUrlFn sets a function that generates a custom URL per table row.
+// By default rows link to /{slug}/{id}. Use this to override for external URLs.
+func (b *BaseResource) SetRecordUrlFn(fn func(item any) string) *BaseResource {
+	b.recordUrlFn = fn
+	return b
+}
+
+// EnableColumnManager activates the column visibility toggle in the table header.
+// The UI is rendered by list.templ automatically when ColumnManager is true.
+func (b *BaseResource) EnableColumnManager() *BaseResource {
+	b.columnManager = true
+	return b
+}
+
 // BuildTableState constructs a TableState from the resource's list data.
 // Resolution order: ResourceQueryable > ResourceSearchable > ResourceFilterable > List.
 func (b *BaseResource) BuildTableState(ctx context.Context, canCreate, canDelete bool) (TableState, error) {
@@ -152,6 +168,7 @@ func (b *BaseResource) BuildTableState(ctx context.Context, canCreate, canDelete
 		Search:        search,
 		SortKey:       sortKey,
 		SortDir:       sortDir,
+		ColumnManager: b.columnManager,
 	}, nil
 }
 
@@ -187,6 +204,9 @@ func (b *BaseResource) buildRows(items []any) []Row {
 	rows := make([]Row, 0, len(items))
 	for _, item := range items {
 		row := Row{ID: getItemID(item), Record: item}
+		if b.recordUrlFn != nil {
+			row.RecordURL = b.recordUrlFn(item)
+		}
 		for _, col := range b.tableColumns {
 			row.Cells = append(row.Cells, col.Value(item))
 		}

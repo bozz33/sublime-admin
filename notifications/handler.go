@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"time"
+
+	ds "github.com/bozz33/sublimeadmin/datastar"
 )
 
 // NotificationStore is the interface that both Store (in-memory) and
@@ -32,6 +35,7 @@ type NotificationStore interface {
 type Handler struct {
 	store      NotificationStore
 	userIDFunc func(r *http.Request) string
+	prefix     string // registered route prefix, e.g. "/api/notifications"
 }
 
 // NewHandler creates a notification HTTP handler.
@@ -49,9 +53,11 @@ func (h *Handler) Register(mux *http.ServeMux, prefix string) {
 	if prefix == "" {
 		prefix = "/notifications"
 	}
+	h.prefix = prefix
 	mux.HandleFunc(prefix, h.handleList)
 	mux.HandleFunc(prefix+"/unread", h.handleUnread)
 	mux.HandleFunc(prefix+"/stream", h.handleStream)
+	mux.HandleFunc(prefix+"/badge-stream", h.handleBadgeStream)
 	mux.HandleFunc(prefix+"/read-all", h.handleReadAll)
 	// /notifications/{id}/read — handled via prefix match
 	mux.HandleFunc(prefix+"/", h.handleByID)
@@ -157,10 +163,10 @@ func (h *Handler) handleByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Extract ID from path: /notifications/{id}/read
+	// Extract ID from path: {prefix}/{id}/read
 	path := r.URL.Path
-	// strip leading /notifications/
-	rest := path[len("/notifications/"):]
+	// strip leading prefix + separator slash
+	rest := path[len(h.prefix)+1:]
 	// expect: {id}/read
 	var notifID string
 	if len(rest) > 5 && rest[len(rest)-5:] == "/read" {
@@ -174,6 +180,65 @@ func (h *Handler) handleByID(w http.ResponseWriter, r *http.Request) {
 
 	h.store.MarkRead(userID, notifID)
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// handleBadgeStream is a Datastar-native SSE endpoint that keeps the topbar
+// notification badge in sync without page reloads.
+//
+// Route: GET /notifications/badge-stream
+//
+// On connection it immediately emits the current unread count as a Datastar
+// MergeSignals event (signal name: "notifUnread"). Thereafter it emits a new
+// count every time the user receives a notification, and a heartbeat every
+// 30 s to prevent proxy timeouts.
+//
+// Topbar usage (already wired in topbar.templ):
+//
+//	data-on-load="@get('/api/notifications/badge-stream')"
+func (h *Handler) handleBadgeStream(w http.ResponseWriter, r *http.Request) {
+	userID := h.userIDFunc(r)
+	if userID == "" {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	_, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "streaming not supported", http.StatusInternalServerError)
+		return
+	}
+
+	sse := ds.NewSSE(w)
+
+	// Send current count immediately so the badge appears without waiting.
+	sse.MergeSignals(map[string]any{
+		"notifUnread": h.store.UnreadCount(userID),
+	})
+
+	ch := h.store.Subscribe(r.Context(), userID)
+
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-r.Context().Done():
+			return
+		case n, ok := <-ch:
+			if !ok {
+				return
+			}
+			_ = n // notification received; re-read the authoritative count
+			sse.MergeSignals(map[string]any{
+				"notifUnread": h.store.UnreadCount(userID),
+			})
+		case <-ticker.C:
+			// Heartbeat: refresh the count in case mark-read happened elsewhere.
+			sse.MergeSignals(map[string]any{
+				"notifUnread": h.store.UnreadCount(userID),
+			})
+		}
+	}
 }
 
 func writeJSON(w http.ResponseWriter, v any) {

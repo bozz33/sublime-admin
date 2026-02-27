@@ -7,32 +7,53 @@ import (
 	"github.com/bozz33/sublimeadmin/actions"
 )
 
+// TableTab represents a filter preset tab displayed above the table.
+// Clicking a tab applies a pre-configured filter automatically.
+type TableTab struct {
+	Label      string // Display label (e.g. "All", "Active", "Archived")
+	Key        string // URL query param key (e.g. "tab")
+	Value      string // URL query param value (e.g. "active")
+	Icon       string // Optional Material icon name
+	Color      string // Optional Tailwind color for the active state
+	BadgeCount string // Optional badge count shown next to the label
+}
+
 // Table represents the complete configuration of a table.
 type Table struct {
-	Columns     []Column
-	Rows        []any
-	Actions     []*actions.Action
-	BulkActions []*BulkAction
-	Filters     []Filter
-	Summaries   []Summary
-	Groups      []Grouping
-	Searchable  bool
-	Pagination  bool
-	PerPage     int
-	BaseURL     string
+	Columns      []Column
+	Rows         []any
+	Actions      []*actions.Action
+	ActionGroups []*actions.ActionGroup // dropdown groups of actions (rendered after individual actions)
+	BulkActions  []*BulkAction
+	Filters      []Filter
+	Summaries    []Summary
+	Groups       []Grouping
+	Tabs         []TableTab // filter preset tabs
+	Searchable   bool
+	Pagination   bool
+	PerPage      int
+	BaseURL      string
+	Striped      bool // alternate row background colors
+	Deferred     bool // lazy-load rows after initial page render
+	EmptyHeading string          // custom empty state heading (default: "Aucun résultat trouvé")
+	EmptyDesc    string          // custom empty state description
+	EmptyIcon    string          // custom Material icon for empty state (default: "inbox")
+	RecordUrlFn  func(any) string // optional: custom URL per row (overrides default /{slug}/{id})
 }
 
 // New creates a new Table instance.
 func New(data []any) *Table {
 	return &Table{
-		Columns:     make([]Column, 0),
-		Rows:        data,
-		Actions:     make([]*actions.Action, 0),
-		BulkActions: make([]*BulkAction, 0),
-		Filters:     make([]Filter, 0),
-		Searchable:  true,
-		Pagination:  true,
-		PerPage:     15,
+		Columns:      make([]Column, 0),
+		Rows:         data,
+		Actions:      make([]*actions.Action, 0),
+		ActionGroups: make([]*actions.ActionGroup, 0),
+		BulkActions:  make([]*BulkAction, 0),
+		Filters:      make([]Filter, 0),
+		Searchable:   true,
+		Pagination:   true,
+		PerPage:      15,
+		EmptyIcon:    "inbox",
 	}
 }
 
@@ -45,6 +66,22 @@ func (t *Table) WithColumns(cols ...Column) *Table {
 // WithActions sets the available actions.
 func (t *Table) WithActions(acts ...*actions.Action) *Table {
 	t.Actions = append(t.Actions, acts...)
+	return t
+}
+
+// WithActionGroups adds dropdown action groups rendered after individual actions.
+func (t *Table) WithActionGroups(groups ...*actions.ActionGroup) *Table {
+	t.ActionGroups = append(t.ActionGroups, groups...)
+	return t
+}
+
+// WithEmptyState sets a custom empty state heading, description and icon.
+func (t *Table) WithEmptyState(heading, desc, icon string) *Table {
+	t.EmptyHeading = heading
+	t.EmptyDesc = desc
+	if icon != "" {
+		t.EmptyIcon = icon
+	}
 	return t
 }
 
@@ -94,6 +131,31 @@ func (t *Table) Search(enabled bool) *Table {
 // Paginate enables/disables pagination.
 func (t *Table) Paginate(enabled bool) *Table {
 	t.Pagination = enabled
+	return t
+}
+
+// WithTabs adds filter preset tabs above the table.
+func (t *Table) WithTabs(tabs ...TableTab) *Table {
+	t.Tabs = append(t.Tabs, tabs...)
+	return t
+}
+
+// WithStriped enables alternating row background colors.
+func (t *Table) WithStriped() *Table {
+	t.Striped = true
+	return t
+}
+
+// WithDeferred enables lazy loading of rows (skeleton shown first, then data).
+func (t *Table) WithDeferred() *Table {
+	t.Deferred = true
+	return t
+}
+
+// WithRecordUrl sets a function that generates a custom URL for each row.
+// By default rows link to /{slug}/{id}. Use this to override for external URLs or nested resources.
+func (t *Table) WithRecordUrl(fn func(item any) string) *Table {
+	t.RecordUrlFn = fn
 	return t
 }
 

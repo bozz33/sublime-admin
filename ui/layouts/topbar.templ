@@ -6,17 +6,17 @@ import (
 	"github.com/bozz33/sublimeadmin/auth"
 )
 
-// Topbar - Version 4.0 — Faithful conversion of dashboard/index.html header
-// Uses Material Icons Outlined exclusively (no SVG inline)
+// Topbar — Version 5.0 — Full Datastar (no Alpine.js)
+// Uses global Datastar signals: $darkMode, $sidebarMobileOpen, $notifOpen, $userMenuOpen
 templ Topbar(ctx context.Context) {
-	{{ 
+	{{
 		cfg := GetPanelConfigFromContext(ctx)
+		primaryHex := primaryColorHex(cfg.PrimaryColor)
 		userEmail := "admin@example.com"
 		userName := "Admin"
 		userRole := "Administrator"
-		avatarURL := "https://ui-avatars.com/api/?name=Admin&background=22c55e&color=fff"
-		
-		// Get user from context
+		avatarURL := "https://ui-avatars.com/api/?name=Admin&background=" + primaryHex + "&color=fff"
+
 		user := auth.UserFromContext(ctx)
 		if user != nil && user.IsAuthenticated() {
 			userEmail = user.Email
@@ -24,87 +24,109 @@ templ Topbar(ctx context.Context) {
 			if len(emailParts) > 0 && len(emailParts[0]) > 0 {
 				namePart := emailParts[0]
 				userName = strings.ToUpper(namePart[:1]) + namePart[1:]
-				avatarURL = "https://ui-avatars.com/api/?name=" + namePart + "&background=22c55e&color=fff"
+				avatarURL = "https://ui-avatars.com/api/?name=" + namePart + "&background=" + primaryHex + "&color=fff"
 			}
 		}
 	}}
+
+	<!-- Transparent backdrop: closes all dropdowns when clicking outside -->
+	<div
+		data-show="$notifOpen || $userMenuOpen"
+		data-on-click="$notifOpen = false; $userMenuOpen = false"
+		class="fixed inset-0 z-20"
+		style="display:none"
+	></div>
+
 	<header class="sticky top-0 z-30 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
 		<div class="flex items-center justify-between h-16 px-4 lg:px-6">
 			<!-- Left: Mobile Menu + Search -->
 			<div class="flex items-center gap-4">
 				<!-- Mobile Menu Toggle -->
 				<button
-					@click="sidebarMobileOpen = true"
+					data-on-click="$sidebarMobileOpen = true"
 					class="lg:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+					aria-label="Open menu"
 				>
 					<span class="material-icons-outlined">menu</span>
 				</button>
-				<!-- Global Search -->
-				<div class="hidden md:block relative">
-					<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-						<span class="material-icons-outlined text-xl">search</span>
-					</span>
-					<input
-						type="text"
-						placeholder="Rechercher..."
-						class="w-64 lg:w-80 h-10 pl-10 pr-4 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-					/>
-				</div>
+				<!-- Global Search — Cmd+K trigger button -->
+				<button
+					onclick="document.dispatchEvent(new CustomEvent('sublimego:search-open'))"
+					class="hidden md:flex items-center gap-2 w-64 lg:w-80 h-10 pl-3 pr-3 rounded-lg border border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-sm text-gray-400 hover:border-primary-400 hover:bg-white dark:hover:bg-gray-600 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500"
+					aria-label="Recherche globale (Cmd+K)"
+				>
+					<span class="material-icons-outlined text-xl">search</span>
+					<span class="flex-1 text-left">Rechercher...</span>
+					<kbd class="hidden lg:flex items-center gap-0.5 text-xs text-gray-400 border border-gray-300 dark:border-gray-500 rounded px-1 py-0.5 font-mono">⌘K</kbd>
+				</button>
 			</div>
 
 			<!-- Right: Actions -->
 			<div class="flex items-center gap-2 lg:gap-4">
 				<!-- Dark Mode Toggle -->
 				<button
-					@click="darkMode = !darkMode"
+					data-on-click="$darkMode = !$darkMode; localStorage.setItem('theme', $darkMode ? 'dark' : 'light')"
 					class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+					aria-label="Toggle dark mode"
 				>
-					<span x-show="!darkMode" class="material-icons-outlined">dark_mode</span>
-					<span x-show="darkMode" x-cloak class="material-icons-outlined">light_mode</span>
+					<span data-show="!$darkMode" class="material-icons-outlined">dark_mode</span>
+					<span data-show="$darkMode" class="material-icons-outlined" style="display:none">light_mode</span>
 				</button>
 
-				<!-- Notification Bell -->
-				<div
-					x-data={ "{ unread: 0, open: false, init() { const es = new EventSource('" + assetPath(cfg.Path, "/api/notifications/stream") + "'); es.onmessage = e => { const d = JSON.parse(e.data); if(d.unread_count !== undefined) this.unread = d.unread_count; }; } }" }
-					class="relative"
-				>
-					<button
-						@click="open = !open"
-						class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-					>
-						<span class="material-icons-outlined">notifications</span>
-						<span
-							x-show="unread > 0"
-							x-cloak
-							class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"
-						></span>
-					</button>
-					<!-- Notification Dropdown -->
-					<div
-						x-show="open"
-						x-cloak
-						@click.away="open = false"
-						class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
-					>
-						<div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-							<h3 class="font-semibold">Notifications</h3>
-						</div>
-						<div class="max-h-80 overflow-y-auto">
-							<p class="px-4 py-6 text-sm text-center text-gray-400 dark:text-gray-500">Aucune notification</p>
-						</div>
-						<div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700">
-							<a href={ templ.SafeURL(navLink(cfg.Path, "notifications")) } class="text-sm text-primary-600 hover:underline">Voir toutes les notifications</a>
+				<!-- Notification Bell (only when Notifications enabled) -->
+				if cfg.Notifications {
+					<div class="relative z-30">
+						<button
+							data-on-click="$notifOpen = !$notifOpen; $userMenuOpen = false"
+							class="relative p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+							aria-label="Notifications"
+						>
+							<span class="material-icons-outlined">notifications</span>
+							<!-- Unread badge dot (visible when count > 0) -->
+							<span
+								data-show="$notifUnread > 0"
+								class="absolute top-1 right-1 flex items-center justify-center min-w-[1.1rem] h-[1.1rem] bg-red-500 rounded-full text-white text-[0.6rem] font-bold leading-none px-0.5"
+								style="display:none"
+								data-text="$notifUnread"
+							></span>
+						</button>
+						<!-- Notification Dropdown -->
+						<div
+							data-show="$notifOpen"
+							class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+							style="display:none"
+						>
+							<div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+								<h3 class="font-semibold">Notifications</h3>
+								<!-- "Tout lire" button: POST to read-all then reset $notifUnread -->
+								<button
+									data-show="$notifUnread > 0"
+									data-on-click={ "fetch('" + navLink(cfg.Path, "api/notifications/read-all") + "', {method:'POST'}).then(() => { $notifUnread = 0; })" }
+									class="text-xs text-primary-600 hover:underline"
+									style="display:none"
+								>
+									Tout lire
+								</button>
+							</div>
+							<div class="max-h-80 overflow-y-auto">
+								<p class="px-4 py-6 text-sm text-center text-gray-400 dark:text-gray-500">Aucune notification</p>
+							</div>
+							<div class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+								<a href={ templ.SafeURL(navLink(cfg.Path, "notifications")) } class="text-sm text-primary-600 hover:underline">
+									Voir toutes les notifications
+								</a>
+							</div>
 						</div>
 					</div>
-				</div>
+				}
 
 				<!-- Separator -->
 				<div class="hidden lg:block w-px h-6 bg-gray-200 dark:bg-gray-700"></div>
 
 				<!-- User Menu -->
-				<div x-data="{ open: false }" class="relative">
+				<div class="relative z-30">
 					<button
-						@click="open = !open"
+						data-on-click="$userMenuOpen = !$userMenuOpen; $notifOpen = false"
 						class="flex items-center gap-3 p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
 					>
 						<div class="hidden lg:block text-right">
@@ -115,10 +137,9 @@ templ Topbar(ctx context.Context) {
 					</button>
 					<!-- User Dropdown -->
 					<div
-						x-show="open"
-						x-cloak
-						@click.away="open = false"
+						data-show="$userMenuOpen"
 						class="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+						style="display:none"
 					>
 						<div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
 							<p class="text-sm font-semibold">{ userName }</p>

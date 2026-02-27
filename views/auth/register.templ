@@ -3,31 +3,42 @@ package auth
 import "github.com/bozz33/sublimeadmin/ui/layouts"
 
 // RegisterPage - Registration page with Filament-style design.
-// Clean design, centered form.
-templ RegisterPage() {
+// errorMsg is an optional error message to display (e.g. "Email already in use").
+templ RegisterPage(errorMsg ...string) {
+	{{ cfg := layouts.GetPanelConfig() }}
+	{{ basePath := cfg.Path }}
 	@layouts.Auth("Create Account") {
 		<!-- Centered Logo -->
 		<div class="sm:mx-auto sm:w-full sm:max-w-md">
 			<div class="flex justify-center">
 				<div class="flex items-center gap-3">
-					<div class="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+					<div class="w-12 h-12 bg-primary-500 rounded-xl flex items-center justify-center">
 						<span class="material-icons-outlined text-white text-2xl">eco</span>
 					</div>
-					<span class="font-bold text-xl text-gray-800 dark:text-white">{ layouts.GetPanelConfig().Name }</span>
+					<span class="font-bold text-xl text-gray-800 dark:text-white">{ cfg.Name }</span>
 				</div>
 			</div>
 			<h2 class="mt-6 text-center text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
 				Create an account
 			</h2>
 			<p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-				Already registered? <a href="/login" class="font-medium text-green-600 hover:text-green-500">Sign in</a>
+				Already registered? <a href={ templ.SafeURL(basePath + "/login") } class="font-medium text-primary-600 hover:text-primary-500">Sign in</a>
 			</p>
 		</div>
 
 		<!-- Form -->
 		<div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
 			<div class="bg-white dark:bg-gray-800 py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-gray-200 dark:border-gray-700">
-				<form action="/register" method="POST" class="space-y-6" x-data="{ showPassword: false }">
+
+				<!-- Error message -->
+				if len(errorMsg) > 0 && errorMsg[0] != "" {
+					<div class="mb-4 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+						<span class="material-icons-outlined text-xl flex-shrink-0">error_outline</span>
+						<span>{ errorMsg[0] }</span>
+					</div>
+				}
+
+				<form action={ templ.SafeURL(basePath + "/register") } method="POST" class="space-y-6" x-data="{ showPassword: false }">
 					<!-- Name -->
 					<div>
 						<label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -43,7 +54,7 @@ templ RegisterPage() {
 								type="text"
 								autocomplete="name"
 								required
-								class="block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+								class="block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
 								placeholder="John Doe"
 							/>
 						</div>
@@ -64,7 +75,7 @@ templ RegisterPage() {
 								type="email"
 								autocomplete="email"
 								required
-								class="block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+								class="block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
 								placeholder="you@example.com"
 							/>
 						</div>
@@ -85,7 +96,7 @@ templ RegisterPage() {
 								:type="showPassword ? 'text' : 'password'"
 								autocomplete="new-password"
 								required
-								class="block w-full pl-11 pr-11 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+								class="block w-full pl-11 pr-11 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
 								placeholder="••••••••"
 							/>
 							<button
@@ -116,7 +127,7 @@ templ RegisterPage() {
 								:type="showPassword ? 'text' : 'password'"
 								autocomplete="new-password"
 								required
-								class="block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm"
+								class="block w-full pl-11 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-900 dark:text-white bg-white dark:bg-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
 								placeholder="••••••••"
 							/>
 						</div>
@@ -129,10 +140,10 @@ templ RegisterPage() {
 							name="terms"
 							type="checkbox"
 							required
-							class="h-4 w-4 mt-0.5 text-green-500 focus:ring-green-500 border-gray-300 dark:border-gray-600 rounded"
+							class="h-4 w-4 mt-0.5 text-primary-500 focus:ring-primary-500 border-gray-300 dark:border-gray-600 rounded"
 						/>
 						<label for="terms" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
-							I agree to the <a href="/terms" class="text-green-600 hover:text-green-500">terms of service</a> and <a href="/privacy" class="text-green-600 hover:text-green-500">privacy policy</a>
+							I agree to the <a href="/terms" class="text-primary-600 hover:text-primary-500">terms of service</a> and <a href="/privacy" class="text-primary-600 hover:text-primary-500">privacy policy</a>
 						</label>
 					</div>
 
@@ -140,7 +151,7 @@ templ RegisterPage() {
 					<div>
 						<button
 							type="submit"
-							class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+							class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-primary-500 hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
 						>
 							Create account
 						</button>

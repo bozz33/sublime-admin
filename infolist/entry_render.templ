@@ -78,69 +78,6 @@ templ EntryRender(e *Entry) {
 		} else {
 			<span class="text-sm text-gray-400 italic">—</span>
 		}
-	case EntryTypeCode:
-		{{ code := e.ValueStr() }}
-		if code != "" {
-			<div class="relative group">
-				<pre class="text-xs bg-gray-900 dark:bg-gray-950 text-gray-100 rounded-lg p-4 overflow-x-auto leading-relaxed"><code>{ code }</code></pre>
-				if e.Language != "" {
-					<span class="absolute top-2 right-2 text-xs text-gray-500 font-mono">{ e.Language }</span>
-				}
-				if e.IsCopyable {
-					<button
-						type="button"
-						x-data
-						@click={ fmt.Sprintf("navigator.clipboard.writeText(%q)", code) }
-						class="absolute top-2 right-10 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-white"
-						title="Copy"
-					>
-						<span class="material-icons-outlined text-sm">content_copy</span>
-					</button>
-				}
-			</div>
-		} else {
-			<span class="text-sm text-gray-400 italic">—</span>
-		}
-	case EntryTypeKeyValue:
-		if len(e.KeyValues) > 0 {
-			<dl class="divide-y divide-gray-100 dark:divide-gray-700 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-				for _, kv := range e.KeyValues {
-					<div class="flex items-center px-3 py-2 gap-4">
-						<dt class="text-xs font-medium text-gray-500 dark:text-gray-400 w-1/3 shrink-0">{ kv.Key }</dt>
-						<dd class="text-sm text-gray-900 dark:text-white flex-1">{ kv.Value }</dd>
-					</div>
-				}
-			</dl>
-		} else {
-			<span class="text-sm text-gray-400 italic">—</span>
-		}
-	case EntryTypeRepeatable:
-		if len(e.RepeatItems) > 0 {
-			<div class="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-				<table class="min-w-full text-sm">
-					if len(e.RepeatLabels) > 0 {
-						<thead class="bg-gray-50 dark:bg-gray-700/50">
-							<tr>
-								for _, lbl := range e.RepeatLabels {
-									<th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">{ lbl }</th>
-								}
-							</tr>
-						</thead>
-					}
-					<tbody class="divide-y divide-gray-100 dark:divide-gray-700">
-						for _, row := range e.RepeatItems {
-							<tr>
-								for _, kv := range row {
-									<td class="px-3 py-2 text-gray-900 dark:text-white whitespace-nowrap">{ kv.Value }</td>
-								}
-							</tr>
-						}
-					</tbody>
-				</table>
-			</div>
-		} else {
-			<span class="text-sm text-gray-400 italic">—</span>
-		}
 	default:
 		{{ v := e.ValueStr()
 		if e.LimitChars > 0 && len([]rune(v)) > e.LimitChars {

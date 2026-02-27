@@ -4,9 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 	"strings"
+
+	"github.com/a-h/templ"
 )
 
 // RelationType defines the type of relationship.
@@ -274,6 +277,10 @@ type RelationManager interface {
 
 	// Columns returns the columns to display in the sub-table.
 	Columns() []Column
+	// Form returns a templ component rendering the create form for a related record.
+	// Called by the framework for GET /{parentID}/relations/{name}/form.
+	// Return emptyComponent() (via BaseRelationManager) if no inline create is needed.
+	Form(ctx context.Context, parentID string) templ.Component
 	// CanAttach returns whether the user can attach items.
 	CanAttach(ctx context.Context) bool
 	// CanCreate returns whether the user can create related items.
@@ -318,10 +325,13 @@ func (b *BaseRelationManager) CreateRelated(_ context.Context, _ string, _ *http
 	return nil
 }
 func (b *BaseRelationManager) DeleteRelated(_ context.Context, _, _ string) error { return nil }
-func (b *BaseRelationManager) Columns() []Column                                  { return []Column{} }
-func (b *BaseRelationManager) CanAttach(_ context.Context) bool                   { return true }
-func (b *BaseRelationManager) CanCreate(_ context.Context) bool                   { return true }
-func (b *BaseRelationManager) CanDelete(_ context.Context) bool                   { return true }
+func (b *BaseRelationManager) Columns() []Column { return []Column{} }
+func (b *BaseRelationManager) Form(_ context.Context, _ string) templ.Component {
+	return templ.ComponentFunc(func(_ context.Context, _ io.Writer) error { return nil })
+}
+func (b *BaseRelationManager) CanAttach(_ context.Context) bool { return true }
+func (b *BaseRelationManager) CanCreate(_ context.Context) bool { return true }
+func (b *BaseRelationManager) CanDelete(_ context.Context) bool { return true }
 
 // SetIcon sets the icon on the base manager.
 func (b *BaseRelationManager) SetIcon(icon string) *BaseRelationManager {
@@ -332,6 +342,23 @@ func (b *BaseRelationManager) SetIcon(icon string) *BaseRelationManager {
 // RelationManagerAware is the interface for resources that expose relation managers.
 type RelationManagerAware interface {
 	GetRelationManagers() []RelationManager
+}
+
+// ResourceWithRelations is an alias for RelationManagerAware.
+// Both interfaces are equivalent; ResourceWithRelations is the idiomatic name
+// used by the Edit page context injection path.
+type ResourceWithRelations = RelationManagerAware
+
+// contextKeyRelationManagers is the context key for relation managers on the Edit page.
+const contextKeyRelationManagers contextKey = "relation_managers"
+
+// GetRelationManagers retrieves relation managers from context.
+// Populated by the CRUDHandler.Edit handler when the resource implements RelationManagerAware.
+func GetRelationManagers(ctx context.Context) []RelationManager {
+	if m, ok := ctx.Value(contextKeyRelationManagers).([]RelationManager); ok {
+		return m
+	}
+	return nil
 }
 
 // ---------------------------------------------------------------------------
@@ -392,7 +419,11 @@ func (h *RelationManagerHandler) ServeHTTP(w http.ResponseWriter, r *http.Reques
 	ctx := r.Context()
 	switch r.Method {
 	case http.MethodGet:
-		h.handleRelationGET(w, rm, parentID, relationName, ctx)
+		if subAction == "form" {
+			h.handleRelationForm(w, rm, parentID, ctx)
+		} else {
+			h.handleRelationGET(w, rm, parentID, relationName, ctx)
+		}
 	case http.MethodPost:
 		h.handleRelationPOST(w, r, rm, parentID, subAction, ctx)
 	case http.MethodDelete:
@@ -417,11 +448,27 @@ func (h *RelationManagerHandler) parseRelationPath(r *http.Request) (parentID, r
 			subAction, relatedID = "detach", strings.TrimPrefix(tail, "detach/")
 		case tail == "attach":
 			subAction = "attach"
+		case tail == "form":
+			subAction = "form"
 		default:
 			relatedID = tail
 		}
 	}
 	return parentID, relationName, subAction, relatedID, true
+}
+
+func (h *RelationManagerHandler) handleRelationForm(
+	w http.ResponseWriter, rm RelationManager, parentID string, ctx context.Context,
+) {
+	if !rm.CanCreate(ctx) {
+		http.Error(w, "forbidden", http.StatusForbidden)
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	comp := rm.Form(ctx, parentID)
+	if err := comp.Render(ctx, w); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func (h *RelationManagerHandler) handleRelationGET(w http.ResponseWriter, rm RelationManager, parentID, relationName string, ctx context.Context) {
@@ -456,7 +503,7 @@ func (h *RelationManagerHandler) handleRelationPOST(w http.ResponseWriter, r *ht
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusNoContent)
+		http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 		return
 	}
 	if !rm.CanCreate(ctx) {
@@ -467,7 +514,7 @@ func (h *RelationManagerHandler) handleRelationPOST(w http.ResponseWriter, r *ht
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
+	http.Redirect(w, r, r.Header.Get("Referer"), http.StatusSeeOther)
 }
 
 func (h *RelationManagerHandler) handleRelationDELETE(w http.ResponseWriter, rm RelationManager, parentID, relatedID, subAction string, ctx context.Context) {

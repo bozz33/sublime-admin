@@ -15,45 +15,16 @@ const (
 	Button ActionType = "button"
 )
 
-// ActionSize defines the visual size of an action button.
-type ActionSize string
-
-const (
-	SizeSM ActionSize = "sm"
-	SizeMD ActionSize = "md"
-	SizeLG ActionSize = "lg"
-)
-
 // Action defines a possible interaction on a resource.
 type Action struct {
-	Name        string
-	Label       string
-	Icon        string
-	Type        ActionType
-	Method      string
-	Color       string
-	Size        ActionSize
+	Name  string
+	Label string
+	Icon  string
+	Type  ActionType
+	Method string
+	Color string
+
 	UrlResolver func(item any) string
-
-	// Visibility / state (CanBeDisabled, CanBeHidden)
-	Disabled       bool
-	DisabledReason string
-	Hidden         bool
-	HiddenFunc     func(ctx context.Context, item any) bool // dynamic hide
-	DisabledFunc   func(ctx context.Context, item any) bool // dynamic disable
-
-	// HasTooltip
-	Tooltip string
-
-	// CanOpenUrl
-	OpenInNewTab bool
-
-	// HasBadge
-	Badge     string                                     // badge text shown on the button (e.g. count)
-	BadgeFunc func(ctx context.Context, item any) string // dynamic badge
-
-	// HasExtraAttributes (arbitrary HTML attrs for the button/link)
-	ExtraAttributes map[string]string
 
 	// Confirmation modal
 	RequiresConfirmation bool
@@ -80,7 +51,7 @@ type Action struct {
 	FailureMessage string
 
 	// Redirect
-	RedirectURL      string                // static redirect after action; empty = back to list
+	RedirectURL      string         // static redirect after action; empty = back to list
 	RedirectResolver func(item any) string // dynamic redirect
 }
 
@@ -91,7 +62,7 @@ func New(name string) *Action {
 		Label:  name,
 		Type:   Link,
 		Method: "GET",
-		Color:  "gray",
+		Color:  ColorGray,
 	}
 }
 
@@ -107,99 +78,9 @@ func (a *Action) SetIcon(icon string) *Action {
 	return a
 }
 
-// SetColor sets the color.
+// SetColor sets the color. Use the Color* constants (e.g. actions.ColorDanger).
 func (a *Action) SetColor(color string) *Action {
 	a.Color = color
-	return a
-}
-
-// WithSize sets the visual size (sm, md, lg).
-func (a *Action) WithSize(size ActionSize) *Action {
-	a.Size = size
-	return a
-}
-
-// WithTooltip sets a tooltip shown on hover.
-func (a *Action) WithTooltip(tip string) *Action {
-	a.Tooltip = tip
-	return a
-}
-
-// Disable statically disables the action (renders as disabled button).
-func (a *Action) Disable(reason ...string) *Action {
-	a.Disabled = true
-	if len(reason) > 0 {
-		a.DisabledReason = reason[0]
-	}
-	return a
-}
-
-// DisableWhen sets a dynamic disable function.
-func (a *Action) DisableWhen(fn func(ctx context.Context, item any) bool) *Action {
-	a.DisabledFunc = fn
-	return a
-}
-
-// Hide statically hides the action.
-func (a *Action) Hide() *Action {
-	a.Hidden = true
-	return a
-}
-
-// HideWhen sets a dynamic hide function.
-func (a *Action) HideWhen(fn func(ctx context.Context, item any) bool) *Action {
-	a.HiddenFunc = fn
-	return a
-}
-
-// IsHidden returns true if the action should be hidden for the given context and item.
-func (a *Action) IsHidden(ctx context.Context, item any) bool {
-	if a.HiddenFunc != nil {
-		return a.HiddenFunc(ctx, item)
-	}
-	return a.Hidden
-}
-
-// IsDisabled returns true if the action should be disabled for the given context and item.
-func (a *Action) IsDisabled(ctx context.Context, item any) bool {
-	if a.DisabledFunc != nil {
-		return a.DisabledFunc(ctx, item)
-	}
-	return a.Disabled
-}
-
-// WithBadge sets a static badge text shown on the button.
-func (a *Action) WithBadge(badge string) *Action {
-	a.Badge = badge
-	return a
-}
-
-// WithBadgeFunc sets a dynamic badge text resolver.
-func (a *Action) WithBadgeFunc(fn func(ctx context.Context, item any) string) *Action {
-	a.BadgeFunc = fn
-	return a
-}
-
-// ResolveBadge returns the badge text for a given context and item.
-func (a *Action) ResolveBadge(ctx context.Context, item any) string {
-	if a.BadgeFunc != nil {
-		return a.BadgeFunc(ctx, item)
-	}
-	return a.Badge
-}
-
-// InNewTab makes URL actions open in a new browser tab.
-func (a *Action) InNewTab() *Action {
-	a.OpenInNewTab = true
-	return a
-}
-
-// WithExtraAttribute adds an arbitrary HTML attribute to the action element.
-func (a *Action) WithExtraAttribute(key, value string) *Action {
-	if a.ExtraAttributes == nil {
-		a.ExtraAttributes = make(map[string]string)
-	}
-	a.ExtraAttributes[key] = value
 	return a
 }
 
@@ -333,6 +214,7 @@ func (a *Action) Execute(ctx context.Context, item any, handler func() error) er
 	if a.OnSuccessFunc != nil {
 		a.OnSuccessFunc(ctx, item)
 	}
+
 	return nil
 }
 
@@ -344,9 +226,15 @@ func (a *Action) URL(item any) string {
 	return ""
 }
 
-// ServeHTTP allows an Action to act as an http.Handler for standalone endpoints.
+// ServeHTTP is intentionally not implemented on Action.
+// Only ModalAction implements http.Handler and can be registered as a route handler.
+// If you need an HTTP-handled action, use actions.ModalAction instead.
+//
+// Calling this method will panic to surface the misconfiguration at startup
+// rather than silently returning 501 at runtime.
 func (a *Action) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "action not configured as handler", http.StatusNotImplemented)
+	panic("sublimeadmin: Action.ServeHTTP called on action \"" + a.Name + "\" — " +
+		"Action does not implement http.Handler. Use actions.ModalAction for HTTP-handled actions.")
 }
 
 // EditAction creates a standard Edit button.
@@ -354,23 +242,22 @@ func EditAction(baseURL string) *Action {
 	return New("edit").
 		SetLabel("Edit").
 		SetIcon("pencil").
-		SetColor("primary").
+		SetColor(ColorPrimary).
 		SetUrl(func(item any) string {
 			return fmt.Sprintf("%s/%v/edit", baseURL, getItemID(item))
 		})
 }
 
-// DeleteAction creates a Delete button with modal.
+// DeleteAction creates a Delete button with confirmation modal.
 func DeleteAction(baseURL string) *Action {
 	a := New("delete").
 		SetLabel("Delete").
 		SetIcon("trash").
-		SetColor("danger").
+		SetColor(ColorDanger).
 		RequiresDialog("Delete this item?", "This action cannot be undone.").
 		SetUrl(func(item any) string {
 			return fmt.Sprintf("%s/%v", baseURL, getItemID(item))
 		})
-
 	a.Method = "DELETE"
 	return a
 }
@@ -380,10 +267,75 @@ func ViewAction(baseURL string) *Action {
 	return New("view").
 		SetLabel("Voir").
 		SetIcon("eye").
-		SetColor("secondary").
+		SetColor(ColorSecondary).
 		SetUrl(func(item any) string {
 			return fmt.Sprintf("%s/%v", baseURL, getItemID(item))
 		})
+}
+
+// CreateAction creates a standard Create button (header-level, no item context).
+func CreateAction(baseURL string) *Action {
+	return New("create").
+		SetLabel("New").
+		SetIcon("plus").
+		SetColor(ColorPrimary).
+		SetUrl(func(_ any) string {
+			return fmt.Sprintf("%s/create", baseURL)
+		})
+}
+
+// ExportAction creates an Export button that triggers a CSV/Excel download.
+// format: "csv" or "xlsx"
+func ExportAction(baseURL string, format string) *Action {
+	if format == "" {
+		format = "csv"
+	}
+	return New("export").
+		SetLabel("Export").
+		SetIcon("arrow-down-tray").
+		SetColor(ColorGray).
+		SetUrl(func(_ any) string {
+			return fmt.Sprintf("%s/export?format=%s", baseURL, format)
+		})
+}
+
+// ImportAction creates an Import button that opens the import form.
+func ImportAction(baseURL string) *Action {
+	return New("import").
+		SetLabel("Import").
+		SetIcon("arrow-up-tray").
+		SetColor(ColorGray).
+		SetUrl(func(_ any) string {
+			return fmt.Sprintf("%s/import", baseURL)
+		})
+}
+
+// RestoreAction creates a Restore button for soft-deleted items.
+func RestoreAction(baseURL string) *Action {
+	a := New("restore").
+		SetLabel("Restore").
+		SetIcon("arrow-path").
+		SetColor(ColorSuccess).
+		RequiresDialog("Restore this item?", "The item will be restored and become active again.").
+		SetUrl(func(item any) string {
+			return fmt.Sprintf("%s/%v/restore", baseURL, getItemID(item))
+		})
+	a.Method = "POST"
+	return a
+}
+
+// ForceDeleteAction creates a permanent delete button with strong confirmation.
+func ForceDeleteAction(baseURL string) *Action {
+	a := New("force-delete").
+		SetLabel("Delete permanently").
+		SetIcon("trash").
+		SetColor(ColorDanger).
+		RequiresDialog("Permanently delete?", "This action CANNOT be undone. The record will be deleted forever.").
+		SetUrl(func(item any) string {
+			return fmt.Sprintf("%s/%v/force-delete", baseURL, getItemID(item))
+		})
+	a.Method = "DELETE"
+	return a
 }
 
 // Identifiable interface for entities with ID.
@@ -402,69 +354,4 @@ func getItemID(item any) string {
 // GetItemID is the exported version for external use.
 func GetItemID(item any) string {
 	return getItemID(item)
-}
-
-// CreateAction creates a standard Create button (header-level, no item context).
-func CreateAction(baseURL string) *Action {
-	return New("create").
-		SetLabel("New").
-		SetIcon("plus").
-		SetColor("primary").
-		SetUrl(func(_ any) string {
-			return fmt.Sprintf("%s/create", baseURL)
-		})
-}
-
-// ExportAction creates an Export button that triggers a CSV/Excel download.
-// format: "csv" or "xlsx"
-func ExportAction(baseURL string, format string) *Action {
-	if format == "" {
-		format = "csv"
-	}
-	return New("export").
-		SetLabel("Export").
-		SetIcon("arrow-down-tray").
-		SetColor("gray").
-		SetUrl(func(_ any) string {
-			return fmt.Sprintf("%s/export?format=%s", baseURL, format)
-		})
-}
-
-// ImportAction creates an Import button that opens the import form.
-func ImportAction(baseURL string) *Action {
-	return New("import").
-		SetLabel("Import").
-		SetIcon("arrow-up-tray").
-		SetColor("gray").
-		SetUrl(func(_ any) string {
-			return fmt.Sprintf("%s/import", baseURL)
-		})
-}
-
-// RestoreAction creates a Restore button for soft-deleted items.
-func RestoreAction(baseURL string) *Action {
-	a := New("restore").
-		SetLabel("Restore").
-		SetIcon("arrow-path").
-		SetColor("success").
-		RequiresDialog("Restore this item?", "The item will be restored and become active again.").
-		SetUrl(func(item any) string {
-			return fmt.Sprintf("%s/%v/restore", baseURL, getItemID(item))
-		})
-	a.Method = "POST"
-	return a
-}
-
-// ForceDeleteAction creates a permanent delete button with strong confirmation.
-func ForceDeleteAction(baseURL string) *Action {
-	a := New("force-delete").
-		SetLabel("Delete permanently").
-		SetIcon("trash").
-		SetColor("danger").
-		RequiresDialog("Permanently delete?", "This action CANNOT be undone. The record will be deleted forever.").
-		SetUrl(func(item any) string {
-			return fmt.Sprintf("%s/%v/force-delete", baseURL, getItemID(item))
-		})
-	a.Method = "DELETE"
-	return a
 }

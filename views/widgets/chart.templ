@@ -1,64 +1,57 @@
 package widgets
 
 import (
+	"fmt"
 	"github.com/bozz33/sublimeadmin/widget"
 )
 
+// Chart renders an ApexCharts widget.
+// JSON data is passed via data-* attributes to avoid HTML-escaping issues
+// with templ's { } interpolation inside <script> blocks.
 templ Chart(w *widget.ChartWidget) {
 	<div class="bg-white dark:bg-gray-800 rounded-2xl p-6 border border-gray-200 dark:border-gray-700">
-		<div class="mb-6">
-			<h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-				{ w.Label }
-			</h3>
+		<div class="mb-4">
+			<h3 class="text-lg font-semibold text-gray-900 dark:text-white">{ w.Label }</h3>
+			if w.Description != "" {
+				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{ w.Description }</p>
+			}
 		</div>
-		<div class="relative w-full" style={ "height: " + w.Height + "px" }>
-			<div id={ w.ID }></div>
-		</div>
-		<script>
-			(function() {
-				const options = {
-					series: JSON.parse('{ w.GetSeriesJSON() }'),
-					chart: {
-						type: '{ string(w.Type) }',
-						height: { w.Height },
-						fontFamily: 'Inter, sans-serif',
-						toolbar: { show: false },
-						background: 'transparent'
-					},
-					colors: JSON.parse('{ w.GetColorsJSON() }'),
-					stroke: {
-						curve: 'smooth',
-						width: 2
-					},
-					dataLabels: { enabled: false },
-					xaxis: {
-						categories: JSON.parse('{ w.GetLabelsJSON() }'),
-						axisBorder: { show: false },
-						axisTicks: { show: false },
-						labels: {
-							style: { colors: '#6b7280', fontSize: '12px' }
-						}
-					},
-					grid: {
-						borderColor: '#e5e7eb',
-						strokeDashArray: 4,
-					},
-					plotOptions: {
-						pie: {
-							donut: {
-								size: '70%',
-								labels: { show: true, total: { show: true, label: 'Total' } }
-							}
-						}
-					},
-					labels: JSON.parse('{ w.GetLabelsJSON() }')
-				};
-
-				if (document.querySelector('#{ w.ID }')) {
-					const chart = new ApexCharts(document.querySelector('#{ w.ID }'), options);
-					chart.render();
-				}
-			})();
-		</script>
+		<!-- Chart container: data attributes carry the JSON safely (no HTML escaping issues) -->
+		<div
+			id={ w.ID }
+			class="sublimego-chart"
+			data-type={ string(w.Type) }
+			data-height={ w.Height }
+			data-series={ w.GetSeriesJSON() }
+			data-labels={ w.GetLabelsJSON() }
+			data-colors={ w.GetColorsJSON() }
+			style={ fmt.Sprintf("height:%spx", w.Height) }
+		></div>
+		if w.Footer != "" {
+			<p class="mt-3 text-xs text-gray-400 dark:text-gray-500">{ w.Footer }</p>
+		}
 	</div>
+}
+
+// ChartRow renders a responsive grid row of charts.
+templ ChartRow(charts ...*widget.ChartWidget) {
+	{{ colClass := chartGridClass(len(charts)) }}
+	<div class={ "grid gap-4 lg:gap-6", colClass }>
+		for _, c := range charts {
+			@Chart(c)
+		}
+	</div>
+}
+
+func chartGridClass(n int) string {
+	switch n {
+	case 1:
+		return "grid-cols-1"
+	case 2:
+		return "grid-cols-1 lg:grid-cols-2"
+	case 3:
+		return "grid-cols-1 md:grid-cols-2 lg:grid-cols-3"
+	default:
+		return "grid-cols-1 md:grid-cols-2"
+	}
 }
